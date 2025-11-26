@@ -1,89 +1,80 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { BottomNav } from '@/components/layout/bottom-nav';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Plus, Search, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { BottomNav } from '@/components/layout/bottom-nav'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Sparkles, Calendar, MessageCircle, Plus, Search } from 'lucide-react'
 
 export default function HomePage() {
-  const [hasTeam, setHasTeam] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // TODO: 실제로는 API로 팀 보유 여부 체크
+  const [hasTeam, setHasTeam] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // localStorage에서 팀 여부 확인
-    const teamData = localStorage.getItem('hasTeam');
-    setHasTeam(teamData === 'true');
-    setLoading(false);
-  }, []);
+    // TODO: 실제 API 연동 시 여기서 팀 체크
+    // const checkTeam = async () => {
+    //   try {
+    //     const response = await fetch('/api/team/my')
+    //     setHasTeam(response.ok)
+    //   } catch (error) {
+    //     setHasTeam(false)
+    //   } finally {
+    //     setLoading(false)
+    //   }
+    // }
+    // checkTeam()
+
+    // Mock: 현재는 팀 없음으로 시작
+    setTimeout(() => setLoading(false), 500)
+  }, [])
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
-    );
+    )
   }
 
   // 팀 없음 상태
   if (!hasTeam) {
     return (
       <div className="min-h-screen bg-background pb-20">
-        {/* 헤더 */}
         <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
           <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
             <div className="flex items-center gap-2">
-              <div className="relative h-10 w-10 overflow-hidden rounded-lg">
-                <Image
-                  src="/images/logo.jpg"
-                  alt="TeamUp Logo"
-                  width={40}
-                  height={40}
-                  className="rounded-lg object-cover"
-                />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+                <Sparkles className="h-6 w-6 text-primary-foreground" />
               </div>
               <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
             </div>
-            <Badge className="bg-accent/15 text-accent border-0">
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
               AI Powered
             </Badge>
           </div>
         </header>
 
-        <main className="mx-auto max-w-lg px-5 py-8">
-          <div className="flex min-h-[65vh] flex-col items-center justify-center text-center">
-            {/* 로고 */}
-            <div className="mb-6">
-              <Image
-                src="/images/logo.jpg"
-                alt="TeamUp Logo"
-                width={120}
-                height={120}
-                className="rounded-2xl object-cover shadow-xl"
-              />
+        <main className="mx-auto max-w-lg px-4 py-6">
+          <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+            <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-secondary">
+              <Sparkles className="h-12 w-12 text-muted-foreground" />
             </div>
-
-            <h2 className="mb-4 text-3xl font-bold text-balance">
-              아직 팀이 없습니다
-            </h2>
-            <p className="mb-10 max-w-md text-base leading-relaxed text-foreground text-balance">
-              팀을 만들거나 기존 팀에 참여하여
-              <br />
-              <span className="font-bold">AI 매칭</span>과{' '}
-              <span className="font-bold">코칭</span>을 시작하세요
+            <h2 className="mb-3 text-2xl font-bold text-balance">아직 팀이 없습니다</h2>
+            <p className="mb-8 text-foreground text-balance">
+              팀을 만들거나 기존 팀에 참여하여<br />AI 매칭과 코칭을 시작하세요
             </p>
 
             <div className="flex w-full max-w-sm flex-col gap-3">
               <Link href="/matching" className="w-full">
-                <Button className="w-full font-semibold shadow-md hover:shadow-lg transition-shadow" size="lg">
+                <Button className="w-full font-semibold" size="lg">
                   <Search className="mr-2 h-5 w-5" />
                   팀 찾기
                 </Button>
               </Link>
-              <Link href="/matching/create" className="w-full">
+              <Link href="/team/create" className="w-full">
                 <Button variant="outline" className="w-full font-semibold" size="lg">
                   <Plus className="mr-2 h-5 w-5" />
                   팀 생성하기
@@ -95,37 +86,31 @@ export default function HomePage() {
 
         <BottomNav />
       </div>
-    );
+    )
   }
 
   // 팀 있음 상태
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* 헤더 */}
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg">
-              <Image
-                src="/images/logo.jpg"
-                alt="TeamUp Logo"
-                width={40}
-                height={40}
-                className="rounded-lg object-cover"
-              />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+              <Sparkles className="h-6 w-6 text-primary-foreground" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
           </div>
-          <Badge className="bg-accent/15 text-accent border-0">
+          <Badge variant="secondary" className="bg-primary/10 text-primary">
             AI Powered
           </Badge>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-5 py-6">
+      <main className="mx-auto max-w-lg px-4 py-6">
+
         {/* 내 팀 섹션 */}
         <div className="mb-6">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             내 팀
           </h3>
 
@@ -140,9 +125,7 @@ export default function HomePage() {
                     <h3 className="mb-1 font-bold text-foreground">세종 born</h3>
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-muted-foreground">팀원 5명</p>
-                      <Badge variant="secondary" className="text-xs">
-                        레벨 A
-                      </Badge>
+                      <Badge variant="secondary" className="text-xs">레벨 A</Badge>
                     </div>
                   </div>
                 </div>
@@ -169,7 +152,7 @@ export default function HomePage() {
         {/* 최근 AI 코칭 */}
         <div className="mb-6">
           <div className="mb-3 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
+            <Sparkles className="h-5 w-5 text-primary" />
             <h3 className="font-bold text-foreground">최근 AI 코칭</h3>
           </div>
 
@@ -186,14 +169,12 @@ export default function HomePage() {
               <div className="mb-3 space-y-2">
                 <div className="rounded-lg bg-primary/5 p-3">
                   <p className="text-sm text-foreground">
-                    <span className="font-semibold text-primary">강점:</span> 팀워크가
-                    우수하며 빠른 공격 전환이 돋보였습니다.
+                    <span className="font-semibold text-primary">강점:</span> 팀워크가 우수하며 빠른 공격 전환이 돋보였습니다.
                   </p>
                 </div>
                 <div className="rounded-lg bg-secondary/30 p-3">
                   <p className="text-sm text-foreground">
-                    <span className="font-semibold text-muted-foreground">개선점:</span> 수비
-                    리바운드 강화가 필요합니다.
+                    <span className="font-semibold text-muted-foreground">개선점:</span> 수비 리바운드 강화가 필요합니다.
                   </p>
                 </div>
               </div>
@@ -221,9 +202,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-foreground">새로운 매칭 요청</p>
-                  <p className="text-xs text-muted-foreground">
-                    관악 Thunders가 매칭을 신청했습니다
-                  </p>
+                  <p className="text-xs text-muted-foreground">관악 Thunders가 매칭을 신청했습니다</p>
                 </div>
               </CardContent>
             </Card>
@@ -233,5 +212,5 @@ export default function HomePage() {
 
       <BottomNav />
     </div>
-  );
+  )
 }
