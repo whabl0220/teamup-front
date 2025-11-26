@@ -9,7 +9,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   const navItems = [
-    { href: '/', icon: Home, label: '홈' },
+    { href: '/home', icon: Home, label: '홈' },
     { href: '/matching', icon: Search, label: '매칭' },
     { href: '/map', icon: Map, label: '지도' },
     { href: '/mypage', icon: User, label: '마이' },

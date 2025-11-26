@@ -1,237 +1,75 @@
-'use client';
+import Link from 'next/link'
+import Image from 'next/image'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { BottomNav } from '@/components/layout/bottom-nav';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MessageCircle, Plus, Search, TrendingUp } from 'lucide-react';
-
-export default function HomePage() {
-  const [hasTeam, setHasTeam] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // localStorage에서 팀 여부 확인
-    const teamData = localStorage.getItem('hasTeam');
-    setHasTeam(teamData === 'true');
-    setLoading(false);
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-
-  // 팀 없음 상태
-  if (!hasTeam) {
-    return (
-      <div className="min-h-screen bg-background pb-20">
-        {/* 헤더 */}
-        <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
-          <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
-            <div className="flex items-center gap-2">
-              <div className="relative h-10 w-10 overflow-hidden rounded-lg">
-                <Image
-                  src="/images/logo.jpg"
-                  alt="TeamUp Logo"
-                  width={40}
-                  height={40}
-                  className="rounded-lg object-cover"
-                />
-              </div>
-              <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
+export default function LandingPage() {
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      {/* 중앙 콘텐츠 */}
+      <main className="flex flex-1 items-center justify-center p-4">
+        <div className="w-full max-w-md text-center">
+          {/* 로고 */}
+          <div className="mb-8 flex justify-center">
+            <div className="relative h-32 w-32 overflow-hidden rounded-3xl shadow-2xl">
+              <Image
+                src="/images/logo.jpg"
+                alt="TeamUp"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-            <Badge className="bg-accent/15 text-accent border-0">
+          </div>
+
+          {/* 타이틀 */}
+          <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground">
+            TeamUp
+          </h1>
+
+          {/* AI Powered 배지 */}
+          <div className="mb-4 flex justify-center">
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
               AI Powered
             </Badge>
           </div>
-        </header>
 
-        <main className="mx-auto max-w-lg px-5 py-8">
-          <div className="flex min-h-[65vh] flex-col items-center justify-center text-center">
-            {/* 로고 */}
-            <div className="mb-6">
-              <Image
-                src="/images/logo.jpg"
-                alt="TeamUp Logo"
-                width={120}
-                height={120}
-                className="rounded-2xl object-cover shadow-xl"
-              />
-            </div>
+          {/* 서브타이틀 */}
+          <p className="mb-12 text-base leading-relaxed text-muted-foreground">
+            AI 기반 팀 매칭으로
+            <br />
+            완벽한 팀을 만나보세요
+          </p>
 
-            <h2 className="mb-4 text-3xl font-bold text-balance">
-              아직 팀이 없습니다
-            </h2>
-            <p className="mb-10 max-w-md text-base leading-relaxed text-foreground text-balance">
-              팀을 만들거나 기존 팀에 참여하여
-              <br />
-              <span className="font-bold">AI 매칭</span>과{' '}
-              <span className="font-bold">코칭</span>을 시작하세요
-            </p>
-
-            <div className="flex w-full max-w-sm flex-col gap-3">
-              <Link href="/matching" className="w-full">
-                <Button className="w-full font-semibold shadow-md hover:shadow-lg transition-shadow" size="lg">
-                  <Search className="mr-2 h-5 w-5" />
-                  팀 찾기
-                </Button>
-              </Link>
-              <Link href="/matching/create" className="w-full">
-                <Button variant="outline" className="w-full font-semibold" size="lg">
-                  <Plus className="mr-2 h-5 w-5" />
-                  팀 생성하기
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </main>
-
-        <BottomNav />
-      </div>
-    );
-  }
-
-  // 팀 있음 상태
-  return (
-    <div className="min-h-screen bg-background pb-20">
-      {/* 헤더 */}
-      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2">
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg">
-              <Image
-                src="/images/logo.jpg"
-                alt="TeamUp Logo"
-                width={40}
-                height={40}
-                className="rounded-lg object-cover"
-              />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
-          </div>
-          <Badge className="bg-accent/15 text-accent border-0">
-            AI Powered
-          </Badge>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-lg px-5 py-6">
-        {/* 내 팀 섹션 */}
-        <div className="mb-6">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            내 팀
-          </h3>
-
-          <Link href="/team">
-            <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
-              <CardContent className="p-0">
-                <div className="flex items-center gap-4 p-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
-                    SB
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="mb-1 font-bold text-foreground">세종 born</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">팀원 5명</p>
-                      <Badge variant="secondary" className="text-xs">
-                        레벨 A
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-px border-t border-border/50 bg-border/50">
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">18</p>
-                    <p className="text-xs text-muted-foreground">총 경기</p>
-                  </div>
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">14</p>
-                    <p className="text-xs text-muted-foreground">AI 리포트</p>
-                  </div>
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">45일</p>
-                    <p className="text-xs text-muted-foreground">활동</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        {/* 최근 AI 코칭 */}
-        <div className="mb-6">
-          <div className="mb-3 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <h3 className="font-bold text-foreground">최근 AI 코칭</h3>
-          </div>
-
-          <Card className="border-border/50 bg-card">
-            <CardContent className="p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">8월 10일 경기 분석</p>
-                  <p className="text-xs text-muted-foreground">세종 born vs 서울 Tigers</p>
-                </div>
-                <Badge className="bg-primary/10 text-primary">승리</Badge>
-              </div>
-
-              <div className="mb-3 space-y-2">
-                <div className="rounded-lg bg-primary/5 p-3">
-                  <p className="text-sm text-foreground">
-                    <span className="font-semibold text-primary">강점:</span> 팀워크가
-                    우수하며 빠른 공격 전환이 돋보였습니다.
-                  </p>
-                </div>
-                <div className="rounded-lg bg-secondary/30 p-3">
-                  <p className="text-sm text-foreground">
-                    <span className="font-semibold text-muted-foreground">개선점:</span> 수비
-                    리바운드 강화가 필요합니다.
-                  </p>
-                </div>
-              </div>
-
-              <Link href="/coaching">
-                <Button variant="outline" size="sm" className="w-full">
-                  전체 코칭 보기
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 최근 활동 */}
-        <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            최근 활동
-          </h3>
-
-          <div className="space-y-2">
-            <Card className="border-border/50 bg-card">
-              <CardContent className="flex items-center gap-3 p-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                  <MessageCircle className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">새로운 매칭 요청</p>
-                  <p className="text-xs text-muted-foreground">
-                    관악 Thunders가 매칭을 신청했습니다
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          {/* 버튼 */}
+          <div className="space-y-3">
+            <Link href="/login" className="block w-full">
+              <Button
+                size="lg"
+                className="h-12 w-full bg-primary text-lg font-semibold text-primary-foreground hover:bg-primary/90"
+              >
+                로그인
+              </Button>
+            </Link>
+            <Link href="/signup" className="block w-full">
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-12 w-full text-lg font-semibold"
+              >
+                회원가입
+              </Button>
+            </Link>
           </div>
         </div>
       </main>
 
-      <BottomNav />
+      {/* 푸터 */}
+      <footer className="border-t border-border/50 py-6">
+        <div className="mx-auto max-w-lg px-4 text-center text-sm text-muted-foreground">
+          <p>© 2025 TeamUp. AI Powered Team Matching</p>
+        </div>
+      </footer>
     </div>
-  );
+  )
 }
