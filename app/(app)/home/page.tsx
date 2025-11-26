@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,8 +11,10 @@ import { Sparkles, Calendar, MessageCircle, Plus, Search } from 'lucide-react'
 
 export default function HomePage() {
   // TODO: 실제로는 API로 팀 보유 여부 체크
-  const [hasTeam, setHasTeam] = useState(false)
+  const [hasTeam, setHasTeam] = useState(true) // Mock: 팀 있음 상태로 시작
   const [loading, setLoading] = useState(true)
+  const [teamName, setTeamName] = useState('세종 born')
+  const [teamPhoto, setTeamPhoto] = useState('')
 
   useEffect(() => {
     // TODO: 실제 API 연동 시 여기서 팀 체크
@@ -26,6 +29,12 @@ export default function HomePage() {
     //   }
     // }
     // checkTeam()
+
+    // localStorage에서 팀 정보 로드
+    const savedName = localStorage.getItem('teamName')
+    const savedPhoto = localStorage.getItem('teamPhoto')
+    if (savedName) setTeamName(savedName)
+    if (savedPhoto) setTeamPhoto(savedPhoto)
 
     // Mock: 현재는 팀 없음으로 시작
     setTimeout(() => setLoading(false), 500)
@@ -46,9 +55,13 @@ export default function HomePage() {
         <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
           <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-                <Sparkles className="h-6 w-6 text-primary-foreground" />
-              </div>
+              <Image
+                src="/images/logo.jpg"
+                alt="TeamUp Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-xl object-contain"
+              />
               <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
             </div>
             <Badge variant="secondary" className="bg-primary/10 text-primary">
@@ -95,9 +108,13 @@ export default function HomePage() {
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <Sparkles className="h-6 w-6 text-primary-foreground" />
-            </div>
+            <Image
+              src="/images/logo.jpg"
+              alt="TeamUp Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-xl object-contain"
+            />
             <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
           </div>
           <Badge variant="secondary" className="bg-primary/10 text-primary">
@@ -118,11 +135,15 @@ export default function HomePage() {
             <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
               <CardContent className="p-0">
                 <div className="flex items-center gap-4 p-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
-                    SB
-                  </div>
+                  {teamPhoto ? (
+                    <img src={teamPhoto} alt="Team" className="h-16 w-16 rounded-2xl object-cover" />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
+                      SB
+                    </div>
+                  )}
                   <div className="flex-1">
-                    <h3 className="mb-1 font-bold text-foreground">세종 born</h3>
+                    <h3 className="mb-1 font-bold text-foreground">{teamName}</h3>
                     <div className="flex items-center gap-2">
                       <p className="text-sm text-muted-foreground">팀원 5명</p>
                       <Badge variant="secondary" className="text-xs">레벨 A</Badge>
@@ -161,7 +182,7 @@ export default function HomePage() {
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-foreground">8월 10일 경기 분석</p>
-                  <p className="text-xs text-muted-foreground">세종 born vs 서울 Tigers</p>
+                  <p className="text-xs text-muted-foreground">{teamName} vs 서울 Tigers</p>
                 </div>
                 <Badge className="bg-primary/10 text-primary">승리</Badge>
               </div>
