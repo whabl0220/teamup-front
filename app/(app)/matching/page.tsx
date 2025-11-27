@@ -1,391 +1,370 @@
 'use client'
 
-import { useState } from 'react'
-import Image from 'next/image'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Sparkles, MapPin, Users, Calendar, MessageCircle, Copy, Check } from 'lucide-react'
-import { toast } from 'sonner'
+import { Sparkles, Search, Plus, Users, MapPin, AlertCircle } from 'lucide-react'
+import type { Team, MatchRequest } from '@/types'
+
+// Mock 데이터 (나중에 API로 교체)
+const mockMyTeam: Team = {
+  id: '1',
+  name: '세종 born',
+  shortName: 'SB',
+  memberCount: 5,
+  maxMembers: 5,
+  level: 'A',
+  region: '광진구 능동',
+  totalGames: 18,
+  aiReports: 14,
+  activeDays: 45,
+  isOfficial: true,
+  captainId: 'user1',
+  description: '세종대 기반 농구 동호회',
+}
+
+const mockTeams: Team[] = [
+  {
+    id: '2',
+    name: '세종 Warriors',
+    shortName: 'SW',
+    region: '광진구 능동',
+    level: 'A',
+    matchScore: 95,
+    memberCount: 5,
+    maxMembers: 5,
+    isOfficial: true,
+    captainId: 'user2',
+    description: '주말 오후에 활동하는 친목 위주 팀입니다.',
+    totalGames: 20,
+    aiReports: 15,
+    activeDays: 60,
+  },
+  {
+    id: '3',
+    name: '강남 Thunder',
+    shortName: 'GT',
+    region: '강남구 역삼',
+    level: 'A+',
+    matchScore: 92,
+    memberCount: 4,
+    maxMembers: 5,
+    isOfficial: false,
+    captainId: 'user3',
+    description: '1명 모집 중! 가드 포지션 우대합니다.',
+    totalGames: 25,
+    aiReports: 20,
+    activeDays: 80,
+  },
+  {
+    id: '4',
+    name: '관악 Hoops',
+    shortName: 'GH',
+    region: '관악구 신림',
+    level: 'B+',
+    matchScore: 88,
+    memberCount: 5,
+    maxMembers: 5,
+    isOfficial: true,
+    captainId: 'user4',
+    description: '주 2회 정기 경기를 진행합니다.',
+    totalGames: 15,
+    aiReports: 12,
+    activeDays: 40,
+  },
+  {
+    id: '5',
+    name: '송파 Dunk',
+    shortName: 'SD',
+    region: '송파구 잠실',
+    level: 'A',
+    matchScore: 90,
+    memberCount: 5,
+    maxMembers: 5,
+    isOfficial: true,
+    captainId: 'user5',
+    description: '잠실 코트에서 주로 활동합니다.',
+    totalGames: 22,
+    aiReports: 18,
+    activeDays: 55,
+  },
+]
+
+const mockMatchRequests: MatchRequest[] = [
+  {
+    id: '101',
+    fromTeam: mockTeams[3], // 송파 Dunk
+    toTeam: mockMyTeam,
+    message: '이번 주말 경기 어떠신가요?',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2시간 전
+  }
+]
 
 export default function MatchingPage() {
-  const [teamName] = useState('세종 born')
-  const [selectedTeam, setSelectedTeam] = useState<number | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredTeams, setFilteredTeams] = useState<Team[]>(mockTeams)
+  const [matchRequests, setMatchRequests] = useState<MatchRequest[]>(mockMatchRequests)
+  const [showMatchModal, setShowMatchModal] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
-  // Mock: 매칭 성공한 팀들
-  const matchedTeams = [
-    {
-      id: 1,
-      name: '관악 Thunders',
-      location: '관악구 봉천동',
-      distance: '1.2km',
-      members: 6,
-      level: 'A',
-      matchDate: '2025.01.28',
-      matchTime: '14:00',
-      status: 'confirmed',
-      avatar: null,
-      kakaoId: 'thunder_captain',
-      totalMatches: 18,
-      aiReports: 14,
-      activeDays: 45,
-      teamMembers: [
-        { name: '김민준', position: '포워드', isLeader: true },
-        { name: '박서연', position: '가드', isLeader: false },
-        { name: '이도윤', position: '센터', isLeader: false },
-        { name: '정하은', position: '가드', isLeader: false },
-        { name: '최예준', position: '포워드', isLeader: false },
-        { name: '장서우', position: '센터', isLeader: false },
-      ],
-    },
-    {
-      id: 2,
-      name: '강남 Warriors',
-      location: '강남구 역삼동',
-      distance: '3.5km',
-      members: 8,
-      level: 'S',
-      matchDate: '2025.01.25',
-      matchTime: '16:00',
-      status: 'pending',
-      avatar: null,
-      kakaoId: 'warrior_leader',
-      totalMatches: 32,
-      aiReports: 28,
-      activeDays: 120,
-      teamMembers: [
-        { name: '강지호', position: '포워드', isLeader: true },
-        { name: '윤서아', position: '가드', isLeader: false },
-        { name: '조민서', position: '센터', isLeader: false },
-        { name: '임시현', position: '가드', isLeader: false },
-        { name: '한준우', position: '포워드', isLeader: false },
-        { name: '송지안', position: '센터', isLeader: false },
-        { name: '백현우', position: '가드', isLeader: false },
-        { name: '오수빈', position: '포워드', isLeader: false },
-      ],
-    },
-  ]
+  // 검색 필터링
+  useEffect(() => {
+    const query = searchQuery.toLowerCase()
+    const filtered = mockTeams.filter(team =>
+      team.name.toLowerCase().includes(query) ||
+      team.region.toLowerCase().includes(query) ||
+      team.level.toLowerCase().includes(query)
+    )
+    setFilteredTeams(filtered)
+  }, [searchQuery])
 
-  const handleCopyKakaoId = async (kakaoId: string) => {
-    try {
-      await navigator.clipboard.writeText(kakaoId)
-      setCopied(true)
-      toast.success('카카오톡 ID가 복사되었습니다!')
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      toast.error('복사에 실패했습니다.')
-    }
+  // TODO: 실제 API 연동
+  // useEffect(() => {
+  //   const loadData = async () => {
+  //     const teams = await api.searchTeams(searchQuery)
+  //     const requests = await api.getMatchRequests()
+  //     setFilteredTeams(teams)
+  //     setMatchRequests(requests)
+  //   }
+  //   loadData()
+  // }, [searchQuery])
+
+  const handleMatchRequest = (team: Team) => {
+    setSelectedTeam(team)
+    setShowMatchModal(true)
   }
 
-  const currentTeam = matchedTeams.find((team) => team.id === selectedTeam)
+  const confirmMatchRequest = () => {
+    setShowMatchModal(false)
+    alert(`${selectedTeam?.name}에 매칭 요청을 보냈습니다!`)
+    // TODO: 실제 API 연동
+    // await api.sendMatchRequest(selectedTeam.id, mockMyTeam.id, '경기 한 번 하시죠!')
+  }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return <Badge className="bg-primary text-primary-foreground">확정</Badge>
-      case 'pending':
-        return <Badge variant="secondary">대기중</Badge>
-      default:
-        return null
-    }
+  const handleAcceptRequest = (requestId: string) => {
+    alert('매칭 요청을 수락했습니다!')
+    setMatchRequests(prev => prev.filter(r => r.id !== requestId))
+    // TODO: 실제 API 연동
+    // await api.acceptMatchRequest(requestId)
+  }
+
+  const handleRejectRequest = (requestId: string) => {
+    alert('매칭 요청을 거절했습니다.')
+    setMatchRequests(prev => prev.filter(r => r.id !== requestId))
+    // TODO: 실제 API 연동
+    // await api.rejectMatchRequest(requestId)
+  }
+
+  const getTimeAgo = (isoString: string) => {
+    const diff = Date.now() - new Date(isoString).getTime()
+    const hours = Math.floor(diff / (1000 * 60 * 60))
+    if (hours < 1) return '방금 전'
+    if (hours < 24) return `${hours}시간 전`
+    return `${Math.floor(hours / 24)}일 전`
   }
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* 헤더 */}
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
-          <h1 className="text-2xl font-bold tracking-tight">팀 매칭</h1>
-          <div className="relative h-8 w-8 overflow-hidden rounded-lg">
-            <Image src="/images/logo.jpg" alt="TeamUp" fill className="object-cover" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">팀 매칭</h1>
+            <p className="text-sm text-muted-foreground">AI가 추천하는 최적의 팀</p>
           </div>
+          <Link href="/team/create">
+            <Button size="sm" className="font-semibold">
+              <Plus className="mr-2 h-4 w-4" />
+              팀 생성
+            </Button>
+          </Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
-        {/* AI 매칭하기 카드 */}
-        <div className="mb-6">
-          <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent">
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary">
-                    <Sparkles className="h-7 w-7 text-primary-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="mb-1 text-lg font-bold text-foreground">AI 팀 매칭</h3>
-                    <p className="text-xs text-muted-foreground">
-                      최적의 상대 팀을 찾아드립니다
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-4 space-y-2 rounded-lg bg-background/50 p-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">내 팀</span>
-                  <span className="font-semibold text-foreground">{teamName}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">팀 레벨</span>
-                  <Badge variant="secondary" className="text-xs">레벨 A</Badge>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">선호 거리</span>
-                  <span className="font-semibold text-foreground">5km 이내</span>
-                </div>
-              </div>
-
-              <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Sparkles className="mr-2 h-5 w-5" />
-                AI 매칭 시작하기
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* 매칭 대기 팀 */}
-        {matchedTeams.filter((team) => team.status === 'pending').length > 0 && (
+        {/* 받은 매칭 요청 */}
+        {matchRequests.length > 0 && (
           <div className="mb-6">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              매칭 대기 팀
-            </h3>
-
+            <div className="mb-3 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-primary" />
+              <h2 className="font-bold text-foreground">받은 매칭 요청</h2>
+              <Badge className="bg-primary">{matchRequests.length}</Badge>
+            </div>
             <div className="space-y-3">
-              {matchedTeams
-                .filter((team) => team.status === 'pending')
-                .map((team) => (
-                  <Card
-                    key={team.id}
-                    className="cursor-pointer border-border/50 bg-card transition-all hover:border-primary/50"
-                    onClick={() => setSelectedTeam(team.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="mb-3 flex items-center gap-4">
-                        {team.avatar ? (
-                          <img
-                            src={team.avatar}
-                            alt={team.name}
-                            className="h-16 w-16 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">
-                            {team.name.substring(0, 2)}
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <div className="mb-1 flex items-center gap-2">
-                            <h4 className="font-bold text-foreground">{team.name}</h4>
-                            <Badge variant="secondary" className="text-xs">
-                              레벨 {team.level}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              <span>{team.location}</span>
-                            </div>
-                            <span>•</span>
-                            <span>{team.distance}</span>
-                          </div>
-                          <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                            <Users className="h-3 w-3" />
-                            <span>팀원 {team.members}명</span>
-                          </div>
-                        </div>
-                        <div>
-                          {getStatusBadge(team.status)}
+              {matchRequests.map((request) => (
+                <Card key={request.id} className="border-primary/50 bg-primary/5">
+                  <CardContent className="p-4">
+                    <div className="mb-3 flex items-start justify-between">
+                      <div>
+                        <h3 className="mb-1 font-bold text-foreground">{request.fromTeam.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">레벨 {request.fromTeam.level}</Badge>
+                          <span className="text-xs text-muted-foreground">{request.fromTeam.region}</span>
                         </div>
                       </div>
-
-                      <div className="rounded-lg bg-muted/30 px-4 py-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium text-foreground">
-                            {team.matchDate} {team.matchTime}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-3 flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1">
-                          거절
-                        </Button>
-                        <Button size="sm" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-                          수락
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      <span className="text-xs text-muted-foreground">{getTimeAgo(request.createdAt)}</span>
+                    </div>
+                    <p className="mb-3 text-sm text-muted-foreground">{request.message}</p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleRejectRequest(request.id)}
+                      >
+                        거절
+                      </Button>
+                      <Button
+                        className="flex-1"
+                        onClick={() => handleAcceptRequest(request.id)}
+                      >
+                        수락하기
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         )}
 
-        {/* 매칭 확정 팀 */}
-        {matchedTeams.filter((team) => team.status === 'confirmed').length > 0 && (
+        {/* 검색 */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="팀 이름, 지역, 레벨로 검색"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-border bg-secondary/30 py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+
+        {/* AI 추천 안내 */}
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-primary/10 p-4">
+          <Sparkles className="h-5 w-5 text-primary" />
           <div>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              매칭된 팀
-            </h3>
+            <p className="text-sm font-semibold text-foreground">AI 추천 팀</p>
+            <p className="text-xs text-muted-foreground">매칭 점수 기반 정렬</p>
+          </div>
+        </div>
 
-            <div className="space-y-3">
-              {matchedTeams
-                .filter((team) => team.status === 'confirmed')
-                .map((team) => (
-                  <Card
-                    key={team.id}
-                    className="cursor-pointer border-border/50 bg-card transition-all hover:border-primary/50"
-                    onClick={() => setSelectedTeam(team.id)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="mb-3 flex items-center gap-4">
-                        {team.avatar ? (
-                          <img
-                            src={team.avatar}
-                            alt={team.name}
-                            className="h-16 w-16 rounded-xl object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">
-                            {team.name.substring(0, 2)}
-                          </div>
-                        )}
-                        <div className="flex-1">
-                          <div className="mb-1 flex items-center gap-2">
-                            <h4 className="font-bold text-foreground">{team.name}</h4>
-                            <Badge variant="secondary" className="text-xs">
-                              레벨 {team.level}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              <span>{team.location}</span>
-                            </div>
-                            <span>•</span>
-                            <span>{team.distance}</span>
-                          </div>
-                          <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                            <Users className="h-3 w-3" />
-                            <span>팀원 {team.members}명</span>
-                          </div>
-                        </div>
-                        <div>
-                          {getStatusBadge(team.status)}
-                        </div>
+        {/* 팀 목록 */}
+        {filteredTeams.length === 0 ? (
+          <div className="py-12 text-center">
+            <p className="text-muted-foreground">검색 결과가 없습니다</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredTeams.map((team) => (
+              <Card key={team.id} className="group border-border/50 bg-card transition-all hover:border-primary/50">
+                <CardContent className="p-4">
+                  <div className="mb-3 flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-foreground">
+                        <Users className="h-6 w-6" />
                       </div>
-
-                      <div className="rounded-lg bg-muted/30 px-4 py-3">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium text-foreground">
-                            {team.matchDate} {team.matchTime}
+                      <div>
+                        <h3 className="mb-1 font-bold text-foreground">{team.name}</h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            레벨 {team.level}
+                          </Badge>
+                          {team.isOfficial ? (
+                            <Badge className="bg-primary/10 text-xs text-primary">
+                              정식 팀
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs">
+                              모집 중
+                            </Badge>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {team.memberCount}/{team.maxMembers}명
                           </span>
                         </div>
                       </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-bold text-primary">{team.matchScore}%</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">매칭</p>
+                    </div>
+                  </div>
 
-                      <Button variant="outline" size="sm" className="mt-3 w-full">
-                        경기 상세보기
+                  <div className="mb-3 flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-foreground">{team.region}</span>
+                  </div>
+
+                  <p className="mb-3 text-sm text-muted-foreground">{team.description}</p>
+
+                  {team.isOfficial ? (
+                    <Button
+                      className="w-full font-semibold"
+                      size="lg"
+                      onClick={() => handleMatchRequest(team)}
+                    >
+                      매칭하기
+                    </Button>
+                  ) : (
+                    <Link href={`/team/${team.id}`} className="block">
+                      <Button variant="outline" className="w-full font-semibold" size="lg">
+                        참여하기
                       </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
+                    </Link>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
       </main>
 
-      <BottomNav />
-
-      {/* 팀 상세 모달 */}
-      {currentTeam && (
-        <Dialog open={selectedTeam !== null} onOpenChange={() => setSelectedTeam(null)}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">팀 정보</DialogTitle>
-            </DialogHeader>
-
-            {/* Team Profile */}
-            <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent">
-              <CardContent className="p-6">
-                <div className="mb-4 flex items-start justify-between">
-                  <div className="flex items-center gap-4">
-                    {currentTeam.avatar ? (
-                      <img src={currentTeam.avatar} alt="Team" className="h-20 w-20 rounded-2xl object-cover" />
-                    ) : (
-                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-primary-foreground">
-                        {currentTeam.name.substring(0, 2)}
-                      </div>
-                    )}
-                    <div>
-                      <h2 className="mb-1 text-2xl font-bold text-foreground">{currentTeam.name}</h2>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-primary/20 text-primary">레벨 {currentTeam.level}</Badge>
-                        <Badge variant="secondary" className="text-xs">{currentTeam.location.split(' ')[0]}</Badge>
-                      </div>
-                    </div>
-                  </div>
+      {/* 매칭 요청 모달 */}
+      {showMatchModal && selectedTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+          <Card className="w-full max-w-sm border-border/50 bg-card">
+            <CardContent className="p-6">
+              <h3 className="mb-4 text-xl font-bold text-foreground">매칭 요청</h3>
+              <div className="mb-6">
+                <p className="mb-2 text-sm text-muted-foreground">상대 팀</p>
+                <div className="rounded-lg bg-secondary/30 p-3">
+                  <p className="font-bold text-foreground">{selectedTeam.name}</p>
+                  <p className="text-sm text-muted-foreground">{selectedTeam.region}</p>
                 </div>
-
-                <div className="mb-4 rounded-lg bg-card/50 p-4">
-                  <div className="mb-2 flex items-center gap-2">
-                    <MessageCircle className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">팀장 카카오톡 ID</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-lg font-bold text-foreground">{currentTeam.kakaoId}</p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleCopyKakaoId(currentTeam.kakaoId)}
-                      className="min-w-[60px]"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="mr-1 h-4 w-4" />
-                          완료
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="mr-1 h-4 w-4" />
-                          복사
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-lg bg-card/50 p-3 text-center">
-                    <p className="text-2xl font-bold text-foreground">{currentTeam.totalMatches}</p>
-                    <p className="text-xs text-muted-foreground">총 경기</p>
-                  </div>
-                  <div className="rounded-lg bg-card/50 p-3 text-center">
-                    <p className="text-2xl font-bold text-foreground">{currentTeam.aiReports}</p>
-                    <p className="text-xs text-muted-foreground">AI 리포트</p>
-                  </div>
-                  <div className="rounded-lg bg-card/50 p-3 text-center">
-                    <p className="text-2xl font-bold text-foreground">{currentTeam.activeDays}일</p>
-                    <p className="text-xs text-muted-foreground">활동</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Button
-              variant="outline"
-              className="mt-4 w-full"
-              onClick={() => setSelectedTeam(null)}
-            >
-              닫기
-            </Button>
-          </DialogContent>
-        </Dialog>
+              </div>
+              <p className="mb-6 text-sm text-muted-foreground">
+                이 팀에 매칭 요청을 보낼까요?<br />
+                상대 팀이 수락하면 팀장끼리 카카오톡으로 연락할 수 있습니다.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowMatchModal(false)}
+                >
+                  취소
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={confirmMatchRequest}
+                >
+                  요청 보내기
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
+
+      <BottomNav />
     </div>
   )
 }
