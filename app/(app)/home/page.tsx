@@ -286,11 +286,9 @@ export default function HomePage() {
                   <div className="flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <p className="text-sm font-semibold text-foreground">새로운 매칭 요청</p>
-                      {matchRequests.length > 1 && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
-                          {matchRequests.length}
-                        </Badge>
-                      )}
+                      <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                        {matchRequests.length}
+                      </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {latestRequest.fromTeam.name}가 매칭을 신청했습니다

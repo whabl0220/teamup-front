@@ -2,40 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Search, Users, MapPin, Sparkles } from 'lucide-react'
-
-// Mock 데이터 (매칭 페이지와 동일)
-const mockTeams = [
-  {
-    id: '3',
-    name: '강남 Thunder',
-    shortName: 'GT',
-    region: '강남구 역삼',
-    level: 'A+',
-    matchScore: 92,
-    memberCount: 4,
-    maxMembers: 5,
-    isOfficial: false,
-    captainId: 'user3',
-    description: '1명 모집 중! 가드 포지션 우대합니다.',
-    totalGames: 25,
-    aiReports: 20,
-    activeDays: 80,
-  },
-]
+import { ArrowLeft, Search } from 'lucide-react'
+import { TeamCard } from '@/components/shared/team-card'
+import { mockJoinTeams } from '@/lib/mock-data'
+import type { Team } from '@/types'
 
 export default function JoinTeamsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredTeams, setFilteredTeams] = useState(mockTeams)
+  const [filteredTeams, setFilteredTeams] = useState<Team[]>(mockJoinTeams)
 
   useEffect(() => {
     const query = searchQuery.toLowerCase()
-    const filtered = mockTeams.filter(team =>
+    const filtered = mockJoinTeams.filter(team =>
       team.name.toLowerCase().includes(query) ||
       team.region.toLowerCase().includes(query) ||
       team.level.toLowerCase().includes(query)
@@ -80,36 +60,15 @@ export default function JoinTeamsPage() {
         ) : (
           <div className="space-y-3">
             {filteredTeams.map((team) => (
-              <Card key={team.id} className="border-border/50 bg-card">
-                <CardContent className="p-4">
-                  <div className="mb-3 flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
-                        <Users className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="mb-1 font-bold text-foreground">{team.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">레벨 {team.level}</Badge>
-                          <span className="text-xs text-muted-foreground">{team.memberCount}/{team.maxMembers}명</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Sparkles className="h-4 w-4 text-primary inline" />
-                      <span className="text-sm font-bold text-primary ml-1">{team.matchScore}%</span>
-                    </div>
-                  </div>
-                  <div className="mb-3 flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{team.region}</span>
-                  </div>
-                  <p className="mb-3 text-sm text-muted-foreground">{team.description}</p>
-                  <Link href={`/team/${team.id}`}>
-                    <Button variant="outline" className="w-full">참여하기</Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <TeamCard
+                key={team.id}
+                team={team}
+                actionButton={{
+                  label: '참여하기',
+                  onClick: () => router.push(`/team/${team.id}`),
+                  variant: 'outline'
+                }}
+              />
             ))}
           </div>
         )}
