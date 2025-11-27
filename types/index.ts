@@ -69,6 +69,15 @@ export interface MatchRequest {
   respondedAt?: string;
 }
 
+// Matched Team Types (수락된 매칭)
+export interface MatchedTeam {
+  id: string;
+  myTeamId: string; // 내 팀 ID
+  matchedTeam: Team; // 매칭된 상대 팀
+  matchedAt: string; // 매칭 성사 날짜
+  requestId: string; // 원본 매칭 요청 ID
+}
+
 // Notification Types
 export interface Notification {
   id: string;

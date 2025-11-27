@@ -4,71 +4,21 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { ArrowLeft, Search, Users, MapPin, Sparkles } from 'lucide-react'
-
-// Mock 데이터
-const mockTeams = [
-  {
-    id: '2',
-    name: '세종 Warriors',
-    shortName: 'SW',
-    region: '광진구 능동',
-    level: 'A',
-    matchScore: 95,
-    memberCount: 5,
-    maxMembers: 5,
-    isOfficial: true,
-    captainId: 'user2',
-    description: '주말 오후에 활동하는 친목 위주 팀입니다.',
-    totalGames: 20,
-    aiReports: 15,
-    activeDays: 60,
-  },
-  {
-    id: '4',
-    name: '관악 Hoops',
-    shortName: 'GH',
-    region: '관악구 신림',
-    level: 'B+',
-    matchScore: 88,
-    memberCount: 5,
-    maxMembers: 5,
-    isOfficial: true,
-    captainId: 'user4',
-    description: '주 2회 정기 경기를 진행합니다.',
-    totalGames: 15,
-    aiReports: 12,
-    activeDays: 40,
-  },
-  {
-    id: '5',
-    name: '송파 Dunk',
-    shortName: 'SD',
-    region: '송파구 잠실',
-    level: 'A',
-    matchScore: 90,
-    memberCount: 5,
-    maxMembers: 5,
-    isOfficial: true,
-    captainId: 'user5',
-    description: '잠실 코트에서 주로 활동합니다.',
-    totalGames: 22,
-    aiReports: 18,
-    activeDays: 55,
-  },
-]
+import { ArrowLeft, Search } from 'lucide-react'
+import { TeamCard } from '@/components/shared/team-card'
+import { mockMatchTeams } from '@/lib/mock-data'
+import type { Team } from '@/types'
 
 export default function MatchTeamsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredTeams, setFilteredTeams] = useState(mockTeams)
+  const [filteredTeams, setFilteredTeams] = useState<Team[]>(mockMatchTeams)
   const [showMatchModal, setShowMatchModal] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<typeof mockTeams[0] | null>(null)
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
   useEffect(() => {
     const query = searchQuery.toLowerCase()
-    const filtered = mockTeams.filter(team =>
+    const filtered = mockMatchTeams.filter(team =>
       team.name.toLowerCase().includes(query) ||
       team.region.toLowerCase().includes(query) ||
       team.level.toLowerCase().includes(query)
@@ -76,7 +26,7 @@ export default function MatchTeamsPage() {
     setFilteredTeams(filtered)
   }, [searchQuery])
 
-  const handleMatchRequest = (team: typeof mockTeams[0]) => {
+  const handleMatchRequest = (team: Team) => {
     setSelectedTeam(team)
     setShowMatchModal(true)
   }
@@ -123,34 +73,15 @@ export default function MatchTeamsPage() {
         ) : (
           <div className="space-y-3">
             {filteredTeams.map((team) => (
-              <Card key={team.id} className="border-border/50 bg-card">
-                <CardContent className="p-4">
-                  <div className="mb-3 flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                        <Users className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="mb-1 font-bold text-foreground">{team.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">레벨 {team.level}</Badge>
-                          <span className="text-xs text-muted-foreground">{team.memberCount}/{team.maxMembers}명</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Sparkles className="h-4 w-4 text-primary inline" />
-                      <span className="text-sm font-bold text-primary ml-1">{team.matchScore}%</span>
-                    </div>
-                  </div>
-                  <div className="mb-3 flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground">{team.region}</span>
-                  </div>
-                  <p className="mb-3 text-sm text-muted-foreground">{team.description}</p>
-                  <Button className="w-full" onClick={() => handleMatchRequest(team)}>매칭하기</Button>
-                </CardContent>
-              </Card>
+              <TeamCard
+                key={team.id}
+                team={team}
+                actionButton={{
+                  label: '매칭하기',
+                  onClick: () => handleMatchRequest(team),
+                  variant: 'default'
+                }}
+              />
             ))}
           </div>
         )}

@@ -82,7 +82,7 @@
   /* Border */
   --border: oklch(0.90 0.01 160);
   --input: oklch(0.90 0.01 160);
-  --ring: oklch(0.52 0.12 160);
+  --ring: oklch(0.72 0.18 45); /* Primary 오렌지 */
 
   /* Charts */
   --chart-1: oklch(0.52 0.12 160); /* 초록 */
@@ -139,7 +139,7 @@
   /* Border */
   --border: oklch(0.98 0 0 / 12%);
   --input: oklch(0.98 0 0 / 18%);
-  --ring: oklch(0.55 0.13 160);
+  --ring: oklch(0.72 0.18 45); /* Primary 오렌지 */
 
   /* Charts */
   --chart-1: oklch(0.55 0.13 160); /* 초록 */

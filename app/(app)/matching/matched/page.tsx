@@ -7,24 +7,30 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Search, Users, Check } from 'lucide-react'
-
-// TODO: localStorage나 API에서 매칭된 팀 불러오기
-const matchedTeams: any[] = []
+import { getMatchedTeams } from '@/lib/storage'
+import type { MatchedTeam } from '@/types'
 
 export default function MatchedTeamsPage() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [filteredTeams, setFilteredTeams] = useState(matchedTeams)
+  const [matchedTeams, setMatchedTeams] = useState<MatchedTeam[]>([])
+  const [filteredTeams, setFilteredTeams] = useState<MatchedTeam[]>([])
+
+  useEffect(() => {
+    const matched = getMatchedTeams()
+    setMatchedTeams(matched)
+    setFilteredTeams(matched)
+  }, [])
 
   useEffect(() => {
     const query = searchQuery.toLowerCase()
-    const filtered = matchedTeams.filter(team =>
-      team.name.toLowerCase().includes(query) ||
-      team.region.toLowerCase().includes(query) ||
-      team.level.toLowerCase().includes(query)
+    const filtered = matchedTeams.filter(m =>
+      m.matchedTeam.name.toLowerCase().includes(query) ||
+      m.matchedTeam.region.toLowerCase().includes(query) ||
+      m.matchedTeam.level.toLowerCase().includes(query)
     )
     setFilteredTeams(filtered)
-  }, [searchQuery])
+  }, [searchQuery, matchedTeams])
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -68,24 +74,24 @@ export default function MatchedTeamsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredTeams.map((team) => (
-              <Card key={team.id} className="border-green-500/50 bg-green-500/5">
+            {filteredTeams.map((matched) => (
+              <Card key={matched.id} className="border-border/50 bg-card">
                 <CardContent className="p-4">
                   <div className="mb-3 flex items-start gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/20">
-                      <Users className="h-6 w-6 text-green-600" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/15">
+                      <Check className="h-6 w-6 text-green-600" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="mb-1 font-bold text-foreground">{team.name}</h3>
+                      <h3 className="mb-1 font-bold text-foreground">{matched.matchedTeam.name}</h3>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-xs">레벨 {team.level}</Badge>
-                        <span className="text-xs text-muted-foreground">{team.region}</span>
+                        <Badge variant="secondary" className="text-xs">레벨 {matched.matchedTeam.level}</Badge>
+                        <span className="text-xs text-muted-foreground">{matched.matchedTeam.region}</span>
                       </div>
                     </div>
                   </div>
-                  <p className="mb-3 text-sm text-muted-foreground">{team.description}</p>
-                  <Link href={`/team/${team.id}`}>
-                    <Button variant="outline" className="w-full">팀 상세보기</Button>
+                  <p className="mb-3 text-sm text-muted-foreground">{matched.matchedTeam.description}</p>
+                  <Link href={`/team/${matched.matchedTeam.id}`}>
+                    <Button variant="outline" className="w-full hover:!bg-green-600 hover:!text-white hover:!border-green-600">팀 상세보기</Button>
                   </Link>
                 </CardContent>
               </Card>

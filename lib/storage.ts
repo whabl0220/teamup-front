@@ -1,7 +1,7 @@
 // localStorage 관리 유틸리티
 // 백엔드 연동 전까지 로컬에서 데이터 관리
 
-import type { Team, MatchRequest } from '@/types'
+import type { Team, MatchRequest, MatchedTeam } from '@/types'
 
 // 전체 앱 데이터 구조
 export interface AppData {
@@ -12,6 +12,7 @@ export interface AppData {
   }
   teams: Team[]
   matchRequests: MatchRequest[]
+  matchedTeams: MatchedTeam[] // 매칭 성사된 팀들
 }
 
 // 팀원 정보 (Team 타입에 members가 없어서 별도 정의)
@@ -34,6 +35,7 @@ const getInitialData = (): AppData => ({
   },
   teams: [],
   matchRequests: [],
+  matchedTeams: [],
 })
 
 // 데이터 읽기
@@ -118,8 +120,36 @@ export const updateMatchRequestStatus = (
   if (request) {
     request.status = status
     request.respondedAt = new Date().toISOString()
+
+    // 수락한 경우 매칭된 팀으로 추가
+    if (status === 'accepted') {
+      const currentTeam = getCurrentTeam()
+      if (currentTeam) {
+        // 내 팀 입장에서 매칭된 팀 추가
+        const matchedTeam: MatchedTeam = {
+          id: `matched_${Date.now()}`,
+          myTeamId: currentTeam.id,
+          matchedTeam: request.fromTeam, // 요청한 팀이 상대 팀
+          matchedAt: new Date().toISOString(),
+          requestId: requestId,
+        }
+        data.matchedTeams.push(matchedTeam)
+      }
+    }
+
     setAppData(data)
   }
+}
+
+// 매칭된 팀 목록 가져오기
+export const getMatchedTeams = (): MatchedTeam[] => {
+  const data = getAppData()
+  const currentTeam = getCurrentTeam()
+  if (!currentTeam) return []
+
+  return data.matchedTeams
+    .filter(m => m.myTeamId === currentTeam.id)
+    .sort((a, b) => new Date(b.matchedAt).getTime() - new Date(a.matchedAt).getTime())
 }
 
 // 시간 포맷 (2시간 전, 1일 전 등)
@@ -294,6 +324,52 @@ export const initMockData = (): void => {
     },
   ]
 
+  // 이미 수락된 매칭 (UI 테스트용)
+  const mockMatchedTeams: MatchedTeam[] = [
+    {
+      id: 'matched_1',
+      myTeamId: '1', // 세종 born
+      matchedTeam: {
+        id: 'team_rockets',
+        name: '강서 Rockets',
+        shortName: 'GR',
+        memberCount: 5,
+        maxMembers: 5,
+        level: 'A',
+        region: '강서구 화곡',
+        totalGames: 18,
+        aiReports: 14,
+        activeDays: 50,
+        isOfficial: true,
+        captainId: 'user_rockets',
+        description: '주말 저녁 위주로 활동하는 팀입니다.',
+      },
+      matchedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3일 전
+      requestId: 'req_accepted_1',
+    },
+    {
+      id: 'matched_2',
+      myTeamId: '1', // 세종 born
+      matchedTeam: {
+        id: 'team_eagles',
+        name: '노원 Eagles',
+        shortName: 'NE',
+        memberCount: 5,
+        maxMembers: 5,
+        level: 'B+',
+        region: '노원구 상계',
+        totalGames: 12,
+        aiReports: 9,
+        activeDays: 35,
+        isOfficial: true,
+        captainId: 'user_eagles',
+        description: '친목 위주로 즐겁게 농구하는 팀!',
+      },
+      matchedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7일 전 (1주일 전)
+      requestId: 'req_accepted_2',
+    },
+  ]
+
   const data: AppData = {
     user: {
       id: 'user1',
@@ -302,6 +378,7 @@ export const initMockData = (): void => {
     },
     teams: mockTeams,
     matchRequests: mockRequests,
+    matchedTeams: mockMatchedTeams, // 이미 수락된 매칭 2개
   }
 
   setAppData(data)
