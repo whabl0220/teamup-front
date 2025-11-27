@@ -18,6 +18,7 @@ export default function HomePage() {
   const [hasTeam, setHasTeam] = useState(true) // Mock: 팀 있음 상태로 시작
   const [teamName, setTeamName] = useState('세종 born')
   const [teamPhoto, setTeamPhoto] = useState('')
+  const [teamId, setTeamId] = useState('1') // Mock 팀 ID
 
   // 매칭 요청 관련 상태
   const [showMatchRequestsModal, setShowMatchRequestsModal] = useState(false)
@@ -47,6 +48,14 @@ export default function HomePage() {
     const savedPhoto = localStorage.getItem('teamPhoto')
     if (savedName) setTeamName(savedName)
     if (savedPhoto) setTeamPhoto(savedPhoto)
+
+    // 팀 ID 로드
+    const appDataStr = localStorage.getItem('teamup_app_data')
+    if (appDataStr) {
+      const appData = JSON.parse(appDataStr)
+      const currentTeamId = appData.user?.currentTeamId
+      if (currentTeamId) setTeamId(currentTeamId)
+    }
 
     // 매칭 요청 로드
     loadMatchRequests()
@@ -135,7 +144,7 @@ export default function HomePage() {
             내 팀
           </h3>
 
-          <Link href="/team">
+          <Link href={`/team/${teamId}`}>
             <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
               <CardContent className="p-0">
                 <div className="flex items-center gap-4 p-4">
