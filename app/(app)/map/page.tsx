@@ -1,18 +1,11 @@
 'use client'
 
-import dynamic from 'next/dynamic'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Users, MessageCircle, UserPlus, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-
-// Leaflet은 SSR에서 사용할 수 없으므로 dynamic import 사용
-const MapView = dynamic(
-  () => import('@/components/features/map/map-view').then((mod) => mod.MapView),
-  { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-800 animate-pulse" /> }
-)
 
 const nearbyTeams = [
   { name: '세종 born_9', date: '5월 11일', time: '오후 6시', location: '광진구 능동로', level: 'A', isOfficial: true, members: 5, maxMembers: 5 },
@@ -41,8 +34,13 @@ export default function MapPage() {
       </header>
 
       <main className="mx-auto max-w-lg">
-        {/* Leaflet Map */}
-        <MapView />
+        {/* 지도 영역 (나중에 API 연동) */}
+        <div className="h-[300px] w-full bg-muted/30 flex items-center justify-center border-b border-border/50">
+          <div className="text-center space-y-2">
+            <MapPin className="h-12 w-12 text-muted-foreground mx-auto" />
+            <p className="text-sm text-muted-foreground">지도 API 연동 예정</p>
+          </div>
+        </div>
 
         <div className="p-4 space-y-6">
           {/* Nearby Courts */}
