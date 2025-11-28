@@ -12,25 +12,32 @@ import { Users, Sparkles } from 'lucide-react'
 import type { Team } from '@/types'
 import { TeamCard } from '@/components/shared/team-card'
 import { mockJoinTeams, mockMatchTeams } from '@/lib/mock-data'
+import { getCurrentTeam, getAppData } from '@/lib/storage'
 
 export default function MatchingPage() {
   const router = useRouter()
   const [showMatchModal, setShowMatchModal] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
+  // 팀장 권한 체크 (초기 상태 계산)
+  const [isTeamLeader] = useState(() => {
+    const currentTeam = getCurrentTeam()
+    const appData = getAppData()
+    if (currentTeam && appData.user) {
+      return currentTeam.captainId === appData.user.id
+    }
+    return false
+  })
+
   // 팀 분류
   const joinTeams = mockJoinTeams // 모집 중
   const matchTeams = mockMatchTeams // 정식 팀
 
-  // TODO: 실제 API 연동
-  // useEffect(() => {
-  //   const loadData = async () => {
-  //     const teams = await api.getRecommendedTeams()
-  //   }
-  //   loadData()
-  // }, [])
-
   const handleMatchRequest = (team: Team) => {
+    if (!isTeamLeader) {
+      alert('팀장만 매칭 요청을 보낼 수 있습니다.')
+      return
+    }
     setSelectedTeam(team)
     setShowMatchModal(true)
   }

@@ -7,9 +7,9 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Check, Bell } from 'lucide-react'
+import { AlertCircle, Check, Bell, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
-import { getReceivedMatchRequests, updateMatchRequestStatus, formatTimeAgo, getMatchedTeams } from '@/lib/storage'
+import { getReceivedMatchRequests, updateMatchRequestStatus, formatTimeAgo, getMatchedTeams, getCurrentTeam, getAppData } from '@/lib/storage'
 import type { MatchRequest, MatchedTeam } from '@/types'
 import { MatchRequestsModal } from '@/components/shared/match-requests-modal'
 
@@ -17,12 +17,20 @@ export default function NotificationsPage() {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [matchedTeams, setMatchedTeams] = useState<MatchedTeam[]>([])
   const [showAllRequestsModal, setShowAllRequestsModal] = useState(false)
+  const [isTeamLeader, setIsTeamLeader] = useState(false)
 
   const loadData = () => {
     const requests = getReceivedMatchRequests()
     setMatchRequests(requests)
     const matched = getMatchedTeams()
     setMatchedTeams(matched)
+
+    // 팀장 권한 체크
+    const currentTeam = getCurrentTeam()
+    const appData = getAppData()
+    if (currentTeam && appData.user) {
+      setIsTeamLeader(currentTeam.captainId === appData.user.id)
+    }
   }
 
   useEffect(() => {
@@ -74,6 +82,18 @@ export default function NotificationsPage() {
           </div>
         )}
 
+        {/* 팀장 권한 안내 */}
+        {!isTeamLeader && matchRequests.length > 0 && (
+          <Card className="mb-4 border-yellow-500/50 bg-yellow-500/10">
+            <CardContent className="flex items-center gap-3 p-4">
+              <ShieldAlert className="h-5 w-5 text-yellow-600" />
+              <p className="text-sm text-foreground">
+                <span className="font-semibold">팀장만</span> 매칭 요청을 수락하거나 거절할 수 있습니다.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 받은 매칭 요청 */}
         {matchRequests.length > 0 && (
           <div className="mb-6">
@@ -115,12 +135,14 @@ export default function NotificationsPage() {
                         variant="outline"
                         className="flex-1 text-destructive hover:bg-destructive/10"
                         onClick={() => handleRejectRequest(request.id)}
+                        disabled={!isTeamLeader}
                       >
                         거절
                       </Button>
                       <Button
                         className="flex-1"
                         onClick={() => handleAcceptRequest(request.id, request.fromTeam.name)}
+                        disabled={!isTeamLeader}
                       >
                         수락하기
                       </Button>
