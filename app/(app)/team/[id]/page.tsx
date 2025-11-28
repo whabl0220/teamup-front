@@ -80,6 +80,11 @@ export default function TeamDetailPage() {
           setTeam(foundTeam)
           setTeamName(foundTeam.name)
 
+          // 팀 사진도 로드 (logo 필드에서)
+          if (foundTeam.logo) {
+            setTeamPhoto(foundTeam.logo)
+          }
+
           // 현재 유저가 이 팀의 멤버인지 확인
           const currentTeamId = appData.user?.currentTeamId
           setIsTeamMember(currentTeamId === teamId)
@@ -102,7 +107,32 @@ export default function TeamDetailPage() {
     reader.onloadend = () => {
       const base64 = reader.result as string
       setTeamPhoto(base64)
+
+      // localStorage에 개별 저장 (호환성)
       localStorage.setItem('teamPhoto', base64)
+
+      // teamup_app_data에도 팀 사진 업데이트
+      const appDataStr = localStorage.getItem('teamup_app_data')
+      if (appDataStr) {
+        const appData = JSON.parse(appDataStr)
+        const teamIndex = appData.teams?.findIndex((t: Team) => t.id === teamId)
+        if (teamIndex !== -1 && appData.teams) {
+          appData.teams[teamIndex] = {
+            ...appData.teams[teamIndex],
+            logo: base64
+          }
+          localStorage.setItem('teamup_app_data', JSON.stringify(appData))
+        }
+      }
+
+      // 현재 페이지의 team 상태도 업데이트
+      if (team) {
+        setTeam({
+          ...team,
+          logo: base64
+        })
+      }
+
       toast.success('팀 사진이 변경되었습니다!')
     }
     reader.readAsDataURL(file)
@@ -183,7 +213,7 @@ export default function TeamDetailPage() {
             </Button>
             <div>
               <h1 className="text-xl font-bold tracking-tight">팀 정보</h1>
-              <p className="text-xs text-muted-foreground">{team.name}</p>
+              <p className="text-xs text-muted-foreground">{teamName || team.name}</p>
             </div>
           </div>
         </div>
@@ -203,7 +233,7 @@ export default function TeamDetailPage() {
                   </div>
                 )}
                 <div>
-                  <h2 className="mb-1 text-2xl font-bold text-foreground">{team.name}</h2>
+                  <h2 className="mb-1 text-2xl font-bold text-foreground">{teamName || team.name}</h2>
                   <div className="flex items-center gap-2">
                     <Badge className="bg-primary/20 text-primary">레벨 {team.level}</Badge>
                     <Badge variant="secondary" className="text-xs">{team.region}</Badge>
@@ -381,7 +411,17 @@ export default function TeamDetailPage() {
                 variant="outline"
                 className="w-full"
                 size="lg"
-                onClick={() => setShowTeamSettingsModal(true)}
+                onClick={() => {
+                  // 팀 설정 모달을 열 때마다 현재 team 상태에서 값 로드
+                  if (team) {
+                    setTeamName(team.name)
+                    // 팀 사진도 team.logo에서 로드
+                    if (team.logo) {
+                      setTeamPhoto(team.logo)
+                    }
+                  }
+                  setShowTeamSettingsModal(true)
+                }}
               >
                 <Settings className="mr-2 h-5 w-5" />
                 팀 설정
@@ -760,10 +800,36 @@ export default function TeamDetailPage() {
                   className="w-full font-semibold"
                   size="lg"
                   onClick={() => {
+                    // localStorage에 개별 저장 (홈 페이지 호환성)
                     localStorage.setItem('teamName', teamName)
                     if (teamPhoto) {
                       localStorage.setItem('teamPhoto', teamPhoto)
                     }
+
+                    // teamup_app_data에도 팀 정보 업데이트 (이름과 사진 모두)
+                    const appDataStr = localStorage.getItem('teamup_app_data')
+                    if (appDataStr) {
+                      const appData = JSON.parse(appDataStr)
+                      const teamIndex = appData.teams?.findIndex((t: Team) => t.id === teamId)
+                      if (teamIndex !== -1 && appData.teams) {
+                        appData.teams[teamIndex] = {
+                          ...appData.teams[teamIndex],
+                          name: teamName,
+                          logo: teamPhoto || appData.teams[teamIndex].logo
+                        }
+                        localStorage.setItem('teamup_app_data', JSON.stringify(appData))
+                      }
+                    }
+
+                    // 현재 페이지의 team 상태도 업데이트 (이름과 사진 모두)
+                    if (team) {
+                      setTeam({
+                        ...team,
+                        name: teamName,
+                        logo: teamPhoto || team.logo
+                      })
+                    }
+
                     toast.success('팀 설정이 저장되었습니다!')
                     setShowTeamSettingsModal(false)
                   }}

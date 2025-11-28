@@ -170,9 +170,13 @@ export const formatTimeAgo = (dateString: string): string => {
 
 // Mock 데이터 초기화 (개발용)
 export const initMockData = (): void => {
+  // 기존 팀 데이터 보존 (이름, 사진 등)
+  const existingData = getAppData()
+  const existingTeam = existingData?.teams?.find((t) => t.id === '1')
+
   const mockTeam: Team = {
     id: '1',
-    name: '세종 born',
+    name: existingTeam?.name || '세종 born',
     shortName: 'SB',
     memberCount: 5,
     maxMembers: 5,
@@ -184,6 +188,7 @@ export const initMockData = (): void => {
     isOfficial: true,
     captainId: 'user1',
     description: '주말 오후에 활동하는 친목 위주 팀입니다.',
+    logo: existingTeam?.logo, // 기존 사진 보존
   }
 
   // 매칭 페이지에 표시될 다른 팀들

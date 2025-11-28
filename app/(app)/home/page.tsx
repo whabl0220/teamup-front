@@ -43,18 +43,23 @@ export default function HomePage() {
     // 임시: 항상 초기화 (매칭 요청 3개 보기 위해)
     initMockData()
 
-    // localStorage에서 팀 정보 로드
-    const savedName = localStorage.getItem('teamName')
-    const savedPhoto = localStorage.getItem('teamPhoto')
-    if (savedName) setTeamName(savedName)
-    if (savedPhoto) setTeamPhoto(savedPhoto)
-
-    // 팀 ID 로드
+    // teamup_app_data에서 팀 정보 로드
     const appDataStr = localStorage.getItem('teamup_app_data')
     if (appDataStr) {
       const appData = JSON.parse(appDataStr)
       const currentTeamId = appData.user?.currentTeamId
-      if (currentTeamId) setTeamId(currentTeamId)
+      if (currentTeamId) {
+        setTeamId(currentTeamId)
+
+        // 현재 팀의 정보를 가져와서 이름과 사진 설정
+        const currentTeam = appData.teams?.find((t: any) => t.id === currentTeamId)
+        if (currentTeam) {
+          setTeamName(currentTeam.name)
+          if (currentTeam.logo) {
+            setTeamPhoto(currentTeam.logo)
+          }
+        }
+      }
     }
 
     // 매칭 요청 로드
