@@ -1,11 +1,13 @@
 'use client'
 
+import { useState } from 'react'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Users, MessageCircle, UserPlus, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
+import { getCurrentTeam, getAppData } from '@/lib/storage'
 
 const nearbyTeams = [
   { name: '세종 born_9', date: '5월 11일', time: '오후 6시', location: '광진구 능동로', level: 'A', isOfficial: true, members: 5, maxMembers: 5 },
@@ -20,6 +22,38 @@ const nearbyCourts = [
 ]
 
 export default function MapPage() {
+  const [showMatchModal, setShowMatchModal] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<{ name: string; level: string; location: string } | null>(null)
+
+  // 팀장 권한 체크 (초기 상태 계산)
+  const [isTeamLeader] = useState(() => {
+    const currentTeam = getCurrentTeam()
+    const appData = getAppData()
+    if (currentTeam && appData.user) {
+      return currentTeam.captainId === appData.user.id
+    }
+    return false
+  })
+
+  const handleMatchRequest = (team: typeof nearbyTeams[0]) => {
+    if (!isTeamLeader) {
+      alert('팀장만 매칭 요청을 보낼 수 있습니다.')
+      return
+    }
+    setSelectedTeam(team)
+    setShowMatchModal(true)
+  }
+
+  const confirmMatchRequest = () => {
+    setShowMatchModal(false)
+    alert(`${selectedTeam?.name}에 매칭 요청을 보냈습니다!`)
+    // TODO: 실제 매칭 요청 로직 구현
+  }
+
+  const handleJoinTeam = (teamName: string) => {
+    alert(`${teamName}에 참여 신청을 보냈습니다!`)
+    // TODO: 실제 팀 참여 로직 구현
+  }
   return (
     <>
       <div className="min-h-screen bg-background pb-20">
@@ -108,17 +142,27 @@ export default function MapPage() {
                           <p><span className="text-muted-foreground">장소:</span> {team.location}</p>
                         </div>
 
-                        {team.isOfficial ? (
-                          <Button className="w-full font-semibold mt-3">
-                            <MessageCircle className="mr-2 h-4 w-4" />
-                            매칭하기
-                          </Button>
-                        ) : (
-                          <Button className="w-full font-semibold mt-3 bg-[#181B1F] hover:bg-[#181B1F]/90 text-white">
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            팀 참여하기
-                          </Button>
-                        )}
+                        <div className="flex flex-col gap-2 mt-3">
+                          {team.isOfficial ? (
+                            <Button
+                              className="w-full font-semibold bg-[#181B1F] text-white hover:bg-[#FF6F1C] hover:text-black transition-colors"
+                              onClick={() => handleMatchRequest(team)}
+                            >
+                              매칭하기
+                            </Button>
+                          ) : (
+                            <Button
+                              className="w-full font-semibold bg-[#181B1F] hover:bg-[#181B1F]/90 text-white"
+                              onClick={() => handleJoinTeam(team.name)}
+                            >
+                              <UserPlus className="mr-2 h-4 w-4" />
+                              팀 참여하기
+                            </Button>
+                          )}
+                          <Link href={`/team/${team.name}`} className="w-full">
+                            <Button variant="default" className="w-full">상세 보기</Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -131,6 +175,48 @@ export default function MapPage() {
 
       <BottomNav />
     </div>
+
+    {/* 매칭 요청 모달 */}
+    {showMatchModal && selectedTeam && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+        <Card className="w-full max-w-sm border-border/50 bg-card">
+          <CardContent className="p-6">
+            <h3 className="mb-4 text-xl font-bold text-foreground">매칭 요청</h3>
+
+            <div className="mb-4 rounded-lg bg-secondary/30 p-4">
+              <div className="mb-2 flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                <h4 className="font-bold text-foreground">{selectedTeam.name}</h4>
+              </div>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p>레벨: {selectedTeam.level}</p>
+                <p>장소: {selectedTeam.location}</p>
+              </div>
+            </div>
+
+            <p className="mb-4 text-sm text-muted-foreground">
+              이 팀에 매칭 요청을 보내시겠습니까?
+            </p>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowMatchModal(false)}
+              >
+                취소
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={confirmMatchRequest}
+              >
+                요청 보내기
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )}
     </>
   )
 }

@@ -36,7 +36,7 @@ export function TeamCard({ team, actionButton, showMatchScore = true }: TeamCard
                   레벨 {team.level}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  {team.memberCount}/{team.maxMembers}명
+                  {team.memberCount}명
                 </span>
               </div>
             </div>
@@ -55,13 +55,18 @@ export function TeamCard({ team, actionButton, showMatchScore = true }: TeamCard
           <span className="text-foreground">{team.region}</span>
         </div>
         <p className="mb-3 text-sm text-muted-foreground">{team.description}</p>
-        <Button
-          variant={actionButton.variant || 'outline'}
-          className="w-full"
-          onClick={actionButton.onClick}
-        >
-          {actionButton.label}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            variant={actionButton.variant || 'outline'}
+            className="w-full"
+            onClick={actionButton.onClick}
+          >
+            {actionButton.label}
+          </Button>
+          <a href={`/team/${team.id}`} className="w-full">
+            <Button variant="default" className="w-full">상세 보기</Button>
+          </a>
+        </div>
       </CardContent>
     </Card>
   )

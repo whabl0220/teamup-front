@@ -32,7 +32,8 @@ export default function MyPage() {
     name: '유혁상',
     email: 'yhs@teamup.com',
     avatar: null, // 실제로는 이미지 URL
-    team: '코스모스 팀',
+    team: '세종 born',
+    teamId: '1', // 실제 팀 id로 교체 필요
     joinDate: '2025년 1월',
   }
 
@@ -80,7 +81,7 @@ export default function MyPage() {
                 <h2 className="mb-1 text-xl font-bold text-foreground">{user.name}</h2>
                 <p className="mb-2 text-sm text-muted-foreground">{user.email}</p>
                 {user.team && (
-                  <Link href="/team">
+                  <Link href={`/team/${user.teamId}`}>
                     <Badge
                       variant="secondary"
                       className="cursor-pointer text-xs transition-colors hover:bg-primary/10 hover:text-primary"
@@ -100,7 +101,7 @@ export default function MyPage() {
             {user.team && (
               <>
                 <Separator className="my-4" />
-                <Link href="/team">
+                <Link href={`/team/${user.teamId}`}>
                   <Button
                     variant="outline"
                     size="sm"

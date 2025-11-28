@@ -1,6 +1,6 @@
 import type { Team } from '@/types'
 
-// 모집 중인 팀 (팀원 모집)
+// 모집 중인 팀 (팀원 모집 - 5명 미만)
 export const mockJoinTeams: Team[] = [
   {
     id: '3',
@@ -10,7 +10,7 @@ export const mockJoinTeams: Team[] = [
     level: 'A+',
     matchScore: 92,
     memberCount: 4,
-    maxMembers: 5,
+    maxMembers: 10,
     isOfficial: false,
     captainId: 'user3',
     description: '1명 모집 중! 가드 포지션 우대합니다.',
@@ -26,7 +26,7 @@ export const mockJoinTeams: Team[] = [
     level: 'B+',
     matchScore: 88,
     memberCount: 3,
-    maxMembers: 5,
+    maxMembers: 10,
     isOfficial: false,
     captainId: 'user6',
     description: '2명 모집 중! 평일 저녁에 활동합니다.',
@@ -41,8 +41,8 @@ export const mockJoinTeams: Team[] = [
     region: '용산구 이촌',
     level: 'A',
     matchScore: 85,
-    memberCount: 4,
-    maxMembers: 5,
+    memberCount: 2,
+    maxMembers: 10,
     isOfficial: false,
     captainId: 'user7',
     description: '포워드 포지션 모집 중입니다!',
@@ -57,8 +57,8 @@ export const mockJoinTeams: Team[] = [
     region: '성북구 정릉',
     level: 'B',
     matchScore: 82,
-    memberCount: 3,
-    maxMembers: 5,
+    memberCount: 4,
+    maxMembers: 10,
     isOfficial: false,
     captainId: 'user8',
     description: '초보 환영! 편하게 농구 즐기실 분 모집합니다.',
@@ -68,7 +68,7 @@ export const mockJoinTeams: Team[] = [
   },
 ]
 
-// 정식 팀 (매칭용)
+// 정식 팀 (매칭용 - 5명 이상)
 export const mockMatchTeams: Team[] = [
   {
     id: '2',
@@ -77,8 +77,8 @@ export const mockMatchTeams: Team[] = [
     region: '광진구 능동',
     level: 'A',
     matchScore: 95,
-    memberCount: 5,
-    maxMembers: 5,
+    memberCount: 7,
+    maxMembers: 10,
     isOfficial: true,
     captainId: 'user2',
     description: '주말 오후에 활동하는 친목 위주 팀입니다.',
@@ -93,8 +93,8 @@ export const mockMatchTeams: Team[] = [
     region: '관악구 신림',
     level: 'B+',
     matchScore: 88,
-    memberCount: 5,
-    maxMembers: 5,
+    memberCount: 6,
+    maxMembers: 10,
     isOfficial: true,
     captainId: 'user4',
     description: '주 2회 정기 경기를 진행합니다.',
@@ -109,8 +109,8 @@ export const mockMatchTeams: Team[] = [
     region: '송파구 잠실',
     level: 'A',
     matchScore: 90,
-    memberCount: 5,
-    maxMembers: 5,
+    memberCount: 8,
+    maxMembers: 10,
     isOfficial: true,
     captainId: 'user5',
     description: '잠실 코트에서 주로 활동합니다.',
@@ -126,7 +126,7 @@ export const mockMatchTeams: Team[] = [
     level: 'A+',
     matchScore: 93,
     memberCount: 5,
-    maxMembers: 5,
+    maxMembers: 10,
     isOfficial: true,
     captainId: 'user9',
     description: '실력 향상을 목표로 하는 팀입니다.',
@@ -141,8 +141,8 @@ export const mockMatchTeams: Team[] = [
     region: '서초구 방배',
     level: 'A',
     matchScore: 87,
-    memberCount: 5,
-    maxMembers: 5,
+    memberCount: 9,
+    maxMembers: 10,
     isOfficial: true,
     captainId: 'user10',
     description: '주말 위주로 활동하는 팀입니다.',
@@ -157,8 +157,8 @@ export const mockMyTeam: Team = {
   id: '1',
   name: '세종 born',
   shortName: 'SB',
-  memberCount: 5,
-  maxMembers: 5,
+  memberCount: 6,
+  maxMembers: 10,
   level: 'A',
   region: '광진구 능동',
   totalGames: 18,

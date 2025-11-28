@@ -8,10 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles, MessageCircle, Plus, Search } from 'lucide-react'
-import { toast } from 'sonner'
-import { getReceivedMatchRequests, getLatestMatchRequest, formatTimeAgo, initMockData, updateMatchRequestStatus } from '@/lib/storage'
+import { getReceivedMatchRequests, getLatestMatchRequest, formatTimeAgo, initMockData } from '@/lib/storage'
 import type { MatchRequest } from '@/types'
-import { MatchRequestsModal } from '@/components/shared/match-requests-modal'
 
 export default function HomePage() {
   // TODO: 실제로는 API로 팀 보유 여부 체크
@@ -21,7 +19,6 @@ export default function HomePage() {
   const [teamId, setTeamId] = useState('1') // Mock 팀 ID
 
   // 매칭 요청 관련 상태
-  const [showMatchRequestsModal, setShowMatchRequestsModal] = useState(false)
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [latestRequest, setLatestRequest] = useState<MatchRequest | null>(null)
 
@@ -272,26 +269,23 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* 최근 활동 */}
-        <div>
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            최근 활동
-          </h3>
+        {/* 최근 알림 */}
+        {latestRequest && (
+          <div>
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              최근 알림
+            </h3>
 
-          <div className="space-y-2">
-            {latestRequest ? (
-              <Card
-                className="cursor-pointer border-border/50 bg-card transition-all hover:border-primary/50"
-                onClick={() => setShowMatchRequestsModal(true)}
-              >
+            <Link href="/notifications">
+              <Card className="cursor-pointer border-primary/50 bg-primary/5 transition-all hover:border-primary">
                 <CardContent className="flex items-center gap-3 p-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
                     <MessageCircle className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <p className="text-sm font-semibold text-foreground">새로운 매칭 요청</p>
-                      <Badge variant="secondary" className="bg-primary/10 text-primary text-xs">
+                      <Badge className="bg-primary text-xs">
                         {matchRequests.length}
                       </Badge>
                     </div>
@@ -304,35 +298,12 @@ export default function HomePage() {
                   </div>
                 </CardContent>
               </Card>
-            ) : (
-              <Card className="border-border/50 bg-card">
-                <CardContent className="p-4 text-center">
-                  <p className="text-sm text-muted-foreground">최근 활동이 없습니다</p>
-                </CardContent>
-              </Card>
-            )}
+            </Link>
           </div>
-        </div>
+        )}
       </main>
 
       <BottomNav />
-
-      {/* 받은 매칭 요청 모달 */}
-      <MatchRequestsModal
-        open={showMatchRequestsModal}
-        onOpenChange={setShowMatchRequestsModal}
-        matchRequests={matchRequests}
-        onAccept={(requestId, teamName) => {
-          updateMatchRequestStatus(requestId, 'accepted')
-          toast.success(`${teamName}의 매칭 요청을 수락했습니다!`)
-          loadMatchRequests()
-        }}
-        onReject={(requestId) => {
-          updateMatchRequestStatus(requestId, 'rejected')
-          toast.success('매칭 요청을 거절했습니다')
-          loadMatchRequests()
-        }}
-      />
     </div>
   )
 }
