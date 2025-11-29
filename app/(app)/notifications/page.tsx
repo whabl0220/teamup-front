@@ -231,7 +231,7 @@ export default function NotificationsPage() {
                           수락
                         </Button>
                       </div>
-                      <Link href={`/player/user1`} className="w-full">
+                      <Link href={`/player/${request.userId}`} className="w-full">
                         <Button variant="outline" className="w-full hover:bg-blue-600! hover:text-white! hover:border-none!">상세 보기</Button>
                       </Link>
                     </div>

@@ -493,21 +493,30 @@ export const initMockData = (): void => {
   const mockJoinRequests: JoinRequest[] = [
     {
       id: 'join1',
-      userId: 'user_kim',
-      userName: '김철수',
+      userId: 'user1',
+      userName: '김세종',
       teamId: '1', // 세종 born
-      message: '농구 좋아하는 대학생입니다! 팀에 참여하고 싶습니다.',
+      message: '빠른 돌파와 패스가 장점인 세종대 농구 동호회 팀장입니다.',
       status: 'pending',
       createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1시간 전
     },
     {
       id: 'join2',
-      userId: 'user_lee',
-      userName: '이영희',
+      userId: 'user2',
+      userName: '이광진',
       teamId: '1', // 세종 born
-      message: '주말에 시간 많아요. 같이 농구 하고 싶습니다!',
+      message: '높은 점프력과 리바운드 능력이 뛰어납니다.',
       status: 'pending',
       createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4시간 전
+    },
+    {
+      id: 'join3',
+      userId: 'user3',
+      userName: '박강남',
+      teamId: '1', // 세종 born
+      message: '팀의 골밑을 책임지는 든든한 센터.',
+      status: 'pending',
+      createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6시간 전
     },
   ]
 
