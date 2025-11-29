@@ -5,14 +5,61 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Users, MessageCircle, UserPlus, ChevronRight } from 'lucide-react'
+import { MapPin, Users, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { getCurrentTeam, getAppData } from '@/lib/storage'
+import { TeamCard } from '@/components/shared/team-card'
+import type { Team } from '@/types'
 
-const nearbyTeams = [
-  { name: '세종 born_9', date: '5월 11일', time: '오후 6시', location: '광진구 능동로', level: 'A', isOfficial: true, members: 5, maxMembers: 5 },
-  { name: '세종 born_10', date: '5월 12일', time: '오후 7시', location: '광진구 능동로', level: 'A+', isOfficial: false, members: 3, maxMembers: 5 },
-  { name: '세종 born_11', date: '5월 13일', time: '오후 8시', location: '광진구 능동로', level: 'A-', isOfficial: true, members: 5, maxMembers: 5 },
+const nearbyTeams: Team[] = [
+  {
+    id: '6',
+    name: '관악 Thunders',
+    shortName: 'GT',
+    level: 'A',
+    region: '광진구 능동로',
+    memberCount: 5,
+    maxMembers: 10,
+    isOfficial: true,
+    description: '주말 오후에 활동하는 친목 위주 팀입니다',
+    matchScore: 95,
+    captainId: 'captain_6',
+    totalGames: 20,
+    aiReports: 15,
+    activeDays: 60
+  },
+  {
+    id: '7',
+    name: '강남 Warriors',
+    shortName: 'GW',
+    level: 'A+',
+    region: '광진구 능동로',
+    memberCount: 3,
+    maxMembers: 10,
+    isOfficial: false,
+    description: '경쟁적인 플레이를 추구하는 팀',
+    matchScore: 88,
+    captainId: 'captain_7',
+    totalGames: 15,
+    aiReports: 10,
+    activeDays: 45
+  },
+  {
+    id: '8',
+    name: '송파 Dragons',
+    shortName: 'SD',
+    level: 'A',
+    region: '광진구 능동로',
+    memberCount: 5,
+    maxMembers: 10,
+    isOfficial: true,
+    description: '승부욕 강한 경쟁 중심 팀',
+    matchScore: 92,
+    captainId: 'captain_8',
+    totalGames: 25,
+    aiReports: 18,
+    activeDays: 75
+  },
 ]
 
 const nearbyCourts = [
@@ -23,7 +70,7 @@ const nearbyCourts = [
 
 export default function MapPage() {
   const [showMatchModal, setShowMatchModal] = useState(false)
-  const [selectedTeam, setSelectedTeam] = useState<{ name: string; level: string; location: string } | null>(null)
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
   // 팀장 권한 체크 (초기 상태 계산)
   const [isTeamLeader] = useState(() => {
@@ -35,7 +82,7 @@ export default function MapPage() {
     return false
   })
 
-  const handleMatchRequest = (team: typeof nearbyTeams[0]) => {
+  const handleMatchRequest = (team: Team) => {
     if (!isTeamLeader) {
       alert('팀장만 매칭 요청을 보낼 수 있습니다.')
       return
@@ -50,8 +97,8 @@ export default function MapPage() {
     // TODO: 실제 매칭 요청 로직 구현
   }
 
-  const handleJoinTeam = (teamName: string) => {
-    alert(`${teamName}에 참여 신청을 보냈습니다!`)
+  const handleJoinRequest = (team: Team) => {
+    alert(`${team.name}에 참여 신청을 보냈습니다!`)
     // TODO: 실제 팀 참여 로직 구현
   }
   return (
@@ -116,57 +163,16 @@ export default function MapPage() {
             </div>
 
             <div className="space-y-3">
-              {nearbyTeams.slice(0, 1).map((team, index) => (
-                <Card key={index} className="border-border/50 bg-card">
-                  <CardContent className="p-4">
-                    <div className="flex gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#181B1F]">
-                        <Users className="h-6 w-6 text-primary" />
-                      </div>
-
-                      <div className="flex-1">
-                        <h3 className="font-bold text-foreground">{team.name}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="secondary" className="text-xs">레벨 {team.level}</Badge>
-                          {team.isOfficial ? (
-                            <Badge className="bg-primary/10 text-xs text-primary">정식 팀</Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-xs">
-                              모집 중 {team.members}/{team.maxMembers}
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="mt-2 rounded-lg bg-secondary/30 p-2 text-sm space-y-1">
-                          <p><span className="text-muted-foreground">일정:</span> {team.date} {team.time}</p>
-                          <p><span className="text-muted-foreground">장소:</span> {team.location}</p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 mt-3">
-                          {team.isOfficial ? (
-                            <Button
-                              className="w-full font-semibold bg-[#181B1F] text-white hover:bg-[#FF6F1C] hover:text-black transition-colors"
-                              onClick={() => handleMatchRequest(team)}
-                            >
-                              매칭하기
-                            </Button>
-                          ) : (
-                            <Button
-                              className="w-full font-semibold bg-[#181B1F] hover:bg-[#181B1F]/90 text-white"
-                              onClick={() => handleJoinTeam(team.name)}
-                            >
-                              <UserPlus className="mr-2 h-4 w-4" />
-                              팀 참여하기
-                            </Button>
-                          )}
-                          <Link href={`/team/${team.name}`} className="w-full">
-                            <Button variant="default" className="w-full">상세 보기</Button>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+              {nearbyTeams.slice(0, 1).map((team) => (
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  actionButton={{
+                    label: team.isOfficial ? '매칭하기' : '참여하기',
+                    onClick: () => team.isOfficial ? handleMatchRequest(team) : handleJoinRequest(team),
+                    variant: 'outline'
+                  }}
+                />
               ))}
             </div>
           </div>
@@ -190,7 +196,7 @@ export default function MapPage() {
               </div>
               <div className="space-y-1 text-sm text-muted-foreground">
                 <p>레벨: {selectedTeam.level}</p>
-                <p>장소: {selectedTeam.location}</p>
+                <p>지역: {selectedTeam.region}</p>
               </div>
             </div>
 

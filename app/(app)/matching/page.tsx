@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -8,7 +8,7 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Users, Sparkles } from 'lucide-react'
+import { Users, Sparkles, Plus } from 'lucide-react'
 import type { Team } from '@/types'
 import { TeamCard } from '@/components/shared/team-card'
 import { mockJoinTeams, mockMatchTeams } from '@/lib/mock-data'
@@ -19,15 +19,32 @@ export default function MatchingPage() {
   const [showMatchModal, setShowMatchModal] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
-  // 팀장 권한 및 정식 팀 체크 (초기 상태 계산)
-  const [isTeamLeader, currentTeam] = useState(() => {
+  // 현재 팀 정보
+  const [teamName, setTeamName] = useState('세종 born')
+  const [teamPhoto, setTeamPhoto] = useState('')
+  const [teamId, setTeamId] = useState('1')
+
+  // 팀장 권한 및 정식 팀 체크
+  const [isTeamLeader, setIsTeamLeader] = useState(false)
+  const [currentTeam, setCurrentTeam] = useState<Team | null>(null)
+
+  useEffect(() => {
     const team = getCurrentTeam()
     const appData = getAppData()
-    if (team && appData.user) {
-      return [team.captainId === appData.user.id, team] as const
+
+    if (team) {
+      setCurrentTeam(team)
+      setTeamName(team.name)
+      setTeamId(team.id)
+      if (team.logo) {
+        setTeamPhoto(team.logo)
+      }
+
+      if (appData.user) {
+        setIsTeamLeader(team.captainId === appData.user.id)
+      }
     }
-    return [false, null] as const
-  })
+  }, [])
 
   // 팀 분류
   const joinTeams = mockJoinTeams // 모집 중
@@ -72,6 +89,76 @@ export default function MatchingPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
+        {/* 내 팀 섹션 */}
+        <div className="mb-6">
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            내 팀
+          </h3>
+
+          <Link href={`/team/${teamId}`}>
+            <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
+              <CardContent className="p-0">
+                <div className="flex items-center gap-4 p-4">
+                  {teamPhoto ? (
+                    <img src={teamPhoto} alt="Team" className="h-16 w-16 rounded-2xl object-cover" />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
+                      {teamName.substring(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="mb-1 font-bold text-foreground">{teamName}</h3>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm text-muted-foreground">팀원 {currentTeam?.memberCount || 5}명</p>
+                      <Badge variant="secondary" className="text-xs">레벨 {currentTeam?.level || 'A'}</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-px border-t border-border/50 bg-border/50">
+                  <div className="bg-card p-3 text-center">
+                    <p className="text-lg font-bold text-foreground">{currentTeam?.totalGames || 18}</p>
+                    <p className="text-xs text-muted-foreground">총 경기</p>
+                  </div>
+                  <div className="bg-card p-3 text-center">
+                    <p className="text-lg font-bold text-foreground">{currentTeam?.aiReports || 14}</p>
+                    <p className="text-xs text-muted-foreground">AI 리포트</p>
+                  </div>
+                  <div className="bg-card p-3 text-center">
+                    <p className="text-lg font-bold text-foreground">{currentTeam?.activeDays || 45}일</p>
+                    <p className="text-xs text-muted-foreground">활동</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* 팀 생성 */}
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            팀 생성
+          </h3>
+
+          <Link href="/team/create">
+            <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
+                    <Plus className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="mb-1 font-bold text-foreground">팀 생성하기</h4>
+                    <p className="text-xs text-muted-foreground">
+                      새로운 팀을 만들고 팀원을 모집하세요
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
         {/* AI 추천 안내 */}
         <div className="mb-4 flex items-center gap-2 rounded-xl bg-primary/10 p-4">
           <Sparkles className="h-5 w-5 text-primary" />

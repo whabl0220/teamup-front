@@ -7,7 +7,7 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, MessageCircle, Plus, Search } from 'lucide-react'
+import { Sparkles, MessageCircle, MapPin, Bell, Users } from 'lucide-react'
 import { getReceivedMatchRequests, getLatestMatchRequest, formatTimeAgo, initMockData } from '@/lib/storage'
 import type { MatchRequest } from '@/types'
 
@@ -15,8 +15,6 @@ export default function HomePage() {
   // TODO: 실제로는 API로 팀 보유 여부 체크
   const [hasTeam, setHasTeam] = useState(true) // Mock: 팀 있음 상태로 시작
   const [teamName, setTeamName] = useState('세종 born')
-  const [teamPhoto, setTeamPhoto] = useState('')
-  const [teamId, setTeamId] = useState('1') // Mock 팀 ID
 
   // 매칭 요청 관련 상태
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
@@ -39,25 +37,6 @@ export default function HomePage() {
 
     // 임시: 항상 초기화 (매칭 요청 3개 보기 위해)
     initMockData()
-
-    // teamup_app_data에서 팀 정보 로드
-    const appDataStr = localStorage.getItem('teamup_app_data')
-    if (appDataStr) {
-      const appData = JSON.parse(appDataStr)
-      const currentTeamId = appData.user?.currentTeamId
-      if (currentTeamId) {
-        setTeamId(currentTeamId)
-
-        // 현재 팀의 정보를 가져와서 이름과 사진 설정
-        const currentTeam = appData.teams?.find((t: any) => t.id === currentTeamId)
-        if (currentTeam) {
-          setTeamName(currentTeam.name)
-          if (currentTeam.logo) {
-            setTeamPhoto(currentTeam.logo)
-          }
-        }
-      }
-    }
 
     // 매칭 요청 로드
     loadMatchRequests()
@@ -98,14 +77,8 @@ export default function HomePage() {
             <div className="flex w-full max-w-sm flex-col gap-3">
               <Link href="/matching" className="w-full">
                 <Button className="w-full font-semibold" size="lg">
-                  <Search className="mr-2 h-5 w-5" />
-                  팀 찾기
-                </Button>
-              </Link>
-              <Link href="/team/create" className="w-full">
-                <Button variant="outline" className="w-full font-semibold" size="lg">
-                  <Plus className="mr-2 h-5 w-5" />
-                  팀 생성하기
+                  <Users className="mr-2 h-5 w-5" />
+                  팀 매칭 바로가기
                 </Button>
               </Link>
             </div>
@@ -140,69 +113,24 @@ export default function HomePage() {
 
       <main className="mx-auto max-w-lg px-4 py-6">
 
-        {/* 내 팀 섹션 */}
-        <div className="mb-6">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            내 팀
-          </h3>
-
-          <Link href={`/team/${teamId}`}>
-            <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
-              <CardContent className="p-0">
-                <div className="flex items-center gap-4 p-4">
-                  {teamPhoto ? (
-                    <img src={teamPhoto} alt="Team" className="h-16 w-16 rounded-2xl object-cover" />
-                  ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
-                      SB
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="mb-1 font-bold text-foreground">{teamName}</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">팀원 5명</p>
-                      <Badge variant="secondary" className="text-xs">레벨 A</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-px border-t border-border/50 bg-border/50">
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">18</p>
-                    <p className="text-xs text-muted-foreground">총 경기</p>
-                  </div>
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">14</p>
-                    <p className="text-xs text-muted-foreground">AI 리포트</p>
-                  </div>
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">45일</p>
-                    <p className="text-xs text-muted-foreground">활동</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        {/* 팀 검색 */}
+        {/* 주요 기능 설명 카드 */}
         <div className="mb-6">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            팀 찾기
+            주요 기능
           </h3>
 
-          <div className="space-y-3">
+          <div className="grid gap-3">
             <Link href="/matching">
               <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
-                      <Search className="h-6 w-6 text-primary" />
+                      <Users className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="mb-1 font-bold text-foreground">팀 찾기</h4>
+                      <h4 className="mb-1 font-bold text-foreground">팀 매칭</h4>
                       <p className="text-xs text-muted-foreground">
-                        AI 추천 팀을 확인하고 매칭하세요
+                        내 팀 관리, 팀 찾기, AI 추천 매칭
                       </p>
                     </div>
                   </div>
@@ -210,17 +138,35 @@ export default function HomePage() {
               </Card>
             </Link>
 
-            <Link href="/team/create">
-              <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
+            <Link href="/map">
+              <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
-                      <Plus className="h-6 w-6 text-muted-foreground" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+                      <MapPin className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="mb-1 font-bold text-foreground">팀 생성하기</h4>
+                      <h4 className="mb-1 font-bold text-foreground">지도</h4>
                       <p className="text-xs text-muted-foreground">
-                        새로운 팀을 만들고 팀원을 모집하세요
+                        주변 팀과 농구장 찾기
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/notifications">
+              <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+                      <Bell className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="mb-1 font-bold text-foreground">알림</h4>
+                      <p className="text-xs text-muted-foreground">
+                        매칭 요청 및 알림 확인
                       </p>
                     </div>
                   </div>
