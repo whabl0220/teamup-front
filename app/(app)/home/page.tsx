@@ -178,41 +178,30 @@ export default function HomePage() {
 
         {/* 최근 AI 코칭 */}
         <div className="mb-6">
-          <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h3 className="font-bold text-foreground">최근 AI 코칭</h3>
-          </div>
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            최근 AI 코칭
+          </h3>
 
-          <Card className="border-border/50 bg-card">
-            <CardContent className="p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-foreground">8월 10일 경기 분석</p>
-                  <p className="text-xs text-muted-foreground">{teamName} vs 서울 Tigers</p>
+          <Link href="/coaching">
+            <Card className="cursor-pointer border-primary/50 bg-primary/5 transition-all hover:border-primary">
+              <CardContent className="flex items-center gap-3 p-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20">
+                  <Sparkles className="h-5 w-5 text-primary" />
                 </div>
-                <Badge className="bg-primary/10 text-primary">승리</Badge>
-              </div>
-
-              <div className="mb-3 space-y-2">
-                <div className="rounded-lg bg-primary/5 p-3">
-                  <p className="text-sm text-foreground">
-                    <span className="font-semibold text-primary">강점:</span> 팀워크가 우수하며 빠른 공격 전환이 돋보였습니다.
+                <div className="flex-1">
+                  <div className="mb-1 flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground">8월 10일 경기 분석</p>
+                    <Badge className="bg-primary text-xs">
+                      4
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {teamName} vs 서울 Tigers - 팀워크가 우수하며 빠른 공격 전환이 돋보였습니다
                   </p>
                 </div>
-                <div className="rounded-lg bg-secondary/30 p-3">
-                  <p className="text-sm text-foreground">
-                    <span className="font-semibold text-muted-foreground">개선점:</span> 수비 리바운드 강화가 필요합니다.
-                  </p>
-                </div>
-              </div>
-
-              <Link href="/coaching">
-                <Button variant="outline" size="sm" className="w-full">
-                  전체 코칭 보기
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* 최근 알림 */}
