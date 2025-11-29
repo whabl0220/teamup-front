@@ -35,6 +35,8 @@ export default function TeamDetailPage() {
   const [showTeamSettingsModal, setShowTeamSettingsModal] = useState(false)
   const [showLeaveTeamModal, setShowLeaveTeamModal] = useState(false)
   const [showJoinRequestModal, setShowJoinRequestModal] = useState(false)
+  const [showTransferLeaderModal, setShowTransferLeaderModal] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<typeof mockTeamMembers[0] | null>(null)
   const [teamName, setTeamName] = useState('')
   const [teamPhoto, setTeamPhoto] = useState('')
 
@@ -178,6 +180,28 @@ export default function TeamDetailPage() {
     // TODO: 실제 API 연동
     setShowJoinRequestModal(false)
     toast.success('팀 참여 요청을 보냈습니다!')
+  }
+
+  const handleTransferLeader = (member: typeof mockTeamMembers[0]) => {
+    setSelectedMember(member)
+    setShowTransferLeaderModal(true)
+  }
+
+  const confirmTransferLeader = () => {
+    // TODO: 실제 API 연동
+    setShowTransferLeaderModal(false)
+    toast.success(`${selectedMember?.name}님에게 팀장을 위임했습니다!`)
+
+    // 팀원 목록에서 팀장 변경
+    setTeamMembers(prev =>
+      prev.map(m => ({
+        ...m,
+        isLeader: m.kakaoId === selectedMember?.kakaoId
+      }))
+    )
+
+    // 내가 더 이상 팀장이 아니므로 팀장 권한 제거
+    setIsTeamLeader(false)
   }
 
   if (loading) {
@@ -324,9 +348,22 @@ export default function TeamDetailPage() {
                         <p className="text-xs text-muted-foreground">{member.position}</p>
                       </div>
                     </div>
-                    {member.isLeader && (
-                      <Badge variant="secondary" className="text-xs">팀장</Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {member.isLeader && (
+                        <Badge variant="secondary" className="text-xs">팀장</Badge>
+                      )}
+                      {/* 팀장만 다른 팀원에게 팀장 위임 가능 */}
+                      {isTeamLeader && !member.isLeader && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs"
+                          onClick={() => handleTransferLeader(member)}
+                        >
+                          팀장 위임
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   {/* 카카오톡 ID - 팀 멤버만 볼 수 있음 */}
@@ -835,6 +872,39 @@ export default function TeamDetailPage() {
                   }}
                 >
                   변경사항 저장
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Transfer Leader Modal */}
+      {showTransferLeaderModal && selectedMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+          <Card className="w-full max-w-sm border-border/50 bg-card">
+            <CardContent className="p-6">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <Crown className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-foreground">팀장 위임</h3>
+              <p className="mb-6 text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{selectedMember.name}</span>님에게 팀장을 위임하시겠습니까?<br />
+                <span className="font-semibold text-primary">위임 후에는 되돌릴 수 없습니다.</span>
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowTransferLeaderModal(false)}
+                >
+                  취소
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={confirmTransferLeader}
+                >
+                  위임하기
                 </Button>
               </div>
             </CardContent>

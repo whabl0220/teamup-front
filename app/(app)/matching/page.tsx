@@ -19,14 +19,14 @@ export default function MatchingPage() {
   const [showMatchModal, setShowMatchModal] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
 
-  // 팀장 권한 체크 (초기 상태 계산)
-  const [isTeamLeader] = useState(() => {
-    const currentTeam = getCurrentTeam()
+  // 팀장 권한 및 정식 팀 체크 (초기 상태 계산)
+  const [isTeamLeader, currentTeam] = useState(() => {
+    const team = getCurrentTeam()
     const appData = getAppData()
-    if (currentTeam && appData.user) {
-      return currentTeam.captainId === appData.user.id
+    if (team && appData.user) {
+      return [team.captainId === appData.user.id, team] as const
     }
-    return false
+    return [false, null] as const
   })
 
   // 팀 분류
@@ -36,6 +36,10 @@ export default function MatchingPage() {
   const handleMatchRequest = (team: Team) => {
     if (!isTeamLeader) {
       alert('팀장만 매칭 요청을 보낼 수 있습니다.')
+      return
+    }
+    if (!currentTeam?.isOfficial) {
+      alert('정식 팀(5명 이상)만 매칭 요청을 보낼 수 있습니다.')
       return
     }
     setSelectedTeam(team)
