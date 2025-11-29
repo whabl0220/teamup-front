@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import {
-  User,
+  User as UserIcon,
   Lock,
   Bell,
   FileText,
@@ -21,21 +21,18 @@ import {
   LogOut,
   Trash2,
   ChevronRight,
+  Edit,
 } from 'lucide-react'
+import { getCurrentUser, getCurrentTeam } from '@/lib/storage'
+import { PlayerCard } from '@/components/shared/PlayerCard'
 
 export default function MyPage() {
   const router = useRouter()
   const [notifications, setNotifications] = useState(true)
 
-  // Mock 사용자 데이터
-  const user = {
-    name: '유혁상',
-    email: 'yhs@teamup.com',
-    avatar: null, // 실제로는 이미지 URL
-    team: '세종 born',
-    teamId: '1', // 실제 팀 id로 교체 필요
-    joinDate: '2025년 1월',
-  }
+  // 사용자 및 팀 데이터 가져오기
+  const user = getCurrentUser()
+  const currentTeam = getCurrentTeam()
 
   const handleLogout = () => {
     // TODO: 실제 로그아웃 로직
@@ -48,6 +45,14 @@ export default function MyPage() {
     if (confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
       router.push('/')
     }
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-muted-foreground">로그인이 필요합니다.</p>
+      </div>
+    )
   }
 
   return (
@@ -67,6 +72,22 @@ export default function MyPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
+        {/* 플레이어 카드 */}
+        <div className="mb-6">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              나의 플레이어 카드
+            </h2>
+            <Link href="/profile/edit">
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Edit className="h-4 w-4" />
+                수정
+              </Button>
+            </Link>
+          </div>
+          <PlayerCard user={user} className="mx-auto max-w-sm" />
+        </div>
+
         {/* 프로필 카드 */}
         <Card className="mb-6 border-border/50 bg-card">
           <CardContent className="p-6">
@@ -80,28 +101,23 @@ export default function MyPage() {
               <div className="flex-1">
                 <h2 className="mb-1 text-xl font-bold text-foreground">{user.name}</h2>
                 <p className="mb-2 text-sm text-muted-foreground">{user.email}</p>
-                {user.team && (
-                  <Link href={`/team/${user.teamId}`}>
+                {currentTeam && (
+                  <Link href={`/team/${user.currentTeamId}`}>
                     <Badge
                       variant="secondary"
                       className="cursor-pointer text-xs transition-colors hover:bg-primary/10 hover:text-primary"
                     >
-                      {user.team}
+                      {currentTeam.name}
                       <ChevronRight className="ml-1 h-3 w-3" />
                     </Badge>
                   </Link>
                 )}
               </div>
             </div>
-            <Separator className="my-4" />
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">가입일</span>
-              <span className="font-medium text-foreground">{user.joinDate}</span>
-            </div>
-            {user.team && (
+            {currentTeam && (
               <>
                 <Separator className="my-4" />
-                <Link href={`/team/${user.teamId}`}>
+                <Link href={`/team/${user.currentTeamId}`}>
                   <Button
                     variant="outline"
                     size="sm"
@@ -127,7 +143,7 @@ export default function MyPage() {
                 <button className="flex w-full items-center justify-between p-4 transition-colors hover:bg-muted/50">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                      <User className="h-5 w-5 text-primary" />
+                      <UserIcon className="h-5 w-5 text-primary" />
                     </div>
                     <span className="font-medium text-foreground">프로필 수정</span>
                   </div>

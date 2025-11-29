@@ -56,6 +56,21 @@ export interface Activity {
   icon?: string;
 }
 
+// Player Card Types (FIFA Style)
+export type Position = 'G' | 'F' | 'C'; // Guard / Forward / Center
+export type PlayStyle = 'SL' | 'SH' | 'DF' | 'PA'; // Slasher / Shooter / Defender / Passer
+export type SkillLevel = 'ROOKIE' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'PRO';
+export type CardSkin = 'DEFAULT' | 'GOLD' | 'RARE';
+
+// Skill Level 점수 매핑
+export const SKILL_LEVEL_SCORES: Record<SkillLevel, number> = {
+  ROOKIE: 10,      // 입문
+  BEGINNER: 30,    // 초보
+  INTERMEDIATE: 50, // 중수
+  ADVANCED: 70,    // 고수
+  PRO: 90          // 선출
+};
+
 // User Types
 export interface User {
   id: string;
@@ -64,6 +79,15 @@ export interface User {
   avatar?: string;
   teams: Team[]; // 여러 팀 소속 가능
   currentTeamId?: string; // 현재 활성화된 팀
+
+  // Player Card 정보 (FIFA 스타일)
+  height?: number; // 키 (cm)
+  position?: Position; // 주 포지션
+  subPosition?: Position; // 부 포지션
+  playStyle?: PlayStyle; // 플레이 스타일
+  skillLevel?: SkillLevel; // 실력 수준
+  cardSkin?: CardSkin; // 카드 디자인 등급
+  statusMsg?: string; // 한 줄 각오 (20자 이내)
 }
 
 // Match Request Types

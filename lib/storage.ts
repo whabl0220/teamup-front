@@ -1,15 +1,11 @@
 // localStorage 관리 유틸리티
 // 백엔드 연동 전까지 로컬에서 데이터 관리
 
-import type { Team, MatchRequest, MatchedTeam, JoinRequest } from '@/types'
+import type { Team, MatchRequest, MatchedTeam, JoinRequest, User } from '@/types'
 
 // 전체 앱 데이터 구조
 export interface AppData {
-  user: {
-    id: string
-    name: string
-    currentTeamId?: string // 현재 활성화된 팀
-  }
+  user: User // 사용자 전체 정보
   teams: Team[]
   matchRequests: MatchRequest[]
   matchedTeams: MatchedTeam[] // 매칭 성사된 팀들
@@ -32,7 +28,10 @@ const STORAGE_KEY = 'teamup_app_data'
 const getInitialData = (): AppData => ({
   user: {
     id: 'user1',
-    name: '사용자', // TODO: 실제 로그인 시 변경
+    name: '사용자',
+    email: 'user@example.com',
+    teams: [],
+    currentTeamId: undefined,
   },
   teams: [],
   matchRequests: [],
@@ -71,6 +70,27 @@ export const setAppData = (data: AppData): void => {
     console.error('Failed to save app data:', error)
   }
 }
+
+// ============================================
+// User 관련 함수
+// ============================================
+
+// 현재 유저 가져오기
+export const getCurrentUser = (): User | null => {
+  const data = getAppData()
+  return data.user || null
+}
+
+// 현재 유저 정보 업데이트
+export const updateCurrentUser = (updates: Partial<User>): void => {
+  const data = getAppData()
+  data.user = { ...data.user, ...updates }
+  setAppData(data)
+}
+
+// ============================================
+// Team 관련 함수
+// ============================================
 
 // 현재 활성화된 팀 가져오기
 export const getCurrentTeam = (): Team | null => {
@@ -554,7 +574,16 @@ export const initMockData = (): void => {
     user: {
       id: 'user1',
       name: '홍길동',
+      email: 'hong@example.com',
+      teams: mockTeams,
       currentTeamId: '1',
+      // Player Card 정보
+      height: 178,
+      position: 'G',
+      playStyle: 'SH',
+      skillLevel: 'INTERMEDIATE',
+      cardSkin: 'DEFAULT',
+      statusMsg: '코트 위의 전사',
     },
     teams: mockTeams,
     matchRequests: mockRequests,
