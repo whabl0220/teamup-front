@@ -206,7 +206,7 @@ export default function MatchingPage() {
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-primary" />
-                <h2 className="font-bold text-foreground">팀 매칭하기</h2>
+                <h2 className="font-bold text-foreground">팀 경기하기</h2>
                 <Badge className="bg-primary/10 text-primary text-xs">정식 팀</Badge>
               </div>
               {matchTeams.length > 1 && (

@@ -1,3 +1,49 @@
+// Player 타입 정의
+export type Player = {
+  id: string
+  name: string
+  profileImage?: string
+  position: string
+  level: string
+  lastActive: string
+  bio: string
+}
+
+// mock player 데이터
+export const mockPlayers: Player[] = [
+  {
+    id: 'user1',
+    name: '김세종',
+    profileImage: '/images/profile1.png',
+    position: '가드',
+    level: 'A',
+    lastActive: '2일 전',
+    bio: '빠른 돌파와 패스가 장점인 세종대 농구 동호회 팀장입니다.',
+  },
+  {
+    id: 'user2',
+    name: '이광진',
+    profileImage: '/images/profile2.png',
+    position: '포워드',
+    level: 'B+',
+    lastActive: '5일 전',
+    bio: '높은 점프력과 리바운드 능력이 뛰어납니다.',
+  },
+  {
+    id: 'user3',
+    name: '박강남',
+    profileImage: '/images/profile3.png',
+    position: '센터',
+    level: 'A+',
+    lastActive: '1주 전',
+    bio: '팀의 골밑을 책임지는 든든한 센터.',
+  },
+]
+
+// id로 player 조회
+export function getPlayerById(id: string): Player | undefined {
+  return mockPlayers.find((p) => p.id === id)
+}
 import type { Team } from '@/types'
 
 // 모집 중인 팀 (팀원 모집 - 5명 미만)

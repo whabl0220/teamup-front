@@ -169,7 +169,7 @@ export default function NotificationsPage() {
                         </Button>
                       </div>
                       <Link href={`/team/${request.fromTeam.id}`} className="w-full">
-                        <Button variant="outline" className="w-full">상세 보기</Button>
+                        <Button variant="outline" className="w-full hover:bg-orange-400! hover:text-black! hover:border-none!">상세 보기</Button>
                       </Link>
                     </div>
                   </CardContent>
@@ -216,7 +216,7 @@ export default function NotificationsPage() {
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
-                          className="flex-1 text-destructive hover:bg-destructive/10"
+                          className="flex-1 text-destructive hover:bg-blue-600! hover:text-white! hover:border-none!"
                           onClick={() => handleRejectJoinRequest(request.id)}
                           disabled={!isTeamLeader}
                         >
@@ -224,15 +224,15 @@ export default function NotificationsPage() {
                         </Button>
                         <Button
                           variant="outline"
-                          className="flex-1 text-green-600 hover:bg-green-600/10"
+                          className="flex-1 text-green-600 hover:bg-blue-600! hover:text-white! hover:border-none!"
                           onClick={() => handleAcceptJoinRequest(request.id, request.userName)}
                           disabled={!isTeamLeader}
                         >
                           수락
                         </Button>
                       </div>
-                      <Link href={`/profile/${request.userId}`} className="w-full">
-                        <Button variant="outline" className="w-full">상세 보기</Button>
+                      <Link href={`/player/user1`} className="w-full">
+                        <Button variant="outline" className="w-full hover:bg-blue-600! hover:text-white! hover:border-none!">상세 보기</Button>
                       </Link>
                     </div>
                   </CardContent>

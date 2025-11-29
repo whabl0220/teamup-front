@@ -36,20 +36,25 @@ export function JoinRequestsModal({ open, onOpenChange, joinRequests, onAccept, 
                     <span className="text-xs text-muted-foreground">{request.createdAt}</span>
                   </div>
                   <p className="mb-3 text-sm text-muted-foreground">{request.message}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-destructive hover:bg-destructive/10"
-                      onClick={() => onReject(request.id)}
-                    >
-                      거절
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 text-green-600 hover:bg-green-600/10"
-                      onClick={() => onAccept(request.id, request.userName)}
-                    >
-                      수락
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-destructive hover:bg-blue-600! hover:text-white! hover:border-none!"
+                        onClick={() => onReject(request.id)}
+                      >
+                        거절
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 text-green-600 hover:bg-blue-600! hover:text-white! hover:border-none!"
+                        onClick={() => onAccept(request.id, request.userName)}
+                      >
+                        수락
+                      </Button>
+                    </div>
+                    <Button asChild variant="outline" className="w-full hover:bg-blue-600! hover:text-white! hover:border-none!">
+                      <a href={`/profile/${request.userId}`}>상세 보기</a>
                     </Button>
                   </div>
                 </CardContent>
