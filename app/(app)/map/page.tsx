@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { MapPin, Plus, Megaphone } from 'lucide-react'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import type { Post } from '@/types'
 import KakaoMap from '@/components/shared/KakaoMap'
 
@@ -55,13 +56,109 @@ const nearbyPosts: Post[] = [
   },
 ]
 
-const nearbyCourts = [
-  { name: '광진 농구장', address: '서울 광진구 능동로 123', type: '실외' },
-  { name: '워커힐 체육관', address: '서울 광진구 워커힐로 177', type: '실내' },
-  { name: '능동 체육공원', address: '서울 광진구 능동로 216', type: '실외' },
+// 광진구 농구장 타입
+interface Court {
+  name: string
+  address: string
+  type: string
+  lat: number
+  lng: number
+  distance?: number
+}
+
+// 광진구 농구장 데이터 (좌표 포함)
+const allCourts: Court[] = [
+  {
+    name: '광진청소년센터 농구장',
+    address: '서울특별시 광진구 구천면로 2',
+    type: '실내',
+    lat: 37.5481,
+    lng: 127.0851
+  },
+  {
+    name: '뚝섬한강공원 농구장',
+    address: '서울특별시 광진구 강변북로 2273',
+    type: '실외',
+    lat: 37.5305,
+    lng: 127.0689
+  },
+  {
+    name: '아트큐브 농구장',
+    address: '서울특별시 광진구 능동로 27',
+    type: '실외',
+    lat: 37.5478,
+    lng: 127.0741
+  },
+  {
+    name: '자양문화체육센터',
+    address: '서울특별시 광진구 뚝섬로52길 66',
+    type: '실내',
+    lat: 37.5332,
+    lng: 127.0699
+  },
+  {
+    name: '중랑천 체육공원 농구장',
+    address: '서울시 광진구 중곡동 485-7',
+    type: '실외',
+    lat: 37.5583,
+    lng: 127.0831
+  },
 ]
 
+// 두 좌표 간 거리 계산 (Haversine formula)
+const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371 // 지구 반지름 (km)
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c // km
+}
+
 export default function MapPage() {
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+  const [nearbyCourts, setNearbyCourts] = useState<Court[]>(allCourts.slice(0, 2))
+
+  // 사용자 위치 받아오고 거리 계산
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude
+          const userLng = position.coords.longitude
+          setUserLocation({ lat: userLat, lng: userLng })
+
+          // 거리 계산 후 정렬
+          const courtsWithDistance = allCourts.map((court) => ({
+            ...court,
+            distance: calculateDistance(userLat, userLng, court.lat, court.lng)
+          }))
+
+          // 거리순 정렬 후 2개만
+          const sortedCourts = courtsWithDistance.sort((a, b) => a.distance - b.distance)
+          setNearbyCourts(sortedCourts.slice(0, 2))
+        },
+        () => {
+          // 위치 실패 시 기본값 (건대입구역 근처)
+          const defaultLat = 37.5400
+          const defaultLng = 127.0695
+          setUserLocation({ lat: defaultLat, lng: defaultLng })
+
+          const courtsWithDistance = allCourts.map((court) => ({
+            ...court,
+            distance: calculateDistance(defaultLat, defaultLng, court.lat, court.lng)
+          }))
+
+          const sortedCourts = courtsWithDistance.sort((a, b) => a.distance - b.distance)
+          setNearbyCourts(sortedCourts.slice(0, 2))
+        }
+      )
+    }
+  }, [])
+
   const handleKakaoClick = (post: Post) => {
     // 카카오톡 오픈채팅방으로 이동
     window.open(post.kakaoLink, '_blank')
@@ -110,7 +207,7 @@ export default function MapPage() {
             </div>
 
             <div className="space-y-3">
-              {nearbyCourts.slice(0, 2).map((court, index) => (
+              {nearbyCourts.map((court, index) => (
                 <Card key={index} className="border-border/50 bg-card">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
@@ -118,7 +215,14 @@ export default function MapPage() {
                         <MapPin className="h-5 w-5 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-foreground">{court.name}</h3>
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-bold text-foreground">{court.name}</h3>
+                          {court.distance && (
+                            <span className="text-xs text-muted-foreground">
+                              {court.distance.toFixed(1)}km
+                            </span>
+                          )}
+                        </div>
                         <Badge variant="secondary" className="mt-1 text-xs">{court.type}</Badge>
                         <p className="mt-1 text-sm text-muted-foreground">{court.address}</p>
                       </div>
