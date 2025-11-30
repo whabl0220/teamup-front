@@ -186,3 +186,21 @@ export interface UserLocation {
   lng: number;
   address?: string;
 }
+
+// Post Types (지도 모집글)
+export type PostType = 'MATCH' | 'GUEST'; // 팀대결 / 용병
+
+export interface Post {
+  id: string;
+  type: PostType; // MATCH (팀 경기 모집) / GUEST (용병 모집)
+  teamId: string; // 작성한 팀 ID
+  teamName: string; // 팀 이름
+  latitude: number; // 위도
+  longitude: number; // 경도
+  gameTime: string; // 경기 시작 시간
+  location: string; // 장소명 (예: 광진 농구장)
+  kakaoLink: string; // 카카오톡 오픈채팅방 URL
+  description?: string; // 추가 설명
+  createdAt: string; // 작성 시간
+  distance?: number; // 사용자로부터의 거리 (km)
+}
