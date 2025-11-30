@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, Check, X } from 'lucide-react'
+import { Check, X } from 'lucide-react'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -100,9 +101,13 @@ export default function SignupPage() {
   return (
     <Card className="border-border/50 shadow-xl">
       <CardHeader className="space-y-1 text-center">
-        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-          <Sparkles className="h-7 w-7 text-primary-foreground" />
-        </div>
+        <Image
+          src="/images/logo.jpg"
+          alt="TeamUp Logo"
+          width={64}
+          height={64}
+          className="mx-auto mb-2 rounded-xl object-cover"
+        />
         <CardTitle className="text-2xl font-bold">회원가입</CardTitle>
         <CardDescription>
           TeamUp과 함께 완벽한 팀을 만나보세요

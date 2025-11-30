@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -45,9 +45,13 @@ export default function LoginPage() {
   return (
     <Card className="border-border/50 shadow-xl">
       <CardHeader className="space-y-1 text-center">
-        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-          <Sparkles className="h-7 w-7 text-primary-foreground" />
-        </div>
+        <Image
+          src="/images/logo.jpg"
+          alt="TeamUp Logo"
+          width={64}
+          height={64}
+          className="mx-auto mb-2 rounded-xl object-cover"
+        />
         <CardTitle className="text-2xl font-bold">로그인</CardTitle>
         <CardDescription>
           TeamUp에 로그인하여 함께 팀을 찾아보세요!
