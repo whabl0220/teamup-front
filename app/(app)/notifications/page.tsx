@@ -7,28 +7,23 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Check, Bell, ShieldAlert, UserPlus } from 'lucide-react'
+import { AlertCircle, Bell, ShieldAlert, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
-import { getReceivedMatchRequests, updateMatchRequestStatus, formatTimeAgo, getMatchedTeams, getCurrentTeam, getAppData, getReceivedJoinRequests, updateJoinRequestStatus } from '@/lib/storage'
-import type { MatchRequest, MatchedTeam, JoinRequest } from '@/types'
+import { getReceivedMatchRequests, updateMatchRequestStatus, formatTimeAgo, getCurrentTeam, getAppData, getReceivedJoinRequests, updateJoinRequestStatus } from '@/lib/storage'
+import type { MatchRequest, JoinRequest } from '@/types'
 import { MatchRequestsModal } from '@/components/shared/match-requests-modal'
 import { JoinRequestsModal } from '@/components/shared/join-requests-modal'
-import { MatchedTeamsModal } from '@/components/shared/matched-teams-modal'
 
 export default function NotificationsPage() {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
-  const [matchedTeams, setMatchedTeams] = useState<MatchedTeam[]>([])
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([])
   const [showMatchRequestsModal, setShowMatchRequestsModal] = useState(false)
   const [showJoinRequestsModal, setShowJoinRequestsModal] = useState(false)
-  const [showMatchedTeamsModal, setShowMatchedTeamsModal] = useState(false)
   const [isTeamLeader, setIsTeamLeader] = useState(false)
 
   const loadData = () => {
     const requests = getReceivedMatchRequests()
     setMatchRequests(requests)
-    const matched = getMatchedTeams()
-    setMatchedTeams(matched)
     const joins = getReceivedJoinRequests()
     setJoinRequests(joins)
 
@@ -68,7 +63,7 @@ export default function NotificationsPage() {
     loadData()
   }
 
-  const hasNotifications = matchRequests.length > 0 || matchedTeams.length > 0 || joinRequests.length > 0
+  const hasNotifications = matchRequests.length > 0 || joinRequests.length > 0
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -242,60 +237,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* 매칭된 팀 */}
-        {matchedTeams.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <h2 className="font-bold text-foreground">매칭된 팀</h2>
-                <Badge className="bg-green-500/10 text-green-600 text-xs">수락됨</Badge>
-              </div>
-              {matchedTeams.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowMatchedTeamsModal(true)}
-                  className="text-green-600 hover:text-green-700 hover:bg-green-500/20!"
-                >
-                  전체
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {matchedTeams.slice(0, 3).map((matched) => (
-                <Card key={matched.id} className="border-green-500 bg-green-500/5">
-                  <CardContent className="p-4">
-                    <div className="mb-3 flex items-start gap-3">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/15">
-                        <Check className="h-6 w-6 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="mb-1 font-bold text-foreground">{matched.matchedTeam.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">레벨 {matched.matchedTeam.level}</Badge>
-                          <span className="text-xs text-muted-foreground">{matched.matchedTeam.region}</span>
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {formatTimeAgo(matched.matchedAt)}에 매칭됨
-                        </p>
-                      </div>
-                    </div>
-                    <p className="mb-3 text-sm text-muted-foreground">{matched.matchedTeam.description}</p>
-                    <Link href={`/team/${matched.matchedTeam.id}`}>
-                      <Button variant="outline" className="w-full hover:bg-green-600! hover:text-white! hover:border-green-600!">
-                        상세 보기
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
       </main>
-
 
       {/* 받은 매칭 요청 전체 모달 */}
       <MatchRequestsModal
@@ -313,13 +255,6 @@ export default function NotificationsPage() {
         joinRequests={joinRequests}
         onAccept={handleAcceptJoinRequest}
         onReject={handleRejectJoinRequest}
-      />
-
-      {/* 매칭된 팀 전체 모달 */}
-      <MatchedTeamsModal
-        open={showMatchedTeamsModal}
-        onOpenChange={setShowMatchedTeamsModal}
-        matchedTeams={matchedTeams}
       />
 
       <BottomNav />

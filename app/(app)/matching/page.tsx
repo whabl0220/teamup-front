@@ -1,54 +1,35 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Users, Sparkles, Plus } from 'lucide-react'
+import { Sparkles, Check } from 'lucide-react'
 import type { Team } from '@/types'
 import { TeamCard } from '@/components/shared/team-card'
-import { mockJoinTeams, mockMatchTeams } from '@/lib/mock-data'
-import { getCurrentTeam, getAppData } from '@/lib/storage'
+import { mockMatchTeams } from '@/lib/mock-data'
+import { getCurrentTeam, getAppData, getMatchedTeams, formatTimeAgo } from '@/lib/storage'
+import { MatchedTeamsModal } from '@/components/shared/matched-teams-modal'
 
 export default function MatchingPage() {
-  const router = useRouter()
   const [showMatchModal, setShowMatchModal] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
+  const [showMatchedTeamsModal, setShowMatchedTeamsModal] = useState(false)
 
-  // 현재 팀 정보
-  const [teamName, setTeamName] = useState('세종 born')
-  const [teamPhoto, setTeamPhoto] = useState('')
-  const [teamId, setTeamId] = useState('1')
+  // 현재 팀 및 팀장 권한 체크
+  const team = getCurrentTeam()
+  const appData = getAppData()
+  const isTeamLeader = team && appData.user ? team.captainId === appData.user.id : false
+  const currentTeam = team
 
-  // 팀장 권한 및 정식 팀 체크
-  const [isTeamLeader, setIsTeamLeader] = useState(false)
-  const [currentTeam, setCurrentTeam] = useState<Team | null>(null)
+  // 정식 팀 목록
+  const matchTeams = mockMatchTeams
 
-  useEffect(() => {
-    const team = getCurrentTeam()
-    const appData = getAppData()
-
-    if (team) {
-      setCurrentTeam(team)
-      setTeamName(team.name)
-      setTeamId(team.id)
-      if (team.logo) {
-        setTeamPhoto(team.logo)
-      }
-
-      if (appData.user) {
-        setIsTeamLeader(team.captainId === appData.user.id)
-      }
-    }
-  }, [])
-
-  // 팀 분류
-  const joinTeams = mockJoinTeams // 모집 중
-  const matchTeams = mockMatchTeams // 정식 팀
+  // 매칭된 팀 목록
+  const matchedTeams = getMatchedTeams()
 
   const handleMatchRequest = (team: Team) => {
     if (!isTeamLeader) {
@@ -89,76 +70,6 @@ export default function MatchingPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
-        {/* 내 팀 섹션 */}
-        <div className="mb-6">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            내 팀
-          </h3>
-
-          <Link href={`/team/${teamId}`}>
-            <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
-              <CardContent className="p-0">
-                <div className="flex items-center gap-4 p-4">
-                  {teamPhoto ? (
-                    <img src={teamPhoto} alt="Team" className="h-16 w-16 rounded-2xl object-cover" />
-                  ) : (
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground">
-                      {teamName.substring(0, 2).toUpperCase()}
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="mb-1 font-bold text-foreground">{teamName}</h3>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground">팀원 {currentTeam?.memberCount || 5}명</p>
-                      <Badge variant="secondary" className="text-xs">레벨 {currentTeam?.level || 'A'}</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-px border-t border-border/50 bg-border/50">
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">{currentTeam?.totalGames || 18}</p>
-                    <p className="text-xs text-muted-foreground">총 경기</p>
-                  </div>
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">{currentTeam?.aiReports || 14}</p>
-                    <p className="text-xs text-muted-foreground">AI 리포트</p>
-                  </div>
-                  <div className="bg-card p-3 text-center">
-                    <p className="text-lg font-bold text-foreground">{currentTeam?.activeDays || 45}일</p>
-                    <p className="text-xs text-muted-foreground">활동</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
-        {/* 팀 생성 */}
-        <div className="mb-6">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            팀 생성
-          </h3>
-
-          <Link href="/team/create">
-            <Card className="cursor-pointer overflow-hidden border-border/50 bg-card transition-all hover:border-primary/50">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary">
-                    <Plus className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="mb-1 font-bold text-foreground">팀 생성하기</h4>
-                    <p className="text-xs text-muted-foreground">
-                      새로운 팀을 만들고 팀원을 모집하세요
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
-
         {/* AI 추천 안내 */}
         <div className="mb-4 flex items-center gap-2 rounded-xl bg-primary/10 p-4">
           <Sparkles className="h-5 w-5 text-primary" />
@@ -168,39 +79,7 @@ export default function MatchingPage() {
           </div>
         </div>
 
-        {/* 팀 참여하기 */}
-        {joinTeams.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                <h2 className="font-bold text-foreground">팀 참여하기</h2>
-                <Badge variant="secondary" className="text-xs">모집 중</Badge>
-              </div>
-              {joinTeams.length > 1 && (
-                <Link href="/matching/join">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-primary hover:text-primary"
-                  >
-                    전체
-                  </Button>
-                </Link>
-              )}
-            </div>
-            <TeamCard
-              team={joinTeams[0]}
-              actionButton={{
-                label: '참여하기',
-                onClick: () => router.push(`/team/${joinTeams[0].id}`),
-                variant: 'outline'
-              }}
-            />
-          </div>
-        )}
-
-        {/* 팀 매칭하기 */}
+        {/* 팀 경기하기 */}
         {matchTeams.length > 0 && (
           <div className="mb-6">
             <div className="mb-3 flex items-center justify-between">
@@ -209,7 +88,7 @@ export default function MatchingPage() {
                 <h2 className="font-bold text-foreground">팀 경기하기</h2>
                 <Badge className="bg-primary/10 text-primary text-xs">정식 팀</Badge>
               </div>
-              {matchTeams.length > 1 && (
+              {matchTeams.length > 2 && (
                 <Link href="/matching/teams">
                   <Button
                     variant="ghost"
@@ -221,16 +100,89 @@ export default function MatchingPage() {
                 </Link>
               )}
             </div>
-            <TeamCard
-              team={matchTeams[0]}
-              actionButton={{
-                label: '매칭하기',
-                onClick: () => handleMatchRequest(matchTeams[0]),
-                variant: 'outline'
-              }}
-            />
+            <div className="space-y-3">
+              {matchTeams.slice(0, 2).map((team) => (
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  actionButton={{
+                    label: '매칭하기',
+                    onClick: () => handleMatchRequest(team),
+                    variant: 'outline'
+                  }}
+                />
+              ))}
+            </div>
           </div>
         )}
+
+        {/* 매칭된 팀 경기 */}
+        <div className="mb-6">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Check className="h-5 w-5 text-green-500" />
+              <h2 className="font-bold text-foreground">매칭된 팀 경기</h2>
+              <Badge className="bg-green-500/10 text-green-600 text-xs">수락됨</Badge>
+            </div>
+            {matchedTeams.length > 1 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMatchedTeamsModal(true)}
+                className="text-green-600 hover:text-green-700 hover:bg-green-500/20!"
+              >
+                전체
+              </Button>
+            )}
+          </div>
+
+          {matchedTeams.length === 0 ? (
+            <Card className="border-border/50">
+              <CardContent className="p-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  아직 매칭된 경기가 없습니다
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {matchedTeams.slice(0, 3).map((matched) => (
+                <Card key={matched.id} className="border-green-500 bg-green-500/5">
+                  <CardContent className="p-4">
+                    <div className="mb-3 flex items-start gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/15">
+                        <Check className="h-6 w-6 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="mb-1 font-bold text-foreground">{matched.matchedTeam.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">레벨 {matched.matchedTeam.level}</Badge>
+                          <span className="text-xs text-muted-foreground">{matched.matchedTeam.region}</span>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {formatTimeAgo(matched.matchedAt)}에 매칭됨
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mb-3 text-sm text-muted-foreground">{matched.matchedTeam.description}</p>
+                    <div className="flex gap-2">
+                      <Link href={`/team/${matched.matchedTeam.id}`} className="flex-1">
+                        <Button variant="outline" className="w-full hover:bg-green-600! hover:text-white! hover:border-green-600!">
+                          상세 보기
+                        </Button>
+                      </Link>
+                      <Link href="/coaching/create" className="flex-1">
+                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                          경기 완료하기
+                        </Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* 매칭 요청 모달 */}
@@ -269,6 +221,13 @@ export default function MatchingPage() {
           </Card>
         </div>
       )}
+
+      {/* 매칭된 팀 전체 모달 */}
+      <MatchedTeamsModal
+        open={showMatchedTeamsModal}
+        onOpenChange={setShowMatchedTeamsModal}
+        matchedTeams={matchedTeams}
+      />
 
       <BottomNav />
     </div>
