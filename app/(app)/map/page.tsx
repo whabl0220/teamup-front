@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { BottomNav } from '@/components/layout/bottom-nav'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -239,27 +238,39 @@ export default function MapPage() {
     <>
       <div className="min-h-screen bg-background pb-20">
         {/* Header */}
-        <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
-          <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
-            <Image
-              src="/images/logo.jpg"
-              alt="TeamUp Logo"
-              width={40}
-              height={40}
-              className="h-10 w-10 rounded-xl object-contain"
-            />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">지도</h1>
-              <p className="text-sm text-muted-foreground">근처 팀과 경기장을 찾아보세요</p>
+        <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-lg">
+          <div className="border-b border-border/50">
+            <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
+              <Image
+                src="/images/logo.jpg"
+                alt="TeamUp Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-xl object-contain"
+              />
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">지도</h1>
+                <p className="text-sm text-muted-foreground">근처 팀과 경기장을 찾아보세요</p>
+              </div>
             </div>
           </div>
 
           {/* 탭 */}
-          <div className="mx-auto max-w-lg px-4 pb-3">
+          <div className="mx-auto max-w-lg px-4 py-3">
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'posts' | 'courts')}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="posts">근처 모집글</TabsTrigger>
-                <TabsTrigger value="courts">주변 농구장</TabsTrigger>
+                <TabsTrigger
+                  value="posts"
+                  className="data-[state=active]:font-bold data-[state=inactive]:font-normal"
+                >
+                  근처 모집글
+                </TabsTrigger>
+                <TabsTrigger
+                  value="courts"
+                  className="data-[state=active]:font-bold data-[state=inactive]:font-normal"
+                >
+                  주변 농구장
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -268,7 +279,7 @@ export default function MapPage() {
         {/* 지도 영역 */}
         <main className="mx-auto max-w-lg">
           <KakaoMap
-            className="h-[calc(100vh-280px)] w-full"
+            className="h-[calc(100vh-230px)] w-full"
             markers={activeTab === 'posts' ? postMarkers : courtMarkers}
             onMarkerClick={handleMarkerClick}
           />

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Calendar } from '@/components/ui/calendar'
@@ -28,6 +27,7 @@ export default function CreatePostPage() {
   const [description, setDescription] = useState('')
   const [showPostcode, setShowPostcode] = useState(false)
   const [showDateTimePicker, setShowDateTimePicker] = useState(false)
+  const [kakaoLinkError, setKakaoLinkError] = useState('')
 
   // 시간 옵션
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
@@ -42,6 +42,28 @@ export default function CreatePostPage() {
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
     const day = String(selectedDate.getDate()).padStart(2, '0')
     return `${year}년 ${month}월 ${day}일 ${selectedHour}:${selectedMinute}`
+  }
+
+  // 카카오톡 오픈채팅 링크 유효성 검사
+  const validateKakaoLink = (link: string): boolean => {
+    if (!link) {
+      setKakaoLinkError('')
+      return false
+    }
+    const isValid = link.startsWith('https://open.kakao.com/o/')
+    setKakaoLinkError(isValid ? '' : '올바른 카카오톡 오픈채팅 링크를 입력해주세요. (https://open.kakao.com/o/...)')
+    return isValid
+  }
+
+  // 카카오톡 링크 입력 핸들러
+  const handleKakaoLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setKakaoLink(value)
+    if (value) {
+      validateKakaoLink(value)
+    } else {
+      setKakaoLinkError('')
+    }
   }
 
   // 주소 검색 완료 시
@@ -70,6 +92,10 @@ export default function CreatePostPage() {
 
     if (!latitude || !longitude) {
       alert('주소에서 위치를 찾을 수 없습니다. 다시 검색해주세요.')
+      return
+    }
+
+    if (!validateKakaoLink(kakaoLink)) {
       return
     }
 
@@ -134,7 +160,7 @@ export default function CreatePostPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">용병 모집글 작성</h1>
+            <h1 className="text-2xl font-bold tracking-tight">용병 모집</h1>
             <p className="text-sm text-muted-foreground">근처에서 같이 농구할 사람을 모집해보세요.</p>
           </div>
         </div>
@@ -211,12 +237,18 @@ export default function CreatePostPage() {
               <Input
                 placeholder="https://open.kakao.com/o/..."
                 value={kakaoLink}
-                onChange={(e) => setKakaoLink(e.target.value)}
-                className="bg-background"
+                onChange={handleKakaoLinkChange}
+                className={`bg-background ${kakaoLinkError ? 'border-destructive' : ''}`}
               />
-              <p className="mt-1 text-xs text-muted-foreground">
-                참여자들이 이 링크로 입장합니다
-              </p>
+              {kakaoLinkError ? (
+                <p className="mt-1 text-xs text-destructive">
+                  {kakaoLinkError}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  참여자들이 이 링크로 입장합니다
+                </p>
+              )}
             </div>
 
           <div>
@@ -251,8 +283,8 @@ export default function CreatePostPage() {
       {/* 우편번호 검색 모달 */}
       {showPostcode && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg w-full max-w-lg max-h-[600px] overflow-hidden">
-            <div className="p-4 border-b border-border/50 flex items-center justify-between">
+          <div className="bg-background rounded-lg w-full max-w-[480px] overflow-hidden flex flex-col" style={{ height: '80vh', maxHeight: '700px' }}>
+            <div className="p-4 border-b border-border/50 flex items-center justify-between flex-shrink-0">
               <h3 className="font-bold text-foreground">주소 검색</h3>
               <Button
                 variant="ghost"
@@ -262,10 +294,11 @@ export default function CreatePostPage() {
                 닫기
               </Button>
             </div>
-            <div className="overflow-auto max-h-[500px]">
+            <div className="overflow-auto flex-1">
               <DaumPostcodeEmbed
                 onComplete={handleAddressComplete}
                 autoClose={false}
+                style={{ height: '100%' }}
               />
             </div>
           </div>
@@ -294,13 +327,15 @@ export default function CreatePostPage() {
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   disabled={(date: Date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                  className="rounded-md border"
+                  className="rounded-md border [&_button[data-selected-single='true']]:rounded-md"
+                  classNames={{
+                    today: "bg-transparent text-foreground border-2 border-primary rounded-md"
+                  }}
                 />
               </div>
 
               {/* 시간 선택 */}
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-foreground">시간 선택</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-xs text-muted-foreground mb-2 block">시</label>
