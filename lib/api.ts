@@ -171,4 +171,18 @@ export const api = {
 
   getRecommendedTeams: (userId: string) =>
     fetchAPI(`/ai/recommend-teams?userId=${userId}`),
+
+  // 🆕 경기 후 AI 피드백 생성 (포지션 기반)
+  generateAIFeedback: (data: {
+    teamId: string;
+    teamDNA: string;
+    gameResult: 'WIN' | 'LOSE' | 'DRAW';
+    feedbackAnswers: Record<string, string>; // 4개 질문의 답변
+    opponent: string;
+    gameDate: string;
+  }) =>
+    fetchAPI('/ai/coaching/feedback', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
