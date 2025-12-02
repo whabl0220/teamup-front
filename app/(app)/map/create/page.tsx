@@ -73,23 +73,50 @@ export default function CreatePostPage() {
       return
     }
 
-    // TODO: 실제 API 연동
+    // 현재 사용자 정보 가져오기
+    const userData = localStorage.getItem('teamup_app_data')
+    if (!userData) {
+      alert('사용자 정보를 찾을 수 없습니다.')
+      return
+    }
+
+    const appData = JSON.parse(userData)
+    const currentUser = appData.user
+    const currentTeam = currentUser.team
+
+    if (!currentTeam) {
+      alert('팀에 소속되어야 모집글을 작성할 수 있습니다.')
+      return
+    }
+
     const year = selectedDate.getFullYear()
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
     const day = String(selectedDate.getDate()).padStart(2, '0')
     const gameTime = `${year}-${month}-${day} ${selectedHour}:${selectedMinute}`
 
+    // 추가 설명이 없으면 기본 문구 사용
+    const finalDescription = description.trim() || '근처에서 같이 농구할 사람 모집해요'
+
+    // 새 모집글 생성
     const newPost = {
+      id: `post_${Date.now()}`,
       type: postType,
-      address, // 기본주소
-      location, // 상세주소 (장소명)
+      teamId: currentTeam.id,
+      teamName: currentTeam.name,
       latitude,
       longitude,
       gameTime,
+      location, // 장소명 (상세주소)
       kakaoLink,
-      description,
+      description: finalDescription,
+      createdAt: new Date().toISOString(),
     }
-    console.log('새 모집글:', newPost)
+
+    // localStorage에 저장
+    const existingPosts = JSON.parse(localStorage.getItem('teamup_posts') || '[]')
+    existingPosts.push(newPost)
+    localStorage.setItem('teamup_posts', JSON.stringify(existingPosts))
+
     alert('모집글이 등록되었습니다!')
     router.push('/map')
   }
@@ -201,10 +228,10 @@ export default function CreatePostPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="bg-background min-h-[100px]"
-              maxLength={100}
+              maxLength={30}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              {description.length}/100
+              {description.length}/30
             </p>
           </div>
 

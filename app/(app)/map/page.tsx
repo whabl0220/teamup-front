@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react'
 import type { Post } from '@/types'
 import KakaoMap, { type MarkerData } from '@/components/shared/KakaoMap'
 
-const nearbyPosts: Post[] = [
+const mockPosts: Post[] = [
   {
     id: 'post_1',
     type: 'GUEST',
@@ -130,6 +130,7 @@ const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: numbe
 export default function MapPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [nearbyCourts, setNearbyCourts] = useState<Court[]>(allCourts)
+  const [nearbyPosts, setNearbyPosts] = useState<Post[]>(mockPosts)
 
   // 사용자 위치 받아오고 거리 계산
   useEffect(() => {
@@ -165,6 +166,16 @@ export default function MapPage() {
           setNearbyCourts(sortedCourts)
         }
       )
+    }
+  }, [])
+
+  // localStorage에서 posts 읽어오기
+  useEffect(() => {
+    const savedPosts = localStorage.getItem('teamup_posts')
+    if (savedPosts) {
+      const parsedPosts: Post[] = JSON.parse(savedPosts)
+      // Mock 데이터와 합치기
+      setNearbyPosts([...mockPosts, ...parsedPosts])
     }
   }, [])
 
