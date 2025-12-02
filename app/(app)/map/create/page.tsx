@@ -16,7 +16,7 @@ export default function CreatePostPage() {
   useKakaoLoader()
 
   const router = useRouter()
-  const [postType, setPostType] = useState<PostType | null>(null)
+  const [postType] = useState<PostType>('GUEST') // 용병 모집으로 고정
   const [selectedDate, setSelectedDate] = useState<Date>()
   const [selectedHour, setSelectedHour] = useState('')
   const [selectedMinute, setSelectedMinute] = useState('')
@@ -63,7 +63,7 @@ export default function CreatePostPage() {
   }
 
   const handleSubmit = () => {
-    if (!postType || !selectedDate || !selectedHour || !selectedMinute || !address || !location || !kakaoLink) {
+    if (!selectedDate || !selectedHour || !selectedMinute || !address || !location || !kakaoLink) {
       alert('모든 필수 항목을 입력해주세요.')
       return
     }
@@ -107,53 +107,16 @@ export default function CreatePostPage() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">모집글 작성</h1>
-            <p className="text-sm text-muted-foreground">근처에서 같이 농구할 사람을 찾아보세요</p>
+            <h1 className="text-2xl font-bold tracking-tight">용병 모집글 작성</h1>
+            <p className="text-sm text-muted-foreground">근처에서 같이 농구할 사람을 모집해보세요.</p>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6 space-y-6">
-        {/* 모집 유형 선택 */}
-        <div>
-          <h3 className="mb-3 text-sm font-semibold text-foreground">모집 유형</h3>
-          <div className="grid grid-cols-2 gap-3">
-            <Card
-              className={`cursor-pointer border-2 transition-all ${
-                postType === 'MATCH'
-                  ? 'border-primary bg-primary/10'
-                  : 'border-border/50 hover:border-border'
-              }`}
-              onClick={() => setPostType('MATCH')}
-            >
-              <CardContent className="p-4 text-center">
-                <div className="mb-2 text-3xl">⚔️</div>
-                <h4 className="font-bold text-foreground">팀 경기</h4>
-                <p className="text-xs text-muted-foreground mt-1">5 vs 5 팀 대결</p>
-              </CardContent>
-            </Card>
-
-            <Card
-              className={`cursor-pointer border-2 transition-all ${
-                postType === 'GUEST'
-                  ? 'border-primary bg-primary/10'
-                  : 'border-border/50 hover:border-border'
-              }`}
-              onClick={() => setPostType('GUEST')}
-            >
-              <CardContent className="p-4 text-center">
-                <div className="mb-2 text-3xl">🏃</div>
-                <h4 className="font-bold text-foreground">용병 모집</h4>
-                <p className="text-xs text-muted-foreground mt-1">부족한 인원 채우기</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
         {/* 경기 정보 입력 */}
-        {postType && (
-          <>
-            {/* 날짜/시간 선택 */}
+        <>
+          {/* 날짜/시간 선택 */}
             <div>
               <label className="mb-2 block text-sm font-semibold text-foreground">
                 경기 날짜 및 시간 <span className="text-destructive">*</span>
@@ -229,38 +192,33 @@ export default function CreatePostPage() {
               </p>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-foreground">
-                추가 설명 (선택)
-              </label>
-              <Textarea
-                placeholder={
-                  postType === 'MATCH'
-                    ? '예: 주말 저녁 한 게임 하실 팀 구합니다!'
-                    : '예: 가드 포지션 1명 급구!'
-                }
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="bg-background min-h-[100px]"
-                maxLength={100}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {description.length}/100
-              </p>
-            </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-foreground">
+              추가 설명 (선택)
+            </label>
+            <Textarea
+              placeholder="예: 가드 포지션 1명 급구!"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="bg-background min-h-[100px]"
+              maxLength={100}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {description.length}/100
+            </p>
+          </div>
 
-            {/* 등록 버튼 */}
-            <div className="pt-4">
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleSubmit}
-              >
-                모집글 등록하기
-              </Button>
-            </div>
-          </>
-        )}
+          {/* 등록 버튼 */}
+          <div className="pt-4">
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleSubmit}
+            >
+              용병 모집글 등록하기
+            </Button>
+          </div>
+        </>
       </main>
 
       {/* 우편번호 검색 모달 */}
