@@ -299,7 +299,10 @@ export default function MapPage() {
 
         {/* 모집글/농구장 상세 모달 */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="w-[410px] p-4 gap-3">
+          <DialogContent
+            className="w-[430px] p-4 gap-3"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
             {selectedPost && (
               <>
                 <DialogHeader className="space-y-2">
