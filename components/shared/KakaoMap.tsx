@@ -5,11 +5,27 @@ import { useState, useEffect } from 'react'
 import { MapPin } from 'lucide-react'
 import useKakaoLoader from '@/hooks/useKakaoLoader'
 
-interface KakaoMapProps {
-  className?: string
+export interface MarkerData {
+  id: string
+  lat: number
+  lng: number
+  title?: string
+  type?: 'post' | 'court' | 'user'
 }
 
-export default function KakaoMap({ className = '' }: KakaoMapProps) {
+interface KakaoMapProps {
+  className?: string
+  markers?: MarkerData[]
+  onMarkerClick?: (marker: MarkerData) => void
+  showUserMarker?: boolean
+}
+
+export default function KakaoMap({
+  className = '',
+  markers = [],
+  onMarkerClick,
+  showUserMarker = true
+}: KakaoMapProps) {
   useKakaoLoader()
 
   const [center, setCenter] = useState({ lat: 37.5665, lng: 126.9780 })
@@ -59,7 +75,39 @@ export default function KakaoMap({ className = '' }: KakaoMapProps) {
         style={{ width: '100%', height: '100%' }}
         level={4}
       >
-        <MapMarker position={center} />
+        {/* 사용자 위치 마커 */}
+        {showUserMarker && (
+          <MapMarker
+            position={center}
+            image={{
+              src: '/icons/user-location-marker.svg',
+              size: { width: 32, height: 32 }
+            }}
+          />
+        )}
+
+        {/* 데이터 마커들 */}
+        {markers.map((marker) => (
+          <MapMarker
+            key={marker.id}
+            position={{ lat: marker.lat, lng: marker.lng }}
+            title={marker.title}
+            onClick={() => onMarkerClick?.(marker)}
+            image={
+              marker.type === 'post'
+                ? {
+                    src: '/icons/star-marker.svg',
+                    size: { width: 48, height: 48 }
+                  }
+                : marker.type === 'court'
+                ? {
+                    src: '/icons/basketball-marker.svg',
+                    size: { width: 48, height: 48 }
+                  }
+                : undefined
+            }
+          />
+        ))}
       </Map>
     </div>
   )
