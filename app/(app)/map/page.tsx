@@ -300,7 +300,7 @@ export default function MapPage() {
         {/* 모집글/농구장 상세 모달 */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent
-            className="w-[430px] p-4 gap-3"
+            className="w-[430px] p-4 gap-3 border-2 border-foreground/30"
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
             {selectedPost && (
