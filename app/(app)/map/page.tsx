@@ -5,14 +5,18 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { MapPin, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import type { Post } from '@/types'
+import type { Post, Team } from '@/types'
 import KakaoMap, { type MarkerData } from '@/components/shared/KakaoMap'
+import { mockMatchTeams } from '@/lib/mock-data'
+import { toast } from 'sonner'
 
-const mockPosts: Post[] = [
+// 용병 모집 글
+const mockGuestPosts: Post[] = [
   {
     id: 'post_1',
     type: 'GUEST',
@@ -23,7 +27,8 @@ const mockPosts: Post[] = [
     gameTime: '2025-11-30 15:00',
     location: '서울특별시 광진구 구천면로 2',
     kakaoLink: 'https://open.kakao.com/o/example1',
-    description: '가드 포지션 1명 급구!',
+    description: '어린이 대공원 근처에서 같이 농구할 사람 모집해요.',
+    additionalDescription: '초보자도 환영합니다! 편한 분위기에서 즐겁게 농구해요.',
     createdAt: '2025-11-30 11:00',
     distance: 0.5
   },
@@ -38,6 +43,7 @@ const mockPosts: Post[] = [
     location: '서울특별시 광진구 능동로 10',
     kakaoLink: 'https://open.kakao.com/o/example2',
     description: '포워드 포지션 2명 구합니다!',
+    additionalDescription: '키 180 이상 선호합니다. 실력은 중수 이상이면 좋아요! 주 2회 정기 경기 있습니다.',
     createdAt: '2025-11-30 10:00',
     distance: 1.0
   },
@@ -56,6 +62,32 @@ const mockPosts: Post[] = [
     distance: 1.1
   },
 ]
+
+// 팀 매칭 모집 글 (matching 페이지의 팀들을 지도에 표시)
+const teamLocations = [
+  { lat: 37.5667, lng: 127.0417, address: '서울 성동구 중랑천동자전거길 366' },
+  { lat: 37.5500, lng: 127.0950, address: '서울 광진구 광나루로 369' },
+  { lat: 37.5430, lng: 127.0720, address: '서울 광진구 긴고랑로46가길 23' },
+  { lat: 37.5700, lng: 126.9850, address: '서울 종로구 종로 133' },
+  { lat: 37.5615, lng: 127.0375, address: '서울 성동구 왕십리광장로 6' },
+]
+
+const mockMatchPosts: Post[] = mockMatchTeams.map((team, index) => ({
+  id: `match_post_${team.id}`,
+  type: 'MATCH' as const,
+  teamId: team.id,
+  teamName: team.name,
+  latitude: teamLocations[index]?.lat || 37.5400,
+  longitude: teamLocations[index]?.lng || 127.0695,
+  gameTime: '2025-12-05 18:00', // 임시 날짜
+  location: teamLocations[index]?.address || team.region,
+  kakaoLink: 'https://open.kakao.com/o/team-match',
+  description: `${team.name} 팀과 경기하기`,
+  additionalDescription: team.description,
+  createdAt: '2025-12-01 10:00',
+}))
+
+const mockPosts: Post[] = [...mockGuestPosts, ...mockMatchPosts]
 
 // 광진구 농구장 타입
 interface Court {
@@ -130,6 +162,10 @@ export default function MapPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [nearbyCourts, setNearbyCourts] = useState<Court[]>(allCourts)
   const [nearbyPosts, setNearbyPosts] = useState<Post[]>(mockPosts)
+  const [currentTeam, setCurrentTeam] = useState<Team | null>(null)
+  const [isTeamLeader, setIsTeamLeader] = useState(false)
+  const [showMatchRequestModal, setShowMatchRequestModal] = useState(false)
+  const [selectedMatchTeam, setSelectedMatchTeam] = useState<Team | null>(null)
 
   // 사용자 위치 받아오고 거리 계산
   useEffect(() => {
@@ -168,7 +204,7 @@ export default function MapPage() {
     }
   }, [])
 
-  // localStorage에서 posts 읽어오기
+  // localStorage에서 posts 읽어오기 및 팀 정보 확인
   useEffect(() => {
     const savedPosts = localStorage.getItem('teamup_posts')
     if (savedPosts) {
@@ -176,12 +212,24 @@ export default function MapPage() {
       // Mock 데이터와 합치기
       setNearbyPosts([...mockPosts, ...parsedPosts])
     }
+
+    // 팀 정보 로드 (storage.ts의 구조에 맞게 수정)
+    const appData = localStorage.getItem('teamup_app_data')
+    if (appData) {
+      const parsed = JSON.parse(appData)
+      const team = parsed.user?.team // user.team에서 현재 팀 가져오기
+      setCurrentTeam(team)
+      if (team && parsed.user) {
+        setIsTeamLeader(team.captainId === parsed.user.id)
+      }
+    }
   }, [])
 
   const [activeTab, setActiveTab] = useState<'posts' | 'courts'>('posts')
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isMapLoading, setIsMapLoading] = useState(true)
 
   const formatGameTime = (gameTime: string) => {
     const date = new Date(gameTime)
@@ -200,7 +248,8 @@ export default function MapPage() {
     lat: post.latitude,
     lng: post.longitude,
     title: post.teamName,
-    type: 'post' as const
+    type: 'post' as const,
+    postType: post.type // MATCH or GUEST
   }))
 
   const courtMarkers: MarkerData[] = nearbyCourts.map((court) => ({
@@ -232,6 +281,32 @@ export default function MapPage() {
 
   const handleKakaoClick = (post: Post) => {
     window.open(post.kakaoLink, '_blank')
+  }
+
+  // 팀 정보 가져오기 (팀 매칭용)
+  const getTeamInfo = (teamId: string): Team | undefined => {
+    return mockMatchTeams.find(team => team.id === teamId)
+  }
+
+  // 매칭 요청 핸들러 (matching 페이지와 동일한 로직)
+  const handleMatchRequest = (team: Team) => {
+    if (!isTeamLeader) {
+      toast.error('팀장만 매칭 요청을 보낼 수 있습니다.')
+      return
+    }
+    if (!currentTeam?.isOfficial) {
+      toast.error('정식 팀(5명 이상)만 매칭 요청을 보낼 수 있습니다.')
+      return
+    }
+    setSelectedMatchTeam(team)
+    setShowMatchRequestModal(true)
+    setIsModalOpen(false) // 기존 모달 닫기
+  }
+
+  const confirmMatchRequest = () => {
+    setShowMatchRequestModal(false)
+    toast.success(`${selectedMatchTeam?.name}에 매칭 요청을 보냈습니다!`)
+    // TODO: 실제 API 연동
   }
 
   return (
@@ -277,12 +352,45 @@ export default function MapPage() {
         </header>
 
         {/* 지도 영역 */}
-        <main className="mx-auto max-w-lg">
+        <main className="mx-auto max-w-lg relative">
           <KakaoMap
             className="h-[calc(100vh-230px)] w-full"
             markers={activeTab === 'posts' ? postMarkers : courtMarkers}
             onMarkerClick={handleMarkerClick}
+            onLoadingChange={setIsMapLoading}
           />
+
+          {/* 범례 (근처 모집글 탭에만 표시, 지도 로딩 완료 후) */}
+          {activeTab === 'posts' && !isMapLoading && (
+            <div className="absolute bottom-6 right-4 bg-background/95 backdrop-blur-sm border-2 border-border/50 rounded-xl px-3 py-2 shadow-xl z-10">
+              <div className="flex flex-col gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-6 flex items-center justify-center">
+                    <Image
+                      src="/icons/star-marker.svg"
+                      alt="용병 모집"
+                      width={20}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="text-foreground font-semibold">용병 모집</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-6 flex items-center justify-center">
+                    <Image
+                      src="/icons/vs-marker.svg"
+                      alt="팀 경기 모집"
+                      width={16}
+                      height={16}
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="text-foreground font-semibold">팀 경기 모집</span>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         <BottomNav />
@@ -303,7 +411,7 @@ export default function MapPage() {
             className="w-[430px] p-4 gap-3 border-2 border-foreground/30"
             onOpenAutoFocus={(e) => e.preventDefault()}
           >
-            {selectedPost && (
+            {selectedPost && selectedPost.type === 'GUEST' && (
               <>
                 <DialogHeader className="space-y-2">
                   <DialogTitle className="flex items-center gap-2 text-sm">
@@ -319,12 +427,21 @@ export default function MapPage() {
                 </DialogHeader>
 
                 <div className="space-y-3">
-                  {/* 설명 */}
+                  {/* 모집 제목 */}
                   {selectedPost.description && (
                     <div>
                       <h3 className="font-bold text-foreground text-base">
                         {selectedPost.description}
                       </h3>
+                    </div>
+                  )}
+
+                  {/* 상세 설명 */}
+                  {selectedPost.additionalDescription && (
+                    <div>
+                      <p className="text-sm text-foreground/80 leading-relaxed">
+                        {selectedPost.additionalDescription}
+                      </p>
                     </div>
                   )}
 
@@ -350,6 +467,88 @@ export default function MapPage() {
                 </div>
               </>
             )}
+
+            {selectedPost && selectedPost.type === 'MATCH' && (() => {
+              const teamInfo = getTeamInfo(selectedPost.teamId)
+              return teamInfo ? (
+                <>
+                  <DialogHeader className="space-y-2">
+                    <DialogTitle className="flex items-center gap-2 text-sm">
+                      <Badge className="text-xs px-2 py-0.5 bg-orange-500/10 text-orange-500 border-orange-500/20">
+                        ⚔️ 팀 경기 모집
+                      </Badge>
+                      {selectedPost.distance && (
+                        <span className="text-xs text-muted-foreground">
+                          {selectedPost.distance}km
+                        </span>
+                      )}
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-3">
+                    {/* 팀 이름 */}
+                    <div>
+                      <h3 className="font-bold text-foreground text-xl">
+                        {teamInfo.name}
+                      </h3>
+                      {teamInfo.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {teamInfo.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* 팀 정보 */}
+                    <div className="grid grid-cols-3 gap-3 rounded-lg bg-secondary/30 p-3">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">팀원</p>
+                        <p className="font-bold text-foreground">
+                          {teamInfo.memberCount}명
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">레벨</p>
+                        <p className="font-bold text-foreground">{teamInfo.level}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-1">경기</p>
+                        <p className="font-bold text-foreground">{teamInfo.totalGames}회</p>
+                      </div>
+                    </div>
+
+                    {/* 매칭률 */}
+                    {teamInfo.matchScore && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">AI 매칭</span>
+                        <Badge className="bg-primary/10 text-primary text-xs">
+                          {teamInfo.matchScore}%
+                        </Badge>
+                      </div>
+                    )}
+
+                    {/* 경기 정보 */}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span>📅</span>
+                        <span>{formatGameTime(selectedPost.gameTime)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span className="line-clamp-2">{selectedPost.location}</span>
+                      </div>
+                    </div>
+
+                    {/* 매칭하기 버튼 */}
+                    <Button
+                      className="w-full h-9 text-sm bg-orange-500"
+                      onClick={() => handleMatchRequest(teamInfo)}
+                    >
+                      ⚔️ 매칭 요청하기
+                    </Button>
+                  </div>
+                </>
+              ) : null
+            })()}
 
             {selectedCourt && (
               <>
@@ -388,6 +587,43 @@ export default function MapPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* 매칭 요청 확인 모달 (matching 페이지와 동일) */}
+        {showMatchRequestModal && selectedMatchTeam && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+            <Card className="w-full max-w-sm border-border/50 bg-card">
+              <CardContent className="p-6">
+                <h3 className="mb-4 text-xl font-bold text-foreground">매칭 요청</h3>
+                <div className="mb-6">
+                  <p className="mb-2 text-sm text-muted-foreground">상대 팀</p>
+                  <div className="rounded-lg bg-secondary/30 p-3">
+                    <p className="font-bold text-foreground">{selectedMatchTeam.name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedMatchTeam.description}</p>
+                  </div>
+                </div>
+                <p className="mb-6 text-sm text-muted-foreground">
+                  이 팀에 매칭 요청을 보낼까요?<br />
+                  상대 팀이 수락하면 팀장끼리 카카오톡으로 연락할 수 있습니다.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowMatchRequestModal(false)}
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={confirmMatchRequest}
+                  >
+                    요청 보내기
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </>
   )

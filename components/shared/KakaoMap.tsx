@@ -11,6 +11,7 @@ export interface MarkerData {
   lng: number
   title?: string
   type?: 'post' | 'court' | 'user'
+  postType?: 'MATCH' | 'GUEST' // 팀 매칭 vs 용병 모집
 }
 
 interface KakaoMapProps {
@@ -18,13 +19,15 @@ interface KakaoMapProps {
   markers?: MarkerData[]
   onMarkerClick?: (marker: MarkerData) => void
   showUserMarker?: boolean
+  onLoadingChange?: (isLoading: boolean) => void
 }
 
 export default function KakaoMap({
   className = '',
   markers = [],
   onMarkerClick,
-  showUserMarker = true
+  showUserMarker = true,
+  onLoadingChange
 }: KakaoMapProps) {
   useKakaoLoader()
 
@@ -40,9 +43,11 @@ export default function KakaoMap({
             lng: position.coords.longitude,
           })
           setIsLoading(false)
+          onLoadingChange?.(false)
         },
         () => {
           setIsLoading(false)
+          onLoadingChange?.(false)
         },
         {
           enableHighAccuracy: true,
@@ -52,8 +57,9 @@ export default function KakaoMap({
       )
     } else {
       setIsLoading(false)
+      onLoadingChange?.(false)
     }
-  }, [])
+  }, [onLoadingChange])
 
   // 로딩 중일 때
   if (isLoading) {
@@ -87,27 +93,28 @@ export default function KakaoMap({
         )}
 
         {/* 데이터 마커들 */}
-        {markers.map((marker) => (
-          <MapMarker
-            key={marker.id}
-            position={{ lat: marker.lat, lng: marker.lng }}
-            title={marker.title}
-            onClick={() => onMarkerClick?.(marker)}
-            image={
-              marker.type === 'post'
-                ? {
-                    src: '/icons/star-marker.svg',
-                    size: { width: 48, height: 48 }
-                  }
-                : marker.type === 'court'
-                ? {
-                    src: '/icons/basketball-marker.svg',
-                    size: { width: 48, height: 48 }
-                  }
-                : undefined
-            }
-          />
-        ))}
+        {markers.map((marker) => {
+          // 핀 이미지 결정
+          let markerImage = undefined
+          if (marker.type === 'post') {
+            // 용병 모집(GUEST)은 파란 별, 팀 매칭(MATCH)은 주황 VS
+            markerImage = marker.postType === 'MATCH'
+              ? { src: '/icons/vs-marker.svg', size: { width: 40, height: 40 } }
+              : { src: '/icons/star-marker.svg', size: { width: 52, height: 65 } }
+          } else if (marker.type === 'court') {
+            markerImage = { src: '/icons/basketball-marker.svg', size: { width: 48, height: 48 } }
+          }
+
+          return (
+            <MapMarker
+              key={marker.id}
+              position={{ lat: marker.lat, lng: marker.lng }}
+              title={marker.title}
+              onClick={() => onMarkerClick?.(marker)}
+              image={markerImage}
+            />
+          )
+        })}
       </Map>
     </div>
   )
