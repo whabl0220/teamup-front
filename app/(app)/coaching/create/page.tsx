@@ -210,7 +210,7 @@ export default function CreateCoachingPage() {
                 상대팀 이름
               </label>
               <Input
-                placeholder="예: 강서 Rockets"
+                placeholder="예: 세종 Twins"
                 value={opponent}
                 onChange={(e) => setOpponent(e.target.value)}
                 className="border-border/50 shadow-none"

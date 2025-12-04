@@ -7,9 +7,9 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, MessageCircle, MapPin, Bell, Users } from 'lucide-react'
-import { getReceivedMatchRequests, getLatestMatchRequest, formatTimeAgo, initMockData } from '@/lib/storage'
-import type { MatchRequest } from '@/types'
+import { Sparkles, MessageCircle, MapPin, Bell, Users, Trophy, TrendingUp } from 'lucide-react'
+import { getReceivedMatchRequests, getLatestMatchRequest, formatTimeAgo, initMockData, getCurrentUser, getCurrentTeamStats } from '@/lib/storage'
+import type { MatchRequest, Team } from '@/types'
 
 export default function HomePage() {
   // TODO: 실제로는 API로 팀 보유 여부 체크
@@ -19,25 +19,35 @@ export default function HomePage() {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [latestRequest, setLatestRequest] = useState<MatchRequest | null>(null)
 
+  // 팀 정보 및 통계
+  const [currentTeam, setCurrentTeam] = useState<Team | null>(null)
+  const [teamStats, setTeamStats] = useState({
+    totalGames: 0,
+    wins: 0,
+    losses: 0,
+    winRate: 0
+  })
+
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    // Mock 데이터 초기화 (개발용)
-    // TODO: 테스트 후 아래 주석 해제하여 한 번만 실행되게 변경
-    // const hasInitialized = localStorage.getItem('teamup_initialized')
-    // if (!hasInitialized) {
-    //   initMockData()
-    //   localStorage.setItem('teamup_initialized', 'true')
-    // }
-
-    // 임시: 항상 초기화 (매칭 요청 3개 보기 위해)
-    initMockData()
+    // Mock 데이터 초기화 (한 번만 실행)
+    const hasInitialized = localStorage.getItem('teamup_initialized')
+    if (!hasInitialized) {
+      initMockData()
+      localStorage.setItem('teamup_initialized', 'true')
+    }
 
     // 매칭 요청 로드
     const loadData = () => {
       const requests = getReceivedMatchRequests()
       setMatchRequests(requests)
       setLatestRequest(getLatestMatchRequest())
+
+      // 팀 정보 및 통계 로드
+      const user = getCurrentUser()
+      setCurrentTeam(user?.team || null)
+      setTeamStats(getCurrentTeamStats())
     }
 
     loadData()
@@ -113,6 +123,59 @@ export default function HomePage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
+
+        {/* 내 팀 정보 카드 */}
+        {currentTeam && (
+          <div className="mb-6">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              내 팀 정보
+            </h3>
+            <Link href={`/team/${currentTeam.id}`}>
+              <Card className="cursor-pointer border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50 hover:shadow-lg">
+                <CardContent className="p-5">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/20">
+                        <Trophy className="h-7 w-7 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-foreground">{currentTeam.name}</h3>
+                        <div className="mt-1 flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
+                            레벨 {currentTeam.level}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">{currentTeam.region}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-3 rounded-xl bg-background/50 p-3">
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-foreground">{teamStats.totalGames}</p>
+                      <p className="text-xs text-muted-foreground">경기</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-green-600">{teamStats.wins}</p>
+                      <p className="text-xs text-muted-foreground">승</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-bold text-red-600">{teamStats.losses}</p>
+                      <p className="text-xs text-muted-foreground">패</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <TrendingUp className="h-3 w-3 text-primary" />
+                        <p className="text-lg font-bold text-primary">{teamStats.winRate}%</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">승률</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        )}
 
         {/* 주요 기능 설명 카드 */}
         <div className="mb-6">
