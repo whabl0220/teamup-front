@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, Clock, AlertCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 const API_URL = 'http://localhost:8080'
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false' // 기본값: Mock 사용
@@ -51,7 +52,9 @@ export default function LoginPage() {
         const generatedCode = Math.floor(100000 + Math.random() * 900000).toString()
         setMockCode(generatedCode)
         console.log(`🔐 Mock 인증코드: ${generatedCode}`)
-        alert(`Mock 모드: 인증코드는 "${generatedCode}" 입니다`)
+        toast.info('인증코드 발송 완료', {
+          description: `인증코드는 "${generatedCode}" 입니다`,
+        })
         setStep('code')
         setTimer(300) // 5분
         setIsLoading(false)
@@ -137,7 +140,9 @@ export default function LoginPage() {
         const generatedCode = Math.floor(100000 + Math.random() * 900000).toString()
         setMockCode(generatedCode)
         console.log(`🔐 Mock 인증코드 (재전송): ${generatedCode}`)
-        alert(`Mock 모드: 인증코드는 "${generatedCode}" 입니다`)
+        toast.info('인증코드 재전송 완료', {
+          description: `인증코드는 "${generatedCode}" 입니다`,
+        })
         setTimer(300) // 5분 리셋
         setIsLoading(false)
       }, 1000)
