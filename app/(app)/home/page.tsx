@@ -7,7 +7,7 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, MessageCircle, MapPin, Bell, Users, Trophy, TrendingUp } from 'lucide-react'
+import { Sparkles, MessageCircle, MapPin, Bell, Users, Trophy, TrendingUp, Plus, UserPlus } from 'lucide-react'
 import { getReceivedMatchRequests, getLatestMatchRequest, formatTimeAgo, initMockData, getCurrentUser, getCurrentTeamStats } from '@/lib/storage'
 import type { MatchRequest, Team } from '@/types'
 
@@ -46,7 +46,9 @@ export default function HomePage() {
 
       // 팀 정보 및 통계 로드
       const user = getCurrentUser()
-      setCurrentTeam(user?.team || null)
+      const team = user?.team || null
+      setCurrentTeam(team)
+      setHasTeam(!!team) // 팀 유무 체크
       setTeamStats(getCurrentTeamStats())
     }
 
@@ -78,18 +80,24 @@ export default function HomePage() {
         <main className="mx-auto max-w-lg px-4 py-6">
           <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
             <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-secondary">
-              <Sparkles className="h-12 w-12 text-muted-foreground" />
+              <Users className="h-12 w-12 text-muted-foreground" />
             </div>
             <h2 className="mb-3 text-2xl font-bold text-balance">아직 팀이 없습니다</h2>
-            <p className="mb-8 text-foreground text-balance">
+            <p className="mb-8 text-muted-foreground text-balance">
               팀을 만들거나 기존 팀에 참여하여<br />AI 매칭과 코칭을 시작하세요
             </p>
 
             <div className="flex w-full max-w-sm flex-col gap-3">
-              <Link href="/matching" className="w-full">
+              <Link href="/team/create" className="w-full">
                 <Button className="w-full font-semibold" size="lg">
-                  <Users className="mr-2 h-5 w-5" />
-                  팀 매칭 바로가기
+                  <Plus className="mr-2 h-5 w-5" />
+                  팀 생성하기
+                </Button>
+              </Link>
+              <Link href="/map" className="w-full">
+                <Button variant="outline" className="w-full font-semibold" size="lg">
+                  <UserPlus className="mr-2 h-5 w-5" />
+                  팀 참여하기
                 </Button>
               </Link>
             </div>
