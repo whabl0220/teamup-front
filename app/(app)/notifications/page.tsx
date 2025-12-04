@@ -7,18 +7,13 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Bell, ShieldAlert, UserPlus } from 'lucide-react'
+import { AlertCircle, Bell, ShieldAlert } from 'lucide-react'
 import { toast } from 'sonner'
-import { getReceivedMatchRequests, updateMatchRequestStatus, formatTimeAgo, getCurrentTeam, getAppData, getReceivedJoinRequests, updateJoinRequestStatus } from '@/lib/storage'
-import type { MatchRequest, JoinRequest } from '@/types'
-import { MatchRequestsModal } from '@/components/shared/match-requests-modal'
-import { JoinRequestsModal } from '@/components/shared/join-requests-modal'
+import { getReceivedMatchRequests, updateMatchRequestStatus, formatTimeAgo, getCurrentTeam, getAppData } from '@/lib/storage'
+import type { MatchRequest } from '@/types'
 
 export default function NotificationsPage() {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
-  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([])
-  const [showMatchRequestsModal, setShowMatchRequestsModal] = useState(false)
-  const [showJoinRequestsModal, setShowJoinRequestsModal] = useState(false)
   const [isTeamLeader, setIsTeamLeader] = useState(false)
 
   const loadData = () => {
@@ -26,8 +21,6 @@ export default function NotificationsPage() {
 
     const requests = getReceivedMatchRequests()
     setMatchRequests(requests)
-    const joins = getReceivedJoinRequests()
-    setJoinRequests(joins)
 
     // 팀장 권한 체크
     const currentTeam = getCurrentTeam()
@@ -53,19 +46,7 @@ export default function NotificationsPage() {
     loadData()
   }
 
-  const handleAcceptJoinRequest = (requestId: string, userName: string) => {
-    updateJoinRequestStatus(requestId, 'accepted')
-    toast.success(`${userName}님의 팀 참여 요청을 수락했습니다!`)
-    loadData()
-  }
-
-  const handleRejectJoinRequest = (requestId: string) => {
-    updateJoinRequestStatus(requestId, 'rejected')
-    toast.success('팀 참여 요청을 거절했습니다')
-    loadData()
-  }
-
-  const hasNotifications = matchRequests.length > 0 || joinRequests.length > 0
+  const hasNotifications = matchRequests.length > 0
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -113,26 +94,14 @@ export default function NotificationsPage() {
         {/* 받은 매칭 요청 */}
         {matchRequests.length > 0 && (
           <div className="mb-6">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-primary" />
-                <h2 className="font-bold text-foreground">받은 매칭 요청</h2>
-                <Badge className="bg-primary">{matchRequests.length}</Badge>
-              </div>
-              {matchRequests.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowMatchRequestsModal(true)}
-                  className="text-primary hover:text-primary"
-                >
-                  전체
-                </Button>
-              )}
+            <div className="mb-3 flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-primary" />
+              <h2 className="font-bold text-foreground">받은 매칭 요청</h2>
+              <Badge className="bg-primary">{matchRequests.length}</Badge>
             </div>
 
             <div className="space-y-3">
-              {matchRequests.slice(0, 3).map((request) => (
+              {matchRequests.map((request) => (
                 <Card key={request.id} className="border-primary/50 bg-primary/5">
                   <CardContent className="p-4">
                     <div className="mb-3 flex items-start justify-between">
@@ -176,88 +145,7 @@ export default function NotificationsPage() {
           </div>
         )}
 
-        {/* 팀 참여 요청 */}
-        {joinRequests.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-blue-500" />
-                <h2 className="font-bold text-foreground">팀 참여 요청</h2>
-                <Badge className="bg-blue-500/10 text-blue-600 text-xs">{joinRequests.length}</Badge>
-              </div>
-              {joinRequests.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowJoinRequestsModal(true)}
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  전체
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {joinRequests.slice(0, 3).map((request) => (
-                <Card key={request.id} className="border-blue-500/50 bg-blue-500/5">
-                  <CardContent className="p-4">
-                    <div className="mb-3 flex items-start justify-between">
-                      <div>
-                        <h3 className="mb-1 font-bold text-foreground">{request.userName}</h3>
-                        <Badge variant="secondary" className="text-xs">팀 참여</Badge>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{formatTimeAgo(request.createdAt)}</span>
-                    </div>
-                    <p className="mb-3 text-sm text-muted-foreground">{request.message}</p>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          className="flex-1 text-destructive hover:bg-blue-600! hover:text-white! hover:border-none!"
-                          onClick={() => handleRejectJoinRequest(request.id)}
-                          disabled={!isTeamLeader}
-                        >
-                          거절
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex-1 text-green-600 hover:bg-blue-600! hover:text-white! hover:border-none!"
-                          onClick={() => handleAcceptJoinRequest(request.id, request.userName)}
-                          disabled={!isTeamLeader}
-                        >
-                          수락
-                        </Button>
-                      </div>
-                      <Link href={`/player/${request.userId}`} className="w-full">
-                        <Button variant="outline" className="w-full hover:bg-blue-600! hover:text-white! hover:border-none!">상세 보기</Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
       </main>
-
-      {/* 받은 매칭 요청 전체 모달 */}
-      <MatchRequestsModal
-        open={showMatchRequestsModal}
-        onOpenChange={setShowMatchRequestsModal}
-        matchRequests={matchRequests}
-        onAccept={handleAcceptRequest}
-        onReject={handleRejectRequest}
-      />
-
-      {/* 팀 참여 요청 전체 모달 */}
-      <JoinRequestsModal
-        open={showJoinRequestsModal}
-        onOpenChange={setShowJoinRequestsModal}
-        joinRequests={joinRequests}
-        onAccept={handleAcceptJoinRequest}
-        onReject={handleRejectJoinRequest}
-      />
 
       <BottomNav />
     </div>
