@@ -199,7 +199,8 @@ export interface Post {
   gameTime: string; // 경기 시작 시간
   location: string; // 장소명 (예: 광진 농구장)
   kakaoLink: string; // 카카오톡 오픈채팅방 URL
-  description?: string; // 추가 설명
+  description?: string; // 모집 제목 (30자 이내)
+  additionalDescription?: string; // 상세 설명 (100자 이내)
   createdAt: string; // 작성 시간
   distance?: number; // 사용자로부터의 거리 (km)
 }

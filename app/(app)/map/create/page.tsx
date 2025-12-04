@@ -24,7 +24,8 @@ export default function CreatePostPage() {
   const [latitude, setLatitude] = useState<number | null>(null)
   const [longitude, setLongitude] = useState<number | null>(null)
   const [kakaoLink, setKakaoLink] = useState('')
-  const [description, setDescription] = useState('')
+  const [description, setDescription] = useState('') // 모집 제목
+  const [additionalDescription, setAdditionalDescription] = useState('') // 상세 설명
   const [showPostcode, setShowPostcode] = useState(false)
   const [showDateTimePicker, setShowDateTimePicker] = useState(false)
   const [kakaoLinkError, setKakaoLinkError] = useState('')
@@ -120,8 +121,9 @@ export default function CreatePostPage() {
     const day = String(selectedDate.getDate()).padStart(2, '0')
     const gameTime = `${year}-${month}-${day} ${selectedHour}:${selectedMinute}`
 
-    // 추가 설명이 없으면 기본 문구 사용
+    // 모집 제목이 없으면 기본 문구 사용
     const finalDescription = description.trim() || '근처에서 같이 농구할 사람 모집해요'
+    const finalAdditionalDescription = additionalDescription.trim() || undefined
 
     // 새 모집글 생성
     const newPost = {
@@ -135,6 +137,7 @@ export default function CreatePostPage() {
       location, // 장소명 (상세주소)
       kakaoLink,
       description: finalDescription,
+      additionalDescription: finalAdditionalDescription,
       createdAt: new Date().toISOString(),
     }
 
@@ -253,17 +256,33 @@ export default function CreatePostPage() {
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-foreground">
-              추가 설명 (선택)
+              모집 제목 (선택)
             </label>
-            <Textarea
-              placeholder="예: 가드 포지션 1명 급구!"
+            <Input
+              placeholder="예: 근처에서 같이 농구할 사람 모집해요."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="bg-background min-h-[100px]"
+              className="bg-background"
               maxLength={30}
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              {description.length}/30
+              {description.length}/30 (비워두면 기본 제목이 표시됩니다)
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-foreground">
+              상세 설명 (선택)
+            </label>
+            <Textarea
+              placeholder="예: 포지션 상관없이 누구나 환영합니다. 초보자도 괜찮아요."
+              value={additionalDescription}
+              onChange={(e) => setAdditionalDescription(e.target.value)}
+              className="bg-background min-h-[100px]"
+              maxLength={100}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {additionalDescription.length}/100
             </p>
           </div>
 

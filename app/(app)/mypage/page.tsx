@@ -105,25 +105,13 @@ export default function MyPage() {
           </h3>
           <Card className="border-border/50 bg-card">
             <CardContent className="p-0">
-              <Link href="/mypage/profile">
+              <Link href="/profile/basic">
                 <button className="flex w-full items-center justify-between p-4 transition-colors hover:bg-muted/50">
                   <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
                       <UserIcon className="h-5 w-5 text-primary" />
                     </div>
-                    <span className="font-medium text-foreground">프로필 수정</span>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
-              </Link>
-              <Separator />
-              <Link href="/mypage/password">
-                <button className="flex w-full items-center justify-between p-4 transition-colors hover:bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                      <Lock className="h-5 w-5 text-primary" />
-                    </div>
-                    <span className="font-medium text-foreground">비밀번호 변경</span>
+                    <span className="font-medium text-foreground">기본 정보 수정</span>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </button>

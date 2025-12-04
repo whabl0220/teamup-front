@@ -59,7 +59,7 @@ export default function LandingPage() {
       {/* 푸터 */}
       <footer className="border-t border-border/50 py-6">
         <div className="mx-auto max-w-lg px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 TeamUp. AI Powered Team Matching</p>
+          <p>2025 TeamUp. AI Powered Team Matching</p>
         </div>
       </footer>
     </div>

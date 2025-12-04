@@ -105,7 +105,7 @@ export default function ProfileEditPage() {
         {/* 미리보기 카드 */}
         <div>
           <h2 className="mb-3 text-sm font-semibold text-foreground">카드 미리보기</h2>
-          <PlayerCard user={previewUser} className="max-w-sm" />
+          <PlayerCard user={previewUser} className="mx-auto max-w-sm" />
         </div>
 
         {/* 입력 폼 */}
@@ -171,6 +171,10 @@ export default function ProfileEditPage() {
                   <option value="PF">파워 포워드 (PF)</option>
                   <option value="C">센터 (C)</option>
                 </select>
+                {/* 안내 문구 */}
+                <p className="text-xs text-muted-foreground">
+                  💡 주 포지션을 먼저 선택해야 카드에 부 포지션이 표시됩니다
+                </p>
               </div>
             </CardContent>
           </Card>
