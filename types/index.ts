@@ -79,6 +79,10 @@ export interface User {
   avatar?: string;
   team?: Team; // 한 팀만 소속 가능 (optional - 팀이 없을 수도 있음)
 
+  // 기본 정보
+  gender?: string; // 성별 ("남성", "여성")
+  address?: string; // 활동 지역
+
   // Player Card 정보 (FIFA 스타일)
   height?: number; // 키 (cm)
   position?: Position; // 주 포지션
