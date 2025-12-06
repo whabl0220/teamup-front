@@ -57,8 +57,8 @@ export interface Activity {
 }
 
 // Player Card Types (FIFA Style)
-export type Position = 'PG' | 'SG' | 'SF' | 'PF' | 'C'; // Point Guard / Shooting Guard / Small Forward / Power Forward / Center
-export type PlayStyle = 'SL' | 'SH' | 'DF' | 'PA'; // Slasher / Shooter / Defender / Passer
+export type Position = 'GUARD' | 'FORWARD' | 'CENTER'; // 백엔드 API 기준
+export type PlayStyle = 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'; // 백엔드 API 기준
 export type SkillLevel = 'ROOKIE' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'PRO';
 export type CardSkin = 'PG_BLUE' | 'SG_CYAN' | 'SF_GREEN' | 'PF_ORANGE' | 'C_PURPLE';
 

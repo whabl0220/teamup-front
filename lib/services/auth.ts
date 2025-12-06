@@ -33,12 +33,38 @@ export interface SignupResponse {
   createdAt: string;
 }
 
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  id: number;
+  email: string;
+  nickname: string;
+  gender: string;
+  address: string;
+  height: number;
+  position: string;
+  subPosition?: string;
+  playStyle?: string;
+  skillLevel?: string;
+  cardSkin?: string;
+  statusMsg?: string;
+  createdAt: string;
+}
+
 export const authService = {
   // ========== 실제 사용 API ==========
 
   // 회원가입 (실제 사용)
   signup: async (data: RegisterRequest): Promise<SignupResponse> => {
     return post<SignupResponse>('/api/auth/signup', data)
+  },
+
+  // 로그인 (실제 사용)
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
+    return post<LoginResponse>('/api/auth/login', data)
   },
 
   // ========== 향후 사용 예정 (주석 처리) ==========
