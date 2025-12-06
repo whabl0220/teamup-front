@@ -6,6 +6,7 @@ export * from './team'
 export * from './matching'
 export * from './coaching'
 export * from './notification'
+export * from './enums'
 
 // 편의를 위한 통합 객체
 export { authService } from './auth'
