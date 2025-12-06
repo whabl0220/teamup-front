@@ -24,53 +24,53 @@ export interface ApiResponse<T = unknown> {
   message?: string
 }
 
-// Fetch wrapper (JSON 응답)
-export async function fetchAPI<T = unknown>(
-  endpoint: string,
-  options?: RequestInit
-): Promise<T> {
-  const token = getAccessToken()
+// Fetch 공통 로직 추출
+async function baseFetch(endpoint: string, options?: RequestInit, timeout = 30000) {
+  const token = getAccessToken();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options?.headers,
-    },
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(errorText || `API Error: ${response.statusText}`)
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options?.headers,
+      },
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `API Error: ${response.statusText}`);
+    }
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
 
-  return response.json()
+// Fetch wrapper (JSON 응답)
+export async function fetchAPI<T = unknown>(endpoint: string, options?: RequestInit): Promise<T> {
+  const response = await baseFetch(endpoint, options);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `API Error: ${response.statusText}`);
+  }
+  const contentLength = response.headers.get('content-length');
+  if (response.status === 204 || contentLength === '0') {
+    return undefined as T;
+  }
+  const text = await response.text();
+  return text ? JSON.parse(text) : (undefined as T);
 }
 
 // Fetch wrapper (Text 응답)
-export async function fetchText(
-  endpoint: string,
-  options?: RequestInit
-): Promise<string> {
-  const token = getAccessToken()
-
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options?.headers,
-    },
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(errorText || `API Error: ${response.statusText}`)
-  }
-
-  return response.text()
+export async function fetchText(endpoint: string, options?: RequestInit): Promise<string> {
+  const response = await baseFetch(endpoint, options);
+  return response.text();
 }
+
 
 // GET 요청
 export async function get<T = unknown>(endpoint: string): Promise<T> {
@@ -100,6 +100,9 @@ export async function put<T = unknown>(
 }
 
 // DELETE 요청
-export async function del<T = unknown>(endpoint: string): Promise<T> {
-  return fetchAPI<T>(endpoint, { method: 'DELETE' })
+export async function del<T = unknown>(endpoint: string, data?: unknown): Promise<T> {
+  return fetchAPI<T>(endpoint, {
+    method: 'DELETE',
+    body: data ? JSON.stringify(data) : undefined,
+  });
 }

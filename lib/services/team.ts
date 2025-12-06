@@ -1,25 +1,3 @@
-// 게임 종료 및 피드백 제출 API 타입
-export interface PositionFeedback {
-  positionNumber: number;
-  tags: string[];
-}
-
-export interface FinishGameFeedbackRequest {
-  teamId: number;
-  result: 'WIN' | 'LOSE' | 'DRAW';
-  positionFeedbacks: PositionFeedback[];
-}
-
-export interface FinishGameFeedbackResponse {
-  gameId: number;
-  teamId: number;
-  teamName: string;
-  result: 'WIN' | 'LOSE' | 'DRAW';
-  positionFeedbacksJson: string;
-  aiComment: string;
-  createdAt: string;
-}
-  
 // 게임 생성 API 타입
 export interface CreateGameRequest {
   homeTeamId: number;

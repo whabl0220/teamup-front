@@ -1,12 +1,16 @@
+// AI 코칭 관련 API
+import { post, get } from './client'
+import type { GameResult, FeedbackTag } from './enums'
+
 // 게임 종료 및 피드백 제출 API 타입
 export interface PositionFeedback {
   positionNumber: number;
-  tags: string[];
+  tags: FeedbackTag[]; // enums.ts의 FeedbackTag 타입 사용
 }
 
 export interface FinishGameFeedbackRequest {
   teamId: number;
-  result: 'WIN' | 'LOSE' | 'DRAW';
+  result: GameResult; // enums.ts의 GameResult 타입 사용
   positionFeedbacks: PositionFeedback[];
 }
 
@@ -14,7 +18,7 @@ export interface FinishGameFeedbackResponse {
   gameId: number;
   teamId: number;
   teamName: string;
-  result: 'WIN' | 'LOSE' | 'DRAW';
+  result: GameResult; // enums.ts의 GameResult 타입 사용
   positionFeedbacksJson: string;
   aiComment: string;
   createdAt: string;
@@ -25,18 +29,16 @@ export interface CreateReportResponse {
   gameId: number;
   teamId: number;
   teamName: string;
-  result: 'WIN' | 'LOSE' | 'DRAW';
+  result: GameResult; // enums.ts의 GameResult 타입 사용
   positionFeedbacksJson: string;
   aiComment: string;
   createdAt: string;
 }
-// AI 코칭 관련 API
-import { post, get } from './client'
 
 export interface AIFeedbackRequest {
   teamId: string
   teamDNA: string
-  gameResult: 'WIN' | 'LOSE' | 'DRAW'
+  gameResult: GameResult // enums.ts의 GameResult 타입 사용
   feedbackAnswers: Record<string, string> // 4개 질문의 답변
   opponent: string
   gameDate: string
@@ -45,7 +47,7 @@ export interface AIFeedbackRequest {
 export interface AIFeedbackResponse {
   id: string
   teamId: string
-  gameResult: 'WIN' | 'LOSE' | 'DRAW'
+  gameResult: GameResult // enums.ts의 GameResult 타입 사용
   opponent: string
   gameDate: string
   feedback: string

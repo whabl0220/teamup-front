@@ -1,5 +1,6 @@
 // 유저 관련 API
 import { get, del } from './client'
+import { Team } from '@/types'
 
 export interface User {
   id: string
@@ -13,7 +14,8 @@ export interface User {
   height?: number
   playStyle?: string
   statusMsg?: string
-  team?: unknown
+  Team?: Team[]
+  createdAt: string
 }
 
 export const userService = {
