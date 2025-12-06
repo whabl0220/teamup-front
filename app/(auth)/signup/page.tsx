@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { UserInfoForm, UserInfoFormData } from '@/components/features/profile/UserInfoForm'
 import { toast } from 'sonner'
 import { authService, type RegisterRequest } from '@/lib/services'
@@ -200,13 +200,6 @@ export default function SignupPage() {
                 </button>
               </div>
             </div>
-
-            {error && (
-              <div className="flex items-center gap-1.5 text-sm text-red-500">
-                <AlertCircle className="h-4 w-4" />
-                <span>{error}</span>
-              </div>
-            )}
 
             <Button
               type="submit"
