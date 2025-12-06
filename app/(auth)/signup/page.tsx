@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Lock, AlertCircle } from 'lucide-react'
+import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { UserInfoForm, UserInfoFormData } from '@/components/features/profile/UserInfoForm'
 import { toast } from 'sonner'
 import { authService, type RegisterRequest } from '@/lib/services'
@@ -19,6 +19,8 @@ export default function SignupPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [formData, setFormData] = useState<UserInfoFormData>({
     nickname: '',
     gender: '',
@@ -44,8 +46,8 @@ export default function SignupPage() {
     }
 
     // 비밀번호 검증
-    if (!password || password.length < 6) {
-      setError('비밀번호는 최소 6자 이상이어야 합니다.')
+    if (!password || password.length < 8) {
+      setError('비밀번호는 최소 8자 이상이어야 합니다.')
       return
     }
 
@@ -146,15 +148,27 @@ export default function SignupPage() {
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="password"
-                  type="password"
-                  placeholder="최소 6자 이상"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="최소 8자 이상"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="h-11 pl-10"
-                  minLength={6}
+                  className="h-11 pl-10 pr-10"
+                  minLength={8}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 
@@ -164,14 +178,26 @@ export default function SignupPage() {
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <Input
                   id="passwordConfirm"
-                  type="password"
+                  type={showPasswordConfirm ? "text" : "password"}
                   placeholder="비밀번호를 다시 입력하세요"
                   value={passwordConfirm}
                   onChange={(e) => setPasswordConfirm(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="h-11 pl-10"
+                  className="h-11 pl-10 pr-10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={isLoading}
+                >
+                  {showPasswordConfirm ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
             </div>
 

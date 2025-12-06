@@ -82,8 +82,8 @@ export function UserInfoForm({
                   <SelectValue placeholder="성별" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="남성">남성</SelectItem>
-                  <SelectItem value="여성">여성</SelectItem>
+                  <SelectItem value="MALE">남성</SelectItem>
+                  <SelectItem value="FEMALE">여성</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -156,11 +156,9 @@ export function UserInfoForm({
                   <SelectValue placeholder="주 포지션" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PG">포인트 가드</SelectItem>
-                  <SelectItem value="SG">슈팅 가드</SelectItem>
-                  <SelectItem value="SF">스몰 포워드</SelectItem>
-                  <SelectItem value="PF">파워 포워드</SelectItem>
-                  <SelectItem value="C">센터</SelectItem>
+                  <SelectItem value="GUARD">가드</SelectItem>
+                  <SelectItem value="FORWARD">포워드</SelectItem>
+                  <SelectItem value="CENTER">센터</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -176,11 +174,9 @@ export function UserInfoForm({
                   <SelectValue placeholder="선택사항" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="PG">포인트 가드</SelectItem>
-                  <SelectItem value="SG">슈팅 가드</SelectItem>
-                  <SelectItem value="SF">스몰 포워드</SelectItem>
-                  <SelectItem value="PF">파워 포워드</SelectItem>
-                  <SelectItem value="C">센터</SelectItem>
+                  <SelectItem value="GUARD">가드</SelectItem>
+                  <SelectItem value="FORWARD">포워드</SelectItem>
+                  <SelectItem value="CENTER">센터</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -199,10 +195,10 @@ export function UserInfoForm({
                 <SelectValue placeholder="플레이 스타일 선택" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="SL">돌파형 (Slasher)</SelectItem>
-                <SelectItem value="SH">슈터형 (Shooter)</SelectItem>
-                <SelectItem value="DF">수비형 (Defender)</SelectItem>
-                <SelectItem value="PA">패스형 (Passer)</SelectItem>
+                <SelectItem value="SLASHER">돌파형 (Slasher)</SelectItem>
+                <SelectItem value="SHOOTER">슈터형 (Shooter)</SelectItem>
+                <SelectItem value="DEFENDER">수비형 (Defender)</SelectItem>
+                <SelectItem value="PASSER">패스형 (Passer)</SelectItem>
               </SelectContent>
             </Select>
           </div>
