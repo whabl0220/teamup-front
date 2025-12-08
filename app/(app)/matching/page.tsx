@@ -60,7 +60,7 @@ export default function MatchingPage() {
             isOfficial: s.memberCount >= 5,
             captainId: 'unknown',
             description: '',
-            matchScore: 0,
+            matchScore: 90,
             teamDna: s.teamDna as 'BULLS' | 'WARRIORS' | 'SPURS',
             teamLevel: s.teamLevel,
             teamExp: 0,

@@ -148,7 +148,13 @@ export default function CoachingPageContent() {
   // 농구 코트 관련 상태
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [feedbackAnswers, setFeedbackAnswers] = useState<Record<number, Record<string, string>>>({})
+  const [feedbackAnswers, setFeedbackAnswers] = useState<Record<number, Record<string, string>>>({
+    1: { q1: '좋았다', q2: '잘 맞았다', q3: '적극적이었다', position_question: '좋았다' },
+    2: { q1: '좋았다', q2: '잘 맞았다', q3: '적극적이었다', position_question: '잘 만들어졌다' },
+    3: { q1: '좋았다', q2: '잘 맞았다', q3: '적극적이었다', position_question: '빨랐다' },
+    4: { q1: '좋았다', q2: '잘 맞았다', q3: '적극적이었다', position_question: '적극적' },
+    5: { q1: '좋았다', q2: '잘 맞았다', q3: '적극적이었다', position_question: '안정적' },
+  })
 
   // 캘린더 모달 상태
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)

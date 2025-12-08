@@ -159,9 +159,16 @@ export default function CoachingDetailPage() {
             <CardContent className="p-6">
               <div className="mb-4 flex items-start gap-3">
                 <Quote className="h-6 w-6 shrink-0 text-primary/50" />
-                <p className="text-base leading-relaxed text-foreground">
-                  {record.aiComment}
-                </p>
+                <div className="text-base leading-relaxed text-foreground space-y-4">
+                  {record.aiComment.split(/(?=[🏀📊🎯✅⚠️💪👍◆])/g).map((section, index) => {
+                    if (!section.trim()) return null;
+                    return (
+                      <p key={index} className="whitespace-pre-wrap">
+                        {section.trim()}
+                      </p>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* AI 서명 */}
