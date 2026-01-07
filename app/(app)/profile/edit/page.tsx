@@ -34,7 +34,20 @@ export default function ProfileEditPage() {
       try {
         setIsLoading(true)
         const userData = await userService.getMe()
-        setUser(userData)
+        // API 응답을 프론트엔드 User 타입으로 변환
+        const user: User = {
+          id: userData.id,
+          name: userData.nickname, // nickname → name 변환
+          email: userData.email,
+          gender: userData.gender,
+          address: userData.address,
+          height: userData.height,
+          position: userData.mainPosition as Position,
+          subPosition: userData.subPosition as Position | undefined,
+          playStyle: userData.playStyle as PlayStyle | undefined,
+          statusMsg: userData.statusMsg,
+        }
+        setUser(user)
         if (userData) {
           setFormData({
             height: userData.height || 0,
