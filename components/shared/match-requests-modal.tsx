@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { MatchRequest } from '@/types'
-import { formatTimeAgo } from '@/lib/storage'
+import { formatTimeAgo } from '@/lib/utils'
 
 interface MatchRequestsModalProps {
   open: boolean

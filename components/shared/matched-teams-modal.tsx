@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Check } from 'lucide-react'
 import type { MatchedTeam } from '@/types'
-import { formatTimeAgo } from '@/lib/storage'
+import { formatTimeAgo } from '@/lib/utils'
 
 interface MatchedTeamsModalProps {
   open: boolean
