@@ -4,15 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
-import { getCurrentUser, updateCurrentUser } from '@/lib/storage'
+import { userService } from '@/lib/services'
 import { User } from '@/types'
 import { UserInfoForm, UserInfoFormData } from '@/components/features/profile/UserInfoForm'
-
-const API_URL = 'http://localhost:8080'
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false' // 기본값: Mock 사용
+import { toast } from 'sonner'
 
 export default function BasicInfoEditPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -31,20 +30,32 @@ export default function BasicInfoEditPage() {
 
   // 클라이언트에서만 데이터 로드 (hydration 오류 방지)
   useEffect(() => {
-    const userData = getCurrentUser()
-    setUser(userData)
-    if (userData) {
-      setFormData({
-        nickname: userData.name || '',
-        gender: userData.gender || '',
-        address: userData.address || '',
-        height: userData.height?.toString() || '',
-        mainPosition: userData.position || '',
-        subPosition: userData.subPosition || '',
-        playStyle: userData.playStyle || '',
-        statusMsg: userData.statusMsg || ''
-      })
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        const userData = await userService.getMe()
+        setUser(userData)
+        if (userData) {
+          setFormData({
+            nickname: userData.nickname || '',
+            gender: userData.gender || '',
+            address: userData.address || '',
+            height: userData.height?.toString() || '',
+            mainPosition: userData.mainPosition || '',
+            subPosition: userData.subPosition || '',
+            playStyle: userData.playStyle || '',
+            statusMsg: userData.statusMsg || ''
+          })
+        }
+      } catch (err) {
+        console.error('사용자 정보 로드 실패:', err)
+        toast.error('사용자 정보를 불러오는데 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    loadData()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,54 +63,36 @@ export default function BasicInfoEditPage() {
     setIsSaving(true)
     setError('')
 
-    // Mock 모드
-    if (USE_MOCK) {
-      setTimeout(() => {
-        console.log('Mock 기본 정보 수정 성공:', formData)
-        // 현재 유저 정보 업데이트
-        updateCurrentUser({
-          name: formData.nickname,
-          gender: formData.gender,
-          address: formData.address
-        })
-        alert('Mock 모드: 기본 정보 수정 성공!')
-        router.push('/mypage')
-        setIsSaving(false)
-      }, 1000)
-      return
-    }
-
-    // 실제 API 호출
     try {
-      const updateBody = {
+      // API로 사용자 정보 업데이트
+      await userService.updateMe({
         nickname: formData.nickname,
         gender: formData.gender,
-        address: formData.address
-      }
-
-      const response = await fetch(`${API_URL}/user/update-basic`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateBody)
+        address: formData.address,
+        height: formData.height ? Number(formData.height) : undefined,
+        mainPosition: formData.mainPosition || undefined,
+        subPosition: formData.subPosition || undefined,
+        playStyle: formData.playStyle || undefined,
+        statusMsg: formData.statusMsg || undefined
       })
 
-      if (response.ok) {
-        // 업데이트 성공 - 로컬 스토리지도 업데이트
-        updateCurrentUser({
-          name: formData.nickname,
-          gender: formData.gender,
-          address: formData.address
-        })
-        router.push('/mypage')
-      } else {
-        const errorText = await response.text()
-        setError(errorText || '기본 정보 수정에 실패했습니다.')
-      }
+      toast.success('기본 정보가 저장되었습니다!')
+      router.push('/mypage')
     } catch (err) {
-      setError('서버와 연결할 수 없습니다.')
+      console.error('기본 정보 수정 실패:', err)
+      setError('기본 정보 수정에 실패했습니다.')
+      toast.error('기본 정보 수정에 실패했습니다.')
     } finally {
       setIsSaving(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   if (!user) {

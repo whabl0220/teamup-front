@@ -9,31 +9,56 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AlertCircle, Bell, ShieldAlert, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
-import { getReceivedMatchRequests, updateMatchRequestStatus, formatTimeAgo, getCurrentTeam, getAppData, getReceivedJoinRequests, updateJoinRequestStatus } from '@/lib/storage'
+import { userService, teamService, matchingService } from '@/lib/services'
+import { formatTimeAgo } from '@/lib/utils'
 import type { MatchRequest, JoinRequest } from '@/types'
 import { MatchRequestsModal } from '@/components/shared/match-requests-modal'
 import { JoinRequestsModal } from '@/components/shared/join-requests-modal'
 
 export default function NotificationsPage() {
+  const [isLoading, setIsLoading] = useState(true)
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([])
   const [showMatchRequestsModal, setShowMatchRequestsModal] = useState(false)
   const [showJoinRequestsModal, setShowJoinRequestsModal] = useState(false)
   const [isTeamLeader, setIsTeamLeader] = useState(false)
 
-  const loadData = () => {
-    if (typeof window === 'undefined') return
+  const loadData = async () => {
+    try {
+      setIsLoading(true)
 
-    const requests = getReceivedMatchRequests()
-    setMatchRequests(requests)
-    const joins = getReceivedJoinRequests()
-    setJoinRequests(joins)
+      // 현재 사용자 정보 조회
+      const user = await userService.getMe()
 
-    // 팀장 권한 체크
-    const currentTeam = getCurrentTeam()
-    const appData = getAppData()
-    if (currentTeam && appData.user) {
-      setIsTeamLeader(currentTeam.captainId === appData.user.id)
+      // 내 팀 목록 조회
+      const teams = await teamService.getMyTeams()
+      const currentTeam = teams.length > 0 ? teams[0] : null
+
+      if (currentTeam) {
+        // 팀장 권한 체크
+        setIsTeamLeader(Number(currentTeam.captainId) === Number(user.id))
+
+        // 매칭 요청 조회
+        try {
+          const requests = await matchingService.getMatchRequests()
+          setMatchRequests(requests)
+        } catch (err) {
+          console.error('매칭 요청 조회 실패:', err)
+        }
+
+        // 팀 참여 요청 조회
+        try {
+          const joins = await teamService.getJoinRequests(currentTeam.id)
+          setJoinRequests(joins)
+        } catch (err) {
+          console.error('팀 참여 요청 조회 실패:', err)
+        }
+      }
+    } catch (err) {
+      console.error('데이터 로드 실패:', err)
+      toast.error('데이터를 불러오는데 실패했습니다.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -41,28 +66,60 @@ export default function NotificationsPage() {
     loadData()
   }, [])
 
-  const handleAcceptRequest = (requestId: string, teamName: string) => {
-    updateMatchRequestStatus(requestId, 'accepted')
-    toast.success(`${teamName}의 매칭 요청을 수락했습니다!`)
-    loadData()
+  const handleAcceptRequest = async (requestId: string, teamName: string) => {
+    try {
+      await matchingService.acceptMatchRequest(requestId)
+      toast.success(`${teamName}의 매칭 요청을 수락했습니다!`)
+      loadData()
+    } catch (err) {
+      console.error('매칭 요청 수락 실패:', err)
+      toast.error('매칭 요청 수락에 실패했습니다.')
+    }
   }
 
-  const handleRejectRequest = (requestId: string) => {
-    updateMatchRequestStatus(requestId, 'rejected')
-    toast.success('매칭 요청을 거절했습니다')
-    loadData()
+  const handleRejectRequest = async (requestId: string) => {
+    try {
+      await matchingService.rejectMatchRequest(requestId)
+      toast.success('매칭 요청을 거절했습니다')
+      loadData()
+    } catch (err) {
+      console.error('매칭 요청 거절 실패:', err)
+      toast.error('매칭 요청 거절에 실패했습니다.')
+    }
   }
 
-  const handleAcceptJoinRequest = (requestId: string, userName: string) => {
-    updateJoinRequestStatus(requestId, 'accepted')
-    toast.success(`${userName}님의 팀 참여 요청을 수락했습니다!`)
-    loadData()
+  const handleAcceptJoinRequest = async (requestId: string, userName: string) => {
+    try {
+      const teams = await teamService.getMyTeams()
+      const currentTeam = teams.length > 0 ? teams[0] : null
+      if (!currentTeam) {
+        toast.error('팀을 찾을 수 없습니다.')
+        return
+      }
+      await teamService.acceptJoinRequest(currentTeam.id, requestId)
+      toast.success(`${userName}님의 팀 참여 요청을 수락했습니다!`)
+      loadData()
+    } catch (err) {
+      console.error('팀 참여 요청 수락 실패:', err)
+      toast.error('팀 참여 요청 수락에 실패했습니다.')
+    }
   }
 
-  const handleRejectJoinRequest = (requestId: string) => {
-    updateJoinRequestStatus(requestId, 'rejected')
-    toast.success('팀 참여 요청을 거절했습니다')
-    loadData()
+  const handleRejectJoinRequest = async (requestId: string) => {
+    try {
+      const teams = await teamService.getMyTeams()
+      const currentTeam = teams.length > 0 ? teams[0] : null
+      if (!currentTeam) {
+        toast.error('팀을 찾을 수 없습니다.')
+        return
+      }
+      await teamService.rejectJoinRequest(currentTeam.id, requestId)
+      toast.success('팀 참여 요청을 거절했습니다')
+      loadData()
+    } catch (err) {
+      console.error('팀 참여 요청 거절 실패:', err)
+      toast.error('팀 참여 요청 거절에 실패했습니다.')
+    }
   }
 
   const hasNotifications = matchRequests.length > 0 || joinRequests.length > 0
@@ -86,7 +143,11 @@ export default function NotificationsPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
-        {!hasNotifications && (
+        {isLoading ? (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : !hasNotifications && (
           <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
               <Bell className="h-8 w-8 text-muted-foreground" />

@@ -10,7 +10,7 @@ import type { TeamCreationData, TeamDNA } from '@/types'
 import { SEOUL_DISTRICTS, DISTRICT_LIST, formatRegion, type DistrictName } from '@/lib/constants'
 import { teamService, type CreateTeamApiRequest } from '@/lib/services'
 import { toast } from 'sonner'
-import { getCurrentUser, setCurrentTeam } from '@/lib/storage'
+import { userService } from '@/lib/services'
 
 // 선택 옵션 정의
 const TIME_OPTIONS = [
@@ -193,49 +193,7 @@ export default function CreateTeamPage() {
         description: `${response.name} 팀이 생성되었습니다.`,
       })
 
-      // localStorage에 팀 추가 및 현재 팀으로 설정
-      const newTeam = {
-        id: response.id.toString(),
-        name: response.name,
-        shortName: response.name.substring(0, 2).toUpperCase(),
-        memberCount: response.memberCount,
-        maxMembers: formData.maxMembers || 5,
-        level: formData.level,
-        region: formData.region,
-        totalGames: 0,
-        aiReports: 0,
-        activeDays: 0,
-        isOfficial: false,
-        captainId: currentUser.id, // 현재 로그인한 사용자가 팀장
-        description: formData.description || '',
-        matchScore: 0,
-        preferredTime: formData.preferredTime,
-        playStyle: formData.playStyle,
-        gameFrequency: formData.gameFrequency,
-        teamMood: formData.teamMood,
-        travelDistance: formData.travelDistance,
-        teamDna: response.teamDna,
-        teamLevel: response.teamLevel,
-        teamExp: response.teamExp,
-      }
-
-      const existingDataStr = localStorage.getItem('teamup_app_data')
-      const appData = existingDataStr ? JSON.parse(existingDataStr) : {
-        user: currentUser,
-        teams: [],
-        matchRequests: [],
-        matchedTeams: [],
-        joinRequests: [],
-        gameRecords: [],
-      }
-
-      // 팀 목록에 추가
-      appData.teams.push(newTeam)
-
-      localStorage.setItem('teamup_app_data', JSON.stringify(appData))
-
-      // 현재 팀으로 설정 (팀장으로 자동 설정됨)
-      setCurrentTeam(newTeam.id)
+      // 팀 생성 완료 - API로 조회하므로 localStorage에 저장 불필요
 
       // 성공 모달 표시
       setShowSuccessModal(true)

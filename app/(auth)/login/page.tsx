@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
 import { authService, userService } from '@/lib/services'
-import { setAppData } from '@/lib/storage'
 import type { Team } from '@/types'
 
 export default function LoginPage() {
@@ -74,25 +73,8 @@ export default function LoginPage() {
         // 팀 목록 조회 실패해도 로그인은 성공으로 처리
       }
 
-      // 로그인 성공 - 사용자 정보 및 팀 목록 저장
-      setAppData({
-        user: {
-          id: response.id.toString(),
-          email: response.email,
-          name: response.nickname,
-          position: response.position as 'GUARD' | 'FORWARD' | 'CENTER' | undefined,
-          playStyle: response.playStyle as 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER' | undefined,
-          height: response.height,
-          address: response.address,
-          statusMsg: response.statusMsg,
-          team: userTeams.length > 0 ? userTeams[0] : undefined, // 첫 번째 팀을 현재 팀으로 설정
-        },
-        teams: userTeams,
-        matchRequests: [],
-        matchedTeams: [],
-        joinRequests: [],
-        gameRecords: [],
-      })
+      // 로그인 성공 - 사용자 정보는 API로 조회하므로 localStorage에 저장 불필요
+      // 인증 토큰은 이미 client.ts에서 localStorage에 저장됨
 
       toast.success('로그인 성공!', {
         description: `환영합니다, ${response.nickname}님!`,

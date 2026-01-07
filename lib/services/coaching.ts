@@ -82,6 +82,11 @@ export const coachingService = {
     return get<FinishGameFeedbackResponse[]>(`/api/teams/${teamId}/game-records`);
   },
 
+  // 게임 기록 상세 조회
+  getGameRecord: async (gameId: number): Promise<FinishGameFeedbackResponse> => {
+    return get<FinishGameFeedbackResponse>(`/api/games/${gameId}`);
+  },
+
   // ========== 향후 사용 예정 (주석 처리) ==========
 
   // // AI 피드백 생성 (경기 후)

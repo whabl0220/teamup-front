@@ -4,22 +4,39 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Trash2, MapPin, Calendar as CalendarIcon } from 'lucide-react'
-import { getCurrentTeam } from '@/lib/storage'
+import { teamService } from '@/lib/services'
+import { toast } from 'sonner'
 import type { Post } from '@/types'
 
 export default function MyPostsPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
   const [myPosts, setMyPosts] = useState<Post[]>([])
   const [postToDelete, setPostToDelete] = useState<string | null>(null)
 
   useEffect(() => {
-    // 내가 올린 모집 글 불러오기
-    const team = getCurrentTeam()
-    if (team) {
-      const posts = JSON.parse(localStorage.getItem('teamup_posts') || '[]') as Post[]
-      const filteredPosts = posts.filter(post => post.teamId === team.id)
-      setMyPosts(filteredPosts)
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        // 내 팀 목록 조회
+        const teams = await teamService.getMyTeams()
+        const team = teams.length > 0 ? teams[0] : null
+
+        if (team) {
+          // 내가 올린 모집 글 불러오기 (향후 API 추가 필요)
+          const posts = JSON.parse(localStorage.getItem('teamup_posts') || '[]') as Post[]
+          const filteredPosts = posts.filter(post => post.teamId === team.id)
+          setMyPosts(filteredPosts)
+        }
+      } catch (err) {
+        console.error('데이터 로드 실패:', err)
+        toast.error('데이터를 불러오는데 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    loadData()
   }, [])
 
   const handleDeletePost = (postId: string) => {
@@ -65,7 +82,11 @@ export default function MyPostsPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
-        {myPosts.length > 0 ? (
+        {isLoading ? (
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        ) : myPosts.length > 0 ? (
           <div className="space-y-4">
             {myPosts.map((post) => (
               <div

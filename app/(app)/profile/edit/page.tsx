@@ -8,12 +8,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft, Save } from 'lucide-react'
-import { getCurrentUser, updateCurrentUser } from '@/lib/storage'
+import { userService } from '@/lib/services'
 import { Position, PlayStyle, User } from '@/types'
 import { PlayerCard } from '@/components/shared/PlayerCard'
+import { toast } from 'sonner'
 
 export default function ProfileEditPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -28,17 +30,29 @@ export default function ProfileEditPage() {
 
   // 클라이언트에서만 데이터 로드 (hydration 오류 방지)
   useEffect(() => {
-    const userData = getCurrentUser()
-    setUser(userData)
-    if (userData) {
-      setFormData({
-        height: userData.height || 0,
-        position: userData.position || '' as Position | '',
-        subPosition: userData.subPosition || '' as Position | '',
-        playStyle: userData.playStyle || '' as PlayStyle | '',
-        statusMsg: userData.statusMsg || ''
-      })
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        const userData = await userService.getMe()
+        setUser(userData)
+        if (userData) {
+          setFormData({
+            height: userData.height || 0,
+            position: (userData.mainPosition as Position) || ('' as Position | ''),
+            subPosition: (userData.subPosition as Position) || ('' as Position | ''),
+            playStyle: (userData.playStyle as PlayStyle) || ('' as PlayStyle | ''),
+            statusMsg: userData.statusMsg || ''
+          })
+        }
+      } catch (err) {
+        console.error('사용자 정보 로드 실패:', err)
+        toast.error('사용자 정보를 불러오는데 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    loadData()
   }, [])
 
   // 미리보기용 유저 데이터
@@ -55,25 +69,31 @@ export default function ProfileEditPage() {
     setIsSaving(true)
 
     try {
-      // 현재 유저 정보 업데이트
-      updateCurrentUser({
+      // API로 사용자 정보 업데이트
+      await userService.updateMe({
         height: formData.height || undefined,
-        position: formData.position || undefined,
+        mainPosition: formData.position || undefined,
         subPosition: formData.subPosition || undefined,
         playStyle: formData.playStyle || undefined,
         statusMsg: formData.statusMsg || undefined
       })
 
-      // 저장 후 마이페이지로 이동
-      setTimeout(() => {
-        router.push('/mypage')
-      }, 500)
+      toast.success('프로필이 저장되었습니다!')
+      router.push('/mypage')
     } catch (error) {
       console.error('프로필 저장 실패:', error)
-      alert('프로필 저장에 실패했습니다.')
+      toast.error('프로필 저장에 실패했습니다.')
     } finally {
       setIsSaving(false)
     }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   if (!user) {

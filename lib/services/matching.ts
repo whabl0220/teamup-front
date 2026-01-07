@@ -26,6 +26,16 @@ export const matchingService = {
     return get<MatchRequest[]>('/api/match-requests/received')
   },
 
+  // 매칭 요청 수락
+  acceptMatchRequest: async (requestId: string): Promise<void> => {
+    return put(`/api/match-requests/${requestId}/accept`)
+  },
+
+  // 매칭 요청 거절
+  rejectMatchRequest: async (requestId: string): Promise<void> => {
+    return put(`/api/match-requests/${requestId}/reject`)
+  },
+
   // // 보낸 매칭 요청 조회
   // getSentMatchRequests: async (): Promise<MatchRequest[]> => {
   //   return get<MatchRequest[]>('/match-requests/sent')

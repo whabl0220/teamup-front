@@ -122,10 +122,20 @@ export const teamService = {
   //   return get<{ isMember: boolean }>(`/teams/${teamId}/is-member`)
   // },
 
-  // // 팀 참여 요청
-  // joinTeam: async (teamId: string, data?: JoinTeamRequest): Promise<void> => {
-  //   return post(`/teams/${teamId}/join`, data)
-  // },
+  // 팀 참여 요청 조회
+  getJoinRequests: async (teamId: string): Promise<JoinRequest[]> => {
+    return get<JoinRequest[]>(`/api/teams/${teamId}/join-requests`)
+  },
+
+  // 팀 참여 요청 수락
+  acceptJoinRequest: async (teamId: string, requestId: string): Promise<void> => {
+    return put(`/api/teams/${teamId}/join-requests/${requestId}/accept`)
+  },
+
+  // 팀 참여 요청 거절
+  rejectJoinRequest: async (teamId: string, requestId: string): Promise<void> => {
+    return put(`/api/teams/${teamId}/join-requests/${requestId}/reject`)
+  },
 
   // // 팀장 연락처 조회
   // getTeamContact: async (teamId: string): Promise<{ kakaoId: string }> => {

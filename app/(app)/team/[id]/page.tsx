@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ArrowLeft, MessageCircle, Sparkles, Settings, LogOut, Crown, Copy, Check, X, Users, UserPlus, Shield, Zap, Users2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { teamService, userService } from '@/lib/services'
 import type { Team, TeamDNA } from '@/types'
 
 // Team DNA 정보
@@ -56,72 +57,58 @@ export default function TeamDetailPage() {
   const [teamDna, setTeamDna] = useState<TeamDNA>('BULLS')
   const [teamDescription, setTeamDescription] = useState('')
 
-  // 현재 유저가 팀 멤버인지 확인 (Mock)
+  // 현재 유저가 팀 멤버인지 확인
   const [isTeamMember, setIsTeamMember] = useState(false)
   const [isTeamLeader, setIsTeamLeader] = useState(false)
 
   useEffect(() => {
-    // 클라이언트 사이드에서만 실행
-    if (typeof window === 'undefined') return
+    const loadTeamData = async () => {
+      try {
+        setLoading(true)
 
-    // TODO: 실제 API로 팀 데이터 로드
-    // const fetchTeam = async () => {
-    //   try {
-    //     const response = await fetch(`/api/team/${teamId}`)
-    //     const data = await response.json()
-    //     setTeam(data)
-    //   } catch (error) {
-    //     toast.error('팀 정보를 불러올 수 없습니다.')
-    //   } finally {
-    //     setLoading(false)
-    //   }
-    // }
-    // fetchTeam()
+        // 팀 상세 정보 조회
+        const teamData = await teamService.getTeam(teamId)
+        setTeam(teamData)
+        setTeamName(teamData.name)
 
-    // Mock: localStorage에서 팀 데이터 로드
-    const loadTeamData = () => {
-      const appDataStr = localStorage.getItem('teamup_app_data')
-      if (appDataStr) {
-        const appData = JSON.parse(appDataStr)
-        const foundTeam = appData.teams?.find((t: Team) => t.id === teamId)
-
-        if (foundTeam) {
-          setTeam(foundTeam)
-          setTeamName(foundTeam.name)
-
-          // 팀 사진도 로드 (logo 필드에서)
-          if (foundTeam.logo) {
-            setTeamPhoto(foundTeam.logo)
-          }
-
-          // 팀 DNA 로드
-          if (foundTeam.teamDna) {
-            setTeamDna(foundTeam.teamDna)
-          }
-
-          // 팀 소개 로드
-          if (foundTeam.description) {
-            setTeamDescription(foundTeam.description)
-          }
-
-          // 현재 유저가 이 팀의 멤버인지 확인
-          const currentTeamId = appData.user?.team?.id
-          setIsTeamMember(currentTeamId === teamId)
-          setIsTeamLeader(foundTeam.captainId === appData.user?.id)
-
-          // 팀장 정보로 팀원 목록 생성 (현재는 팀장만 표시)
-          const captain = {
-            name: appData.user?.name || '팀장',
-            position: appData.user?.position || 'SF',
-            isLeader: true,
-            kakaoId: appData.user?.email || 'captain_kakao_id'
-          }
-          setTeamMembers([captain])
-        } else {
-          toast.error('팀을 찾을 수 없습니다.')
+        // 팀 사진 로드
+        if (teamData.logo) {
+          setTeamPhoto(teamData.logo)
         }
+
+        // 팀 DNA 로드
+        if (teamData.teamDna) {
+          setTeamDna(teamData.teamDna)
+        }
+
+        // 팀 소개 로드
+        if (teamData.description) {
+          setTeamDescription(teamData.description)
+        }
+
+        // 현재 사용자 정보 조회
+        const user = await userService.getMe()
+
+        // 내 팀 목록 조회하여 멤버십 확인
+        const myTeams = await teamService.getMyTeams()
+        const isMember = myTeams.some((t) => t.id === teamId)
+        setIsTeamMember(isMember)
+        setIsTeamLeader(teamData.captainId === user.id)
+
+        // 팀원 목록 생성 (현재는 팀장만 표시, 향후 API 추가 필요)
+        const captain = {
+          name: user.nickname || '팀장',
+          position: user.mainPosition || 'SF',
+          isLeader: true,
+          kakaoId: user.email || 'captain_kakao_id',
+        }
+        setTeamMembers([captain])
+      } catch (err) {
+        console.error('팀 정보 로드 실패:', err)
+        toast.error('팀 정보를 불러올 수 없습니다.')
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     loadTeamData()

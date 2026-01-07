@@ -402,6 +402,51 @@ export const handlers = [
     })
   }),
 
+  // 사용자 정보 수정
+  http.put('*/api/users/me', async ({ request }) => {
+    const body = (await request.json()) as Partial<{
+      nickname: string
+      gender: string
+      address: string
+      height: number
+      mainPosition: string
+      subPosition: string
+      playStyle: string
+      statusMsg: string
+    }>
+
+    const user = mockData.users[0]
+    if (!user) {
+      return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // 사용자 정보 업데이트
+    if (body.nickname) user.name = body.nickname
+    if (body.gender) user.gender = body.gender
+    if (body.address) user.address = body.address
+    if (body.height !== undefined) user.height = body.height
+    if (body.mainPosition) user.position = body.mainPosition as any
+    if (body.subPosition) user.subPosition = body.subPosition as any
+    if (body.playStyle) user.playStyle = body.playStyle as any
+    if (body.statusMsg) user.statusMsg = body.statusMsg
+
+    return HttpResponse.json({
+      id: user.id,
+      email: user.email,
+      nickname: user.name,
+      mainPosition: user.position || 'GUARD',
+      subPosition: user.subPosition,
+      gender: body.gender || 'MALE',
+      age: 25,
+      address: user.address || '',
+      height: user.height,
+      playStyle: user.playStyle,
+      statusMsg: user.statusMsg,
+      Team: user.team ? [user.team] : [],
+      createdAt: new Date().toISOString(),
+    })
+  }),
+
   // 사용자 조회
   http.get('*/api/users/:userId', ({ params }) => {
     const user = mockData.users.find((u) => u.id === params.userId)
@@ -428,6 +473,67 @@ export const handlers = [
     )
 
     return HttpResponse.json(receivedRequests)
+  }),
+
+  // 매칭 요청 수락
+  http.put('*/api/match-requests/:requestId/accept', ({ params }) => {
+    const requestId = params.requestId as string
+    const request = mockData.matchRequests.find((r) => r.id === requestId)
+
+    if (!request) {
+      return HttpResponse.json({ error: 'Match request not found' }, { status: 404 })
+    }
+
+    request.status = 'accepted'
+    request.respondedAt = new Date().toISOString()
+
+    return HttpResponse.json({ success: true })
+  }),
+
+  // 매칭 요청 거절
+  http.put('*/api/match-requests/:requestId/reject', ({ params }) => {
+    const requestId = params.requestId as string
+    const request = mockData.matchRequests.find((r) => r.id === requestId)
+
+    if (!request) {
+      return HttpResponse.json({ error: 'Match request not found' }, { status: 404 })
+    }
+
+    request.status = 'rejected'
+    request.respondedAt = new Date().toISOString()
+
+    return HttpResponse.json({ success: true })
+  }),
+
+  // 팀 참여 요청 조회
+  http.get('*/api/teams/:teamId/join-requests', ({ params }) => {
+    const teamId = params.teamId as string
+    // Mock 데이터에서 팀 참여 요청 반환 (향후 실제 데이터 구조에 맞게 수정)
+    return HttpResponse.json([])
+  }),
+
+  // 팀 참여 요청 수락
+  http.put('*/api/teams/:teamId/join-requests/:requestId/accept', ({ params }) => {
+    // Mock: 팀 참여 요청 수락 처리
+    return HttpResponse.json({ success: true })
+  }),
+
+  // 팀 참여 요청 거절
+  http.put('*/api/teams/:teamId/join-requests/:requestId/reject', ({ params }) => {
+    // Mock: 팀 참여 요청 거절 처리
+    return HttpResponse.json({ success: true })
+  }),
+
+  // 게임 기록 상세 조회
+  http.get('*/api/games/:gameId', ({ params }) => {
+    const gameId = Number(params.gameId)
+    const record = mockData.gameRecords?.find((r) => r.gameId === gameId)
+
+    if (!record) {
+      return HttpResponse.json({ error: 'Game record not found' }, { status: 404 })
+    }
+
+    return HttpResponse.json(record)
   }),
 
   // 매칭 요청 보내기
