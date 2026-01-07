@@ -18,6 +18,7 @@ export interface FinishGameFeedbackResponse {
   gameId: number;
   teamId: number;
   teamName: string;
+  opponent?: string; // 상대팀 이름
   result: GameResult; // enums.ts의 GameResult 타입 사용
   positionFeedbacksJson: string;
   aiComment: string;
@@ -75,6 +76,16 @@ export const coachingService = {
   // AI 리포트 생성 (실제 사용)
   createReport: async (gameId: number, teamId: number): Promise<CreateReportResponse> => {
     return post<CreateReportResponse>(`/api/games/${gameId}/report?teamId=${teamId}`);
+  },
+
+  // 팀의 게임 기록 조회
+  getTeamGameRecords: async (teamId: number): Promise<FinishGameFeedbackResponse[]> => {
+    return get<FinishGameFeedbackResponse[]>(`/api/teams/${teamId}/game-records`);
+  },
+
+  // 게임 기록 상세 조회
+  getGameRecord: async (gameId: number): Promise<FinishGameFeedbackResponse> => {
+    return get<FinishGameFeedbackResponse>(`/api/games/${gameId}`);
   },
 
   // ========== 향후 사용 예정 (주석 처리) ==========

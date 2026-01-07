@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles, MessageCircle, MapPin, Bell, Users, Trophy, TrendingUp, Plus, UserPlus } from 'lucide-react'
-import { getReceivedMatchRequests, getLatestMatchRequest, formatTimeAgo, initMockData, getCurrentUser, getCurrentTeamStats } from '@/lib/storage'
+import { userService, teamService, matchingService, coachingService } from '@/lib/services'
+import { formatTimeAgo } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { MatchRequest, Team } from '@/types'
 
 export default function HomePage() {
-  // TODO: 실제로는 API로 팀 보유 여부 체크
-  const [hasTeam, setHasTeam] = useState(true) // Mock: 팀 있음 상태로 시작
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasTeam, setHasTeam] = useState(false)
 
   // 매칭 요청 관련 상태
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
@@ -29,31 +31,88 @@ export default function HomePage() {
   })
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
 
-    // Mock 데이터 초기화 (한 번만 실행)
-    const hasInitialized = localStorage.getItem('teamup_initialized')
-    if (!hasInitialized) {
-      initMockData()
-      localStorage.setItem('teamup_initialized', 'true')
-    }
+        // 현재 사용자 정보 조회
+        const user = await userService.getMe()
 
-    // 매칭 요청 로드
-    const loadData = () => {
-      const requests = getReceivedMatchRequests()
-      setMatchRequests(requests)
-      setLatestRequest(getLatestMatchRequest())
+        // 내 팀 목록 조회
+        const teams = await teamService.getMyTeams()
+        const team = teams.length > 0 ? teams[0] : null
+        setCurrentTeam(team)
+        setHasTeam(!!team)
 
-      // 팀 정보 및 통계 로드
-      const user = getCurrentUser()
-      const team = user?.team || null
-      setCurrentTeam(team)
-      setHasTeam(!!team) // 팀 유무 체크
-      setTeamStats(getCurrentTeamStats())
+        // 팀이 있으면 통계 및 매칭 요청 조회
+        if (team) {
+          // 매칭 요청 조회
+          try {
+            const requests = await matchingService.getMatchRequests()
+            setMatchRequests(requests)
+            setLatestRequest(requests.length > 0 ? requests[0] : null)
+          } catch (err) {
+            console.error('매칭 요청 조회 실패:', err)
+          }
+
+          // 게임 기록 조회하여 통계 계산
+          try {
+            const gameRecords = await coachingService.getTeamGameRecords(Number(team.id))
+            const wins = gameRecords.filter((r) => r.result === 'WIN').length
+            const losses = gameRecords.filter((r) => r.result === 'LOSE').length
+            const total = gameRecords.length
+
+            setTeamStats({
+              totalGames: total,
+              wins,
+              losses,
+              winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
+            })
+          } catch (err) {
+            console.error('게임 기록 조회 실패:', err)
+          }
+        }
+      } catch (err) {
+        console.error('데이터 로드 실패:', err)
+        toast.error('데이터를 불러오는데 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     loadData()
   }, [])
+
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
+            <div className="flex items-center gap-2">
+              <Image
+                src="/images/logo.jpg"
+                alt="TeamUp Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-xl object-contain"
+              />
+              <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
+            </div>
+            <Badge variant="secondary" className="bg-primary/10 text-primary">
+              AI Powered
+            </Badge>
+          </div>
+        </header>
+        <main className="mx-auto max-w-lg px-4 py-6">
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        </main>
+        <BottomNav />
+      </div>
+    )
+  }
 
   // 팀 없음 상태
   if (!hasTeam) {

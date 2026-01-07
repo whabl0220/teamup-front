@@ -1,5 +1,5 @@
 // 모든 서비스를 한 곳에서 export
-export * from './client'
+// client.ts는 클라이언트 전용이므로 export하지 않음 (직접 import 필요)
 export * from './auth'
 export * from './user'
 export * from './team'

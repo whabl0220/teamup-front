@@ -52,6 +52,15 @@ export default function LandingPage() {
                 회원가입
               </Button>
             </Link>
+            <Link href="/home" className="block w-full">
+              <Button
+                size="lg"
+                variant="ghost"
+                className="h-12 w-full text-lg font-semibold"
+              >
+                체험하기
+              </Button>
+            </Link>
           </div>
         </div>
       </main>

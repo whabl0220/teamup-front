@@ -20,11 +20,17 @@ export interface MatchSuggestion {
   teamDna: string;
   teamLevel: number;
   memberCount: number;
+  description?: string;
+  region?: string;
+  level?: string;
+  totalGames?: number;
+  aiReports?: number;
+  activeDays?: number;
 }
 
 // 팀 관련 API
-import { get, post, del } from './client'
-import type { Team, TeamMember } from '@/types'
+import { get, post, del, put } from './client'
+import type { Team, TeamMember, JoinRequest } from '@/types'
 
 
 // 실제 API 명세에 맞는 팀 생성 요청 타입
@@ -79,17 +85,25 @@ export const teamService = {
     return get<MatchSuggestion[]>(`/api/teams/${teamId}/match-suggestions`);
   },
 
-  // ========== 향후 사용 예정 (주석 처리) ==========
+  // 내 팀 목록 조회
+  getMyTeams: async (): Promise<Team[]> => {
+    return get<Team[]>('/api/teams/my')
+  },
 
-  // // 내 팀 목록 조회
-  // getMyTeams: async (): Promise<Team[]> => {
-  //   return get<Team[]>('/teams/my')
-  // },
+  // 팀 상세 조회
+  getTeam: async (id: string): Promise<Team> => {
+    return get<Team>(`/api/teams/${id}`)
+  },
 
-  // // 팀 상세 조회
-  // getTeam: async (id: string): Promise<Team> => {
-  //   return get<Team>(`/teams/${id}`)
-  // },
+  // 팀 멤버 목록 조회
+  getTeamMembers: async (teamId: string): Promise<Array<{ id: string; name: string; position: string; isLeader: boolean; email: string }>> => {
+    return get<Array<{ id: string; name: string; position: string; isLeader: boolean; email: string }>>(`/api/teams/${teamId}/members`)
+  },
+
+  // 매칭된 팀 목록 조회 (게임 생성된 팀들)
+  getMatchedTeams: async (teamId: string): Promise<Array<{ gameId: number; matchedTeam: Team; matchedAt: string }>> => {
+    return get<Array<{ gameId: number; matchedTeam: Team; matchedAt: string }>>(`/api/teams/${teamId}/matched-teams`)
+  },
 
   // // 팀 검색
   // searchTeams: async (
@@ -124,10 +138,20 @@ export const teamService = {
   //   return get<{ isMember: boolean }>(`/teams/${teamId}/is-member`)
   // },
 
-  // // 팀 참여 요청
-  // joinTeam: async (teamId: string, data?: JoinTeamRequest): Promise<void> => {
-  //   return post(`/teams/${teamId}/join`, data)
-  // },
+  // 팀 참여 요청 조회
+  getJoinRequests: async (teamId: string): Promise<JoinRequest[]> => {
+    return get<JoinRequest[]>(`/api/teams/${teamId}/join-requests`)
+  },
+
+  // 팀 참여 요청 수락
+  acceptJoinRequest: async (teamId: string, requestId: string): Promise<void> => {
+    return put(`/api/teams/${teamId}/join-requests/${requestId}/accept`)
+  },
+
+  // 팀 참여 요청 거절
+  rejectJoinRequest: async (teamId: string, requestId: string): Promise<void> => {
+    return put(`/api/teams/${teamId}/join-requests/${requestId}/reject`)
+  },
 
   // // 팀장 연락처 조회
   // getTeamContact: async (teamId: string): Promise<{ kakaoId: string }> => {

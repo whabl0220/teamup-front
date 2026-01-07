@@ -39,26 +39,64 @@
 - **Toast Notifications**: Sonner
 - **Map**: Kakao Map API
 - **Backend API**: REST API
+- **API Mocking**: MSW (Mock Service Worker)
 
 ## 시작하기
 
 ### 환경 변수 설정
 
-`.env` 파일을 생성하고 다음 변수들을 설정하세요:
+`.env.local` 파일을 생성하고 다음 변수들을 설정하세요:
 
 ```env
-NEXT_PUBLIC_API_URL=http://(서버 주소)
+# API 설정
+NEXT_PUBLIC_API_URL=http://localhost:8080
+
+# MSW Mock 설정 (개발 환경에서만 사용)
+# true로 설정하면 MSW를 사용하여 API를 mock합니다
+# false 또는 설정하지 않으면 실제 API를 사용합니다
+NEXT_PUBLIC_USE_MOCK=true
+
+# Kakao Map API Key
 NEXT_PUBLIC_KAKAO_MAP_API_KEY=your_kakao_map_api_key
 ```
 
 ### 개발 서버 실행
 
 ```bash
+# 의존성 설치
 npm install
+
+# MSW Service Worker 초기화 (최초 1회만)
+npm run msw:init
+
+# 개발 서버 실행
 npm run dev
 ```
 
 브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
+
+#### MSW 사용하기
+
+MSW를 사용하여 백엔드 API 없이도 개발할 수 있습니다:
+
+**개발 환경:**
+1. `.env.local`에 `NEXT_PUBLIC_USE_MOCK=true` 설정
+2. `npm run dev` 실행
+3. 브라우저 콘솔에서 MSW 활성화 메시지 확인
+
+**프로덕션에서 임시 사용 (백엔드 미준비 시):**
+```env
+NEXT_PUBLIC_USE_MOCK=true
+NEXT_PUBLIC_ALLOW_PRODUCTION_MOCK=true
+```
+
+> ⚠️ **주의**: 백엔드 API가 준비되면 즉시 위 환경 변수를 제거하고 실제 API URL을 설정하세요.
+
+**마이그레이션 완료:**
+- ✅ 개발 환경에서 MSW를 통한 완전한 API 모킹 지원
+- ✅ 프로덕션 환경에서는 기본적으로 MSW 비활성화 (안전장치 포함)
+
+자세한 내용은 [mocks/README.md](./mocks/README.md)를 참고하세요.
 
 ### 빌드
 
@@ -124,6 +162,22 @@ types/
 ## 배포
 
 Vercel을 통해 자동 배포됩니다.
+
+### 환경 변수 설정
+
+**프로덕션 (백엔드 준비됨):**
+```env
+NEXT_PUBLIC_API_URL=https://your-production-api.com
+# MSW 관련 변수는 설정하지 않음 (자동 비활성화)
+```
+
+**프로덕션 (백엔드 미준비, 임시 데모용):**
+```env
+NEXT_PUBLIC_USE_MOCK=true
+NEXT_PUBLIC_ALLOW_PRODUCTION_MOCK=true
+```
+
+> ⚠️ 프로덕션에서 MSW를 사용하는 것은 임시 조치입니다. 백엔드가 준비되면 즉시 실제 API로 전환하세요.
 
 ## 라이선스
 

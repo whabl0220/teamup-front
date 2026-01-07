@@ -10,6 +10,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
   User as UserIcon,
   Lock,
   Bell,
@@ -22,31 +30,63 @@ import {
   Edit,
   Megaphone,
 } from 'lucide-react'
-import { getCurrentUser, getCurrentTeam } from '@/lib/storage'
+import { userService, teamService } from '@/lib/services'
 import { PlayerCard } from '@/components/shared/PlayerCard'
-import type { User, Team, Post } from '@/types'
+import { toast } from 'sonner'
+import type { User, Team, Post, Position, PlayStyle } from '@/types'
 
 export default function MyPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
   const [notifications, setNotifications] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null)
   const [myPosts, setMyPosts] = useState<Post[]>([])
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
 
   // 클라이언트에서만 데이터 로드 (hydration 오류 방지)
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
 
-    setUser(getCurrentUser())
-    setCurrentTeam(getCurrentTeam())
+        // 현재 사용자 정보 조회
+        const userData = await userService.getMe()
+        // API 응답을 프론트엔드 User 타입으로 변환
+        const user: User = {
+          id: userData.id,
+          name: userData.nickname, // nickname → name 변환
+          email: userData.email,
+          gender: userData.gender,
+          address: userData.address,
+          height: userData.height,
+          position: userData.mainPosition as Position,
+          subPosition: userData.subPosition as Position | undefined,
+          playStyle: userData.playStyle as PlayStyle | undefined,
+          statusMsg: userData.statusMsg,
+        }
+        setUser(user)
 
-    // 내가 올린 모집 글 불러오기
-    const team = getCurrentTeam()
-    if (team) {
-      const posts = JSON.parse(localStorage.getItem('teamup_posts') || '[]') as Post[]
-      const filteredPosts = posts.filter(post => post.teamId === team.id)
-      setMyPosts(filteredPosts)
+        // 내 팀 목록 조회
+        const teams = await teamService.getMyTeams()
+        const team = teams.length > 0 ? teams[0] : null
+        setCurrentTeam(team)
+
+        // 내가 올린 모집 글 불러오기 (향후 API 추가 필요)
+        if (team) {
+          const posts = JSON.parse(localStorage.getItem('teamup_posts') || '[]') as Post[]
+          const filteredPosts = posts.filter(post => post.teamId === team.id)
+          setMyPosts(filteredPosts)
+        }
+      } catch (err) {
+        console.error('데이터 로드 실패:', err)
+        toast.error('데이터를 불러오는데 실패했습니다.')
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    loadData()
   }, [])
 
   const handleLogout = () => {
@@ -56,10 +96,22 @@ export default function MyPage() {
   }
 
   const handleDeleteAccount = () => {
-    // TODO: 회원탈퇴 확인 다이얼로그
-    if (confirm('정말로 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      router.push('/')
-    }
+    setShowDeleteAccountModal(true)
+  }
+
+  const confirmDeleteAccount = () => {
+    // TODO: 실제 회원탈퇴 API 호출
+    setShowDeleteAccountModal(false)
+    toast.success('회원탈퇴가 완료되었습니다.')
+    router.push('/')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   if (!user) {
@@ -245,6 +297,38 @@ export default function MyPage() {
           </div>
         </div>
       </main>
+
+      {/* 회원탈퇴 확인 다이얼로그 */}
+      <Dialog open={showDeleteAccountModal} onOpenChange={setShowDeleteAccountModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mx-auto">
+              <Trash2 className="h-6 w-6 text-destructive" />
+            </div>
+            <DialogTitle className="text-center text-xl">회원탈퇴</DialogTitle>
+            <DialogDescription className="text-center">
+              정말로 탈퇴하시겠습니까?<br />
+              <span className="font-semibold text-destructive">이 작업은 되돌릴 수 없습니다.</span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 mt-4">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={confirmDeleteAccount}
+            >
+              탈퇴하기
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => setShowDeleteAccountModal(false)}
+            >
+              취소
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>

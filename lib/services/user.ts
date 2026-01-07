@@ -1,5 +1,5 @@
 // 유저 관련 API
-import { get, del } from './client'
+import { get, put, del } from './client'
 import { Team } from '@/types'
 
 export interface User {
@@ -34,17 +34,20 @@ export interface UserTeamResponse {
 export const userService = {
   // ========== 실제 사용 API ==========
 
+  // 내 정보 조회
+  getMe: async (): Promise<User> => {
+    return get<User>('/api/users/me')
+  },
+
   // 사용자의 팀 목록 조회
   getUserTeams: async (userId: number): Promise<UserTeamResponse[]> => {
     return get<UserTeamResponse[]>(`/api/users/${userId}/teams`)
   },
 
-  // ========== 향후 사용 예정 (주석 처리) ==========
-
-  // // 내 정보 조회
-  // getMe: async (): Promise<User> => {
-  //   return get<User>('/users/me')
-  // },
+  // 내 정보 수정
+  updateMe: async (data: Partial<User>): Promise<User> => {
+    return put<User>('/api/users/me', data)
+  },
 
   // // 특정 유저 조회
   // getUser: async (id: string): Promise<User> => {

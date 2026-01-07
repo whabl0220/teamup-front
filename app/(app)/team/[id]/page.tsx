@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ArrowLeft, MessageCircle, Sparkles, Settings, LogOut, Crown, Copy, Check, X, Users, UserPlus, Shield, Zap, Users2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { teamService, userService } from '@/lib/services'
 import type { Team, TeamDNA } from '@/types'
 
 // Team DNA 정보
@@ -56,72 +57,71 @@ export default function TeamDetailPage() {
   const [teamDna, setTeamDna] = useState<TeamDNA>('BULLS')
   const [teamDescription, setTeamDescription] = useState('')
 
-  // 현재 유저가 팀 멤버인지 확인 (Mock)
+  // 현재 유저가 팀 멤버인지 확인
   const [isTeamMember, setIsTeamMember] = useState(false)
   const [isTeamLeader, setIsTeamLeader] = useState(false)
 
   useEffect(() => {
-    // 클라이언트 사이드에서만 실행
-    if (typeof window === 'undefined') return
+    const loadTeamData = async () => {
+      try {
+        setLoading(true)
 
-    // TODO: 실제 API로 팀 데이터 로드
-    // const fetchTeam = async () => {
-    //   try {
-    //     const response = await fetch(`/api/team/${teamId}`)
-    //     const data = await response.json()
-    //     setTeam(data)
-    //   } catch (error) {
-    //     toast.error('팀 정보를 불러올 수 없습니다.')
-    //   } finally {
-    //     setLoading(false)
-    //   }
-    // }
-    // fetchTeam()
+        // 팀 상세 정보 조회
+        const teamData = await teamService.getTeam(teamId)
+        setTeam(teamData)
+        setTeamName(teamData.name)
 
-    // Mock: localStorage에서 팀 데이터 로드
-    const loadTeamData = () => {
-      const appDataStr = localStorage.getItem('teamup_app_data')
-      if (appDataStr) {
-        const appData = JSON.parse(appDataStr)
-        const foundTeam = appData.teams?.find((t: Team) => t.id === teamId)
+        // 팀 사진 로드
+        if (teamData.logo) {
+          setTeamPhoto(teamData.logo)
+        }
 
-        if (foundTeam) {
-          setTeam(foundTeam)
-          setTeamName(foundTeam.name)
+        // 팀 DNA 로드
+        if (teamData.teamDna) {
+          setTeamDna(teamData.teamDna)
+        }
 
-          // 팀 사진도 로드 (logo 필드에서)
-          if (foundTeam.logo) {
-            setTeamPhoto(foundTeam.logo)
-          }
+        // 팀 소개 로드
+        if (teamData.description) {
+          setTeamDescription(teamData.description)
+        }
 
-          // 팀 DNA 로드
-          if (foundTeam.teamDna) {
-            setTeamDna(foundTeam.teamDna)
-          }
+        // 현재 사용자 정보 조회
+        const user = await userService.getMe()
 
-          // 팀 소개 로드
-          if (foundTeam.description) {
-            setTeamDescription(foundTeam.description)
-          }
+        // 내 팀 목록 조회하여 멤버십 확인
+        const myTeams = await teamService.getMyTeams()
+        const isMember = myTeams.some((t) => t.id === teamId)
+        setIsTeamMember(isMember)
+        setIsTeamLeader(String(teamData.captainId) === String(user.id))
 
-          // 현재 유저가 이 팀의 멤버인지 확인
-          const currentTeamId = appData.user?.team?.id
-          setIsTeamMember(currentTeamId === teamId)
-          setIsTeamLeader(foundTeam.captainId === appData.user?.id)
-
-          // 팀장 정보로 팀원 목록 생성 (현재는 팀장만 표시)
+        // 팀원 목록 조회
+        try {
+          const members = await teamService.getTeamMembers(teamId)
+          const teamMembersList = members.map((member) => ({
+            name: member.name,
+            position: member.position,
+            isLeader: member.isLeader,
+            kakaoId: member.email,
+          }))
+          setTeamMembers(teamMembersList)
+        } catch (err) {
+          console.error('팀원 목록 조회 실패:', err)
+          // 실패 시 팀장만 표시
           const captain = {
-            name: appData.user?.name || '팀장',
-            position: appData.user?.position || 'SF',
+            name: user.nickname || '팀장',
+            position: user.mainPosition || 'SF',
             isLeader: true,
-            kakaoId: appData.user?.email || 'captain_kakao_id'
+            kakaoId: user.email || 'captain_kakao_id',
           }
           setTeamMembers([captain])
-        } else {
-          toast.error('팀을 찾을 수 없습니다.')
         }
+      } catch (err) {
+        console.error('팀 정보 로드 실패:', err)
+        toast.error('팀 정보를 불러올 수 없습니다.')
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     loadTeamData()
@@ -438,8 +438,38 @@ export default function TeamDetailPage() {
                       )
                     }
 
-                    // 기본: 팀 멤버면 모든 카카오톡 아이디 표시
+                    // 내 소속 팀인 경우: 모든 멤버의 연락처 표시
                     if (isTeamMember) {
+                      return (
+                        <div className="ml-[52px] flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm text-foreground">{member.kakaoId}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleCopyKakaoId(member.kakaoId, member.name)}
+                          >
+                            {copied === member.kakaoId ? (
+                              <>
+                                <Check className="mr-1 h-3 w-3" />
+                                완료
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="mr-1 h-3 w-3" />
+                                복사
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )
+                    }
+
+                    // 내 소속 팀이 아닌 경우: 팀장의 이메일만 표시
+                    if (!isTeamMember && member.isLeader) {
                       return (
                         <div className="ml-[52px] flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
                           <div className="flex items-center gap-2">
@@ -475,26 +505,6 @@ export default function TeamDetailPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* 최근 AI 코칭 - 팀 멤버만 볼 수 있음, 경기 기록이 있을 때만 표시 */}
-        {isTeamMember && team.totalGames > 0 && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="font-bold text-foreground">최근 AI 코칭</h3>
-            </div>
-
-            <Card className="border-border/50 bg-card">
-              <CardContent className="p-4">
-                <div className="text-center py-8">
-                  <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">아직 AI 코칭 기록이 없습니다.</p>
-                  <p className="text-xs text-muted-foreground mt-1">경기를 진행하면 AI 분석 결과를 받을 수 있습니다.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Team Actions - 팀 멤버만 볼 수 있음 */}
         {isTeamMember && (

@@ -6,30 +6,66 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Sparkles, TrendingUp, TrendingDown, Minus, Quote } from 'lucide-react'
-import { getGameRecord } from '@/lib/storage'
+import { coachingService, teamService } from '@/lib/services'
+import { toast } from 'sonner'
 import type { GameRecord } from '@/types'
 
 export default function CoachingDetailPage() {
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
+  const [isLoading, setIsLoading] = useState(true)
   const [record, setRecord] = useState<GameRecord | null>(null)
 
   useEffect(() => {
-    // Storage에서 실제 데이터 가져오기
-    const foundRecord = getGameRecord(id)
-    if (foundRecord) {
-      setRecord(foundRecord)
-    } else {
-      // 기록이 없으면 목록 페이지로 리다이렉트
-      router.push('/coaching')
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
+        const gameId = Number(id)
+        
+        // 게임 기록 상세 조회
+        const gameRecord = await coachingService.getGameRecord(gameId)
+        
+        // 내 팀 목록 조회 (팀 정보 가져오기)
+        const teams = await teamService.getMyTeams()
+        const team = teams.length > 0 ? teams[0] : null
+
+        if (!team) {
+          toast.error('팀 정보를 찾을 수 없습니다.')
+          router.push('/coaching')
+          return
+        }
+
+        // GameRecord 타입으로 변환
+        const convertedRecord: GameRecord = {
+          id: gameRecord.gameId.toString(),
+          teamId: team.id,
+          teamName: team.name,
+          opponent: gameRecord.opponent || '상대팀', // 게임 기록에서 상대팀 이름 가져오기
+          result: gameRecord.result,
+          feedbackTag: 'TEAMWORK' as const, // Mock 데이터
+          aiComment: gameRecord.aiComment,
+          gameDate: new Date(gameRecord.createdAt).toISOString().split('T')[0],
+          createdAt: gameRecord.createdAt,
+        }
+
+        setRecord(convertedRecord)
+      } catch (err) {
+        console.error('게임 기록 조회 실패:', err)
+        toast.error('게임 기록을 불러올 수 없습니다.')
+        router.push('/coaching')
+      } finally {
+        setIsLoading(false)
+      }
     }
+
+    loadData()
   }, [id, router])
 
-  if (!record) {
+  if (isLoading || !record) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">로딩 중...</p>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
       </div>
     )
   }
@@ -209,22 +245,21 @@ export default function CoachingDetailPage() {
         {/* 액션 버튼 */}
         <div className="space-y-3">
           <Button
-            variant="default"
-            size="lg"
-            className="w-full"
-            onClick={() => router.push('/coaching/create')}
-          >
-            <Sparkles className="mr-2 h-5 w-5" />
-            새로운 경기 기록하기
-          </Button>
-
-          <Button
             variant="outline"
             size="lg"
             className="w-full"
             onClick={() => router.push('/coaching')}
           >
             전체 코칭 기록 보기
+          </Button>
+
+          <Button
+            variant="default"
+            size="lg"
+            className="w-full"
+            onClick={() => router.push('/home')}
+          >
+            홈으로
           </Button>
         </div>
       </main>
