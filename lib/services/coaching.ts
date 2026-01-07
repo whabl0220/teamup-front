@@ -18,6 +18,7 @@ export interface FinishGameFeedbackResponse {
   gameId: number;
   teamId: number;
   teamName: string;
+  opponent?: string; // 상대팀 이름
   result: GameResult; // enums.ts의 GameResult 타입 사용
   positionFeedbacksJson: string;
   aiComment: string;

@@ -58,14 +58,14 @@ export default function MatchingPage() {
             shortName: s.name.substring(0, 2).toUpperCase(),
             memberCount: s.memberCount,
             maxMembers: 10, // API에 없으면 기본값
-            level: 'B', // API에 없으면 기본값
-            region: '서울', // API에 없으면 기본값
-            totalGames: 0,
-            aiReports: 0,
-            activeDays: 0,
+            level: (s.level || 'B') as Team['level'],
+            region: s.region || '서울',
+            totalGames: s.totalGames || 0,
+            aiReports: s.aiReports || 0,
+            activeDays: s.activeDays || 0,
             isOfficial: s.memberCount >= 5,
             captainId: 'unknown',
-            description: '',
+            description: s.description || '',
             matchScore: 90,
             teamDna: s.teamDna as 'BULLS' | 'WARRIORS' | 'SPURS',
             teamLevel: s.teamLevel,

@@ -41,7 +41,7 @@ export default function CoachingDetailPage() {
           id: gameRecord.gameId.toString(),
           teamId: team.id,
           teamName: team.name,
-          opponent: '상대팀', // Mock 데이터
+          opponent: gameRecord.opponent || '상대팀', // 게임 기록에서 상대팀 이름 가져오기
           result: gameRecord.result,
           feedbackTag: 'TEAMWORK' as const, // Mock 데이터
           aiComment: gameRecord.aiComment,
@@ -245,22 +245,21 @@ export default function CoachingDetailPage() {
         {/* 액션 버튼 */}
         <div className="space-y-3">
           <Button
-            variant="default"
-            size="lg"
-            className="w-full"
-            onClick={() => router.push('/coaching/create')}
-          >
-            <Sparkles className="mr-2 h-5 w-5" />
-            새로운 경기 기록하기
-          </Button>
-
-          <Button
             variant="outline"
             size="lg"
             className="w-full"
             onClick={() => router.push('/coaching')}
           >
             전체 코칭 기록 보기
+          </Button>
+
+          <Button
+            variant="default"
+            size="lg"
+            className="w-full"
+            onClick={() => router.push('/home')}
+          >
+            홈으로
           </Button>
         </div>
       </main>

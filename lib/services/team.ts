@@ -20,6 +20,12 @@ export interface MatchSuggestion {
   teamDna: string;
   teamLevel: number;
   memberCount: number;
+  description?: string;
+  region?: string;
+  level?: string;
+  totalGames?: number;
+  aiReports?: number;
+  activeDays?: number;
 }
 
 // 팀 관련 API

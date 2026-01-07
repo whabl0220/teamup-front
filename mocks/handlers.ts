@@ -36,6 +36,7 @@ const mockData = {
     gameId: number
     teamId: number
     teamName: string
+    opponent: string
     result: 'WIN' | 'LOSE' | 'DRAW'
     positionFeedbacksJson: string
     aiComment: string
@@ -218,6 +219,12 @@ export const handlers = [
         teamDna: team.teamDna || 'BULLS',
         teamLevel: team.teamLevel || 1,
         memberCount: team.memberCount,
+        description: team.description || '',
+        region: team.region || '',
+        level: team.level || 'B',
+        totalGames: team.totalGames || 0,
+        aiReports: team.aiReports || 0,
+        activeDays: team.activeDays || 0,
       }))
 
     return HttpResponse.json(suggestions)
@@ -400,12 +407,18 @@ export const handlers = [
     // 게임 상태 업데이트
     game.status = 'FINISHED'
 
+    // 상대팀 찾기
+    const opponentTeamId = game.homeTeamId === body.teamId ? game.awayTeamId : game.homeTeamId
+    const opponentTeam = mockData.teams.find((t) => Number(t.id) === opponentTeamId)
+    const opponentName = opponentTeam?.name || '상대팀'
+
     const aiComment = getAICoachingComment(team.teamDna || 'BULLS', body.result)
 
     const response = {
       gameId,
       teamId: body.teamId,
       teamName: team.name,
+      opponent: opponentName,
       result: body.result as 'WIN' | 'LOSE' | 'DRAW',
       positionFeedbacksJson: JSON.stringify(body.positionFeedbacks),
       aiComment,

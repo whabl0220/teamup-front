@@ -107,6 +107,7 @@ export default function CoachingPageContent() {
 
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null)
   const [opponent, setOpponent] = useState('')
+  const [opponentDisabled, setOpponentDisabled] = useState(false) // 매칭된 팀인 경우 수정 불가
   const [gameDate, setGameDate] = useState<Date>(new Date())
   const [result, setResult] = useState<GameResult | null>(null)
   const [matchedTeamId, setMatchedTeamId] = useState<string | null>(null)
@@ -181,6 +182,21 @@ export default function CoachingPageContent() {
         const matchedId = searchParams.get('matchedTeamId')
         if (matchedId) {
           setMatchedTeamId(matchedId)
+          
+          // 매칭된 팀 정보 가져오기
+          try {
+            const matchedTeams = await teamService.getMatchedTeams(team.id)
+            const matchedTeam = matchedTeams.find(m => m.gameId.toString() === matchedId)
+            
+            if (matchedTeam) {
+              // 매칭된 팀 이름을 자동으로 설정하고 수정 불가능하게
+              setOpponent(matchedTeam.matchedTeam.name)
+              setOpponentDisabled(true)
+            }
+          } catch (err) {
+            console.error('매칭된 팀 정보 조회 실패:', err)
+            // 실패해도 계속 진행 (수동 입력 가능)
+          }
         }
       } catch (err) {
         console.error('데이터 로드 실패:', err)
@@ -317,11 +333,15 @@ export default function CoachingPageContent() {
             <div>
               <label className="mb-2 block text-sm font-medium text-foreground">
                 상대팀 이름
+                {opponentDisabled && (
+                  <span className="ml-2 text-xs text-muted-foreground">(매칭된 팀)</span>
+                )}
               </label>
               <Input
                 placeholder="예: 세종 Twins"
                 value={opponent}
                 onChange={(e) => setOpponent(e.target.value)}
+                disabled={opponentDisabled}
                 className="border-border/50 shadow-none"
               />
             </div>

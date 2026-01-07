@@ -54,7 +54,7 @@ export default function CoachingPage() {
             id: record.gameId.toString(),
             teamId: team.id,
             teamName: team.name,
-            opponent: '상대팀', // Mock 데이터
+            opponent: record.opponent || '상대팀', // 게임 기록에서 상대팀 이름 가져오기
             result: record.result,
             feedbackTag: 'TEAMWORK' as const, // Mock 데이터
             aiComment: record.aiComment,

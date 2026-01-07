@@ -438,8 +438,38 @@ export default function TeamDetailPage() {
                       )
                     }
 
-                    // 기본: 팀 멤버면 모든 카카오톡 아이디 표시
+                    // 내 소속 팀인 경우: 모든 멤버의 연락처 표시
                     if (isTeamMember) {
+                      return (
+                        <div className="ml-[52px] flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <MessageCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                            <span className="text-sm text-foreground">{member.kakaoId}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => handleCopyKakaoId(member.kakaoId, member.name)}
+                          >
+                            {copied === member.kakaoId ? (
+                              <>
+                                <Check className="mr-1 h-3 w-3" />
+                                완료
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="mr-1 h-3 w-3" />
+                                복사
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      )
+                    }
+
+                    // 내 소속 팀이 아닌 경우: 팀장의 이메일만 표시
+                    if (!isTeamMember && member.isLeader) {
                       return (
                         <div className="ml-[52px] flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-2">
                           <div className="flex items-center gap-2">
@@ -475,26 +505,6 @@ export default function TeamDetailPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* 최근 AI 코칭 - 팀 멤버만 볼 수 있음, 경기 기록이 있을 때만 표시 */}
-        {isTeamMember && team.totalGames > 0 && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="font-bold text-foreground">최근 AI 코칭</h3>
-            </div>
-
-            <Card className="border-border/50 bg-card">
-              <CardContent className="p-4">
-                <div className="text-center py-8">
-                  <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">아직 AI 코칭 기록이 없습니다.</p>
-                  <p className="text-xs text-muted-foreground mt-1">경기를 진행하면 AI 분석 결과를 받을 수 있습니다.</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         {/* Team Actions - 팀 멤버만 볼 수 있음 */}
         {isTeamMember && (
