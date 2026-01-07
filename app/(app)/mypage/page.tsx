@@ -25,7 +25,7 @@ import {
 import { userService, teamService } from '@/lib/services'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { toast } from 'sonner'
-import type { User, Team, Post } from '@/types'
+import type { User, Team, Post, Position, PlayStyle } from '@/types'
 
 export default function MyPage() {
   const router = useRouter()
@@ -43,7 +43,20 @@ export default function MyPage() {
 
         // 현재 사용자 정보 조회
         const userData = await userService.getMe()
-        setUser(userData)
+        // API 응답을 프론트엔드 User 타입으로 변환
+        const user: User = {
+          id: userData.id,
+          name: userData.nickname, // nickname → name 변환
+          email: userData.email,
+          gender: userData.gender,
+          address: userData.address,
+          height: userData.height,
+          position: userData.mainPosition as Position,
+          subPosition: userData.subPosition as Position | undefined,
+          playStyle: userData.playStyle as PlayStyle | undefined,
+          statusMsg: userData.statusMsg,
+        }
+        setUser(user)
 
         // 내 팀 목록 조회
         const teams = await teamService.getMyTeams()

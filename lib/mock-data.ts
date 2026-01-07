@@ -13,12 +13,12 @@ export type Player = {
 export const mockPlayers: Player[] = [
   {
     id: 'user1',
-    name: '김세종',
+    name: 'Yoo', // mockData.users[0]와 일치
     profileImage: '/images/profile1.png',
-    position: 'PG',
+    position: 'SF', // FORWARD → SF로 변환
     level: 'A',
     lastActive: '2일 전',
-    bio: '빠른 돌파와 패스가 장점인 세종대 농구 동호회 팀장입니다.',
+    bio: 'TeamUp is good!', // mockData.users[0]의 statusMsg와 일치
   },
   {
     id: 'user2',
@@ -37,6 +37,102 @@ export const mockPlayers: Player[] = [
     level: 'A+',
     lastActive: '1주 전',
     bio: '팀의 골밑을 책임지는 든든한 센터.',
+  },
+  {
+    id: 'user4',
+    name: '최민수',
+    profileImage: '/images/profile4.png',
+    position: 'PG',
+    level: 'A',
+    lastActive: '3일 전',
+    bio: '빠른 패스와 게임 리딩이 특기입니다.',
+  },
+  {
+    id: 'user5',
+    name: '정태영',
+    profileImage: '/images/profile5.png',
+    position: 'SG',
+    level: 'B+',
+    lastActive: '1일 전',
+    bio: '정확한 3점슛으로 팀을 이끕니다.',
+  },
+  {
+    id: 'user6',
+    name: '김도현',
+    profileImage: '/images/profile6.png',
+    position: 'PF',
+    level: 'A-',
+    lastActive: '4일 전',
+    bio: '강력한 인사이드 플레이와 리바운드.',
+  },
+]
+
+// 팀원 정보 (팀 상세 페이지용)
+export interface TeamMemberInfo {
+  id: string
+  name: string
+  email: string
+  position: 'GUARD' | 'FORWARD' | 'CENTER'
+  playStyle?: 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'
+  height?: number
+  isLeader: boolean
+}
+
+// 세종 born 팀의 팀원 목록 (mockMyTeam용)
+export const mockMyTeamMembers: TeamMemberInfo[] = [
+  {
+    id: 'user1',
+    name: 'Yoo',
+    email: 'Yoo@gmail.com',
+    position: 'FORWARD',
+    playStyle: 'SHOOTER',
+    height: 178,
+    isLeader: true,
+  },
+  {
+    id: 'user2',
+    name: '이광진',
+    email: 'kwangjin@example.com',
+    position: 'FORWARD',
+    playStyle: 'SLASHER',
+    height: 185,
+    isLeader: false,
+  },
+  {
+    id: 'user3',
+    name: '박강남',
+    email: 'kangnam@example.com',
+    position: 'CENTER',
+    playStyle: 'DEFENDER',
+    height: 195,
+    isLeader: false,
+  },
+  {
+    id: 'user4',
+    name: '최민수',
+    email: 'minsu@example.com',
+    position: 'GUARD',
+    playStyle: 'PASSER',
+    height: 175,
+    isLeader: false,
+  },
+  {
+    id: 'user5',
+    name: '정태영',
+    email: 'taeyoung@example.com',
+    position: 'GUARD',
+    playStyle: 'SHOOTER',
+    height: 180,
+    isLeader: false,
+  },
+  {
+    id: 'user6',
+    name: '김도현',
+    email: 'dohyun@example.com',
+    position: 'FORWARD',
+    playStyle: 'SLASHER',
+    height: 188,
+    isLeader: false,
   },
 ]
 

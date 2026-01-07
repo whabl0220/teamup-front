@@ -95,14 +95,27 @@ export default function TeamDetailPage() {
         setIsTeamMember(isMember)
         setIsTeamLeader(teamData.captainId === user.id)
 
-        // 팀원 목록 생성 (현재는 팀장만 표시, 향후 API 추가 필요)
-        const captain = {
-          name: user.nickname || '팀장',
-          position: user.mainPosition || 'SF',
-          isLeader: true,
-          kakaoId: user.email || 'captain_kakao_id',
+        // 팀원 목록 조회
+        try {
+          const members = await teamService.getTeamMembers(teamId)
+          const teamMembersList = members.map((member) => ({
+            name: member.name,
+            position: member.position,
+            isLeader: member.isLeader,
+            kakaoId: member.email,
+          }))
+          setTeamMembers(teamMembersList)
+        } catch (err) {
+          console.error('팀원 목록 조회 실패:', err)
+          // 실패 시 팀장만 표시
+          const captain = {
+            name: user.nickname || '팀장',
+            position: user.mainPosition || 'SF',
+            isLeader: true,
+            kakaoId: user.email || 'captain_kakao_id',
+          }
+          setTeamMembers([captain])
         }
-        setTeamMembers([captain])
       } catch (err) {
         console.error('팀 정보 로드 실패:', err)
         toast.error('팀 정보를 불러올 수 없습니다.')

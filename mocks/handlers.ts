@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import type { Team, MatchRequest, User } from '@/types'
-import { mockMatchTeams, mockJoinTeams, mockMyTeam } from '@/lib/mock-data'
+import { mockMatchTeams, mockJoinTeams, mockMyTeam, mockMyTeamMembers } from '@/lib/mock-data'
 
 // Mock 데이터 저장소 (메모리 기반)
 const mockData = {
@@ -8,13 +8,14 @@ const mockData = {
   users: [
     {
       id: 'user1',
-      name: 'KimB',
-      email: 'kimB@example.com',
+      name: 'Yoo',
+      email: 'Yoo@gmail.com',
       team: mockMyTeam,
       height: 178,
-      position: 'GUARD' as const,
-      playStyle: 'SHOOTER' as const,
-      statusMsg: 'TeamUp 3주 연속 출석 중!',
+      position: 'FORWARD' as const, // Position: 'GUARD' | 'FORWARD' | 'CENTER'
+      subPosition: 'CENTER' as const, // Position: 'GUARD' | 'FORWARD' | 'CENTER'
+      playStyle: 'SHOOTER' as const, // PlayStyle: 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'
+      statusMsg: 'TeamUp is good!',
     },
   ] as User[],
   matchRequests: [] as MatchRequest[],
@@ -237,6 +238,54 @@ export const handlers = [
       return HttpResponse.json({ error: 'Team not found' }, { status: 404 })
     }
     return HttpResponse.json(team)
+  }),
+
+  // 팀 멤버 목록 조회
+  http.get('*/api/teams/:teamId/members', ({ params }) => {
+    const teamId = params.teamId as string
+    const team = mockData.teams.find((t) => t.id === teamId)
+
+    if (!team) {
+      return HttpResponse.json({ error: 'Team not found' }, { status: 404 })
+    }
+
+    // 세종 born 팀 (id: '1')인 경우 mockMyTeamMembers 사용
+    if (teamId === '1' || team.id === '1') {
+      const members = mockMyTeamMembers.slice(0, team.memberCount || 6).map((member) => ({
+        id: member.id,
+        name: member.name,
+        position: member.position,
+        isLeader: member.isLeader,
+        email: member.email,
+      }))
+      return HttpResponse.json(members)
+    }
+
+    // 다른 팀의 경우 팀장만 반환
+    const currentUser = mockData.users[0]
+    const members = [
+      {
+        id: currentUser.id,
+        name: currentUser.name,
+        position: currentUser.position || 'FORWARD',
+        isLeader: true,
+        email: currentUser.email,
+      },
+    ]
+
+    // memberCount에 맞춰 추가 멤버 생성 (간단한 Mock 데이터)
+    const memberCount = team.memberCount || 1
+    for (let i = 1; i < memberCount; i++) {
+      members.push({
+        id: `member${i}`,
+        name: `멤버${i}`,
+        position: ['GUARD', 'FORWARD', 'CENTER'][i % 3] as 'GUARD' | 'FORWARD' | 'CENTER',
+        isLeader: false,
+        email: `member${i}@example.com`,
+      })
+    }
+
+    return HttpResponse.json(members)
   }),
 
   // 팀의 게임 기록 조회

@@ -89,6 +89,11 @@ export const teamService = {
     return get<Team>(`/api/teams/${id}`)
   },
 
+  // 팀 멤버 목록 조회
+  getTeamMembers: async (teamId: string): Promise<Array<{ id: string; name: string; position: string; isLeader: boolean; email: string }>> => {
+    return get<Array<{ id: string; name: string; position: string; isLeader: boolean; email: string }>>(`/api/teams/${teamId}/members`)
+  },
+
   // // 팀 검색
   // searchTeams: async (
   //   query: string,
