@@ -172,7 +172,7 @@ export default function CreateTeamPage() {
 
     try {
       // 로그인된 유저 정보 가져오기
-      const currentUser = getCurrentUser()
+      const currentUser = await userService.getMe()
       if (!currentUser) {
         toast.error('로그인이 필요합니다.')
         router.push('/login')
