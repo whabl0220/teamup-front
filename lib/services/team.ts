@@ -29,8 +29,8 @@ export interface MatchSuggestion {
 }
 
 // 팀 관련 API
-import { get, post, del } from './client'
-import type { Team, TeamMember } from '@/types'
+import { get, post, del, put } from './client'
+import type { Team, TeamMember, JoinRequest } from '@/types'
 
 
 // 실제 API 명세에 맞는 팀 생성 요청 타입
