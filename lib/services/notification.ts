@@ -13,14 +13,11 @@ export interface Notification {
 
 export const notificationService = {
   // ========== 실제 사용 API ==========
-  // (시연에서는 사용 안 함)
 
-  // ========== 향후 사용 예정 (주석 처리) ==========
-
-  // // 알림 목록 조회
-  // getNotifications: async (): Promise<Notification[]> => {
-  //   return get<Notification[]>('/notifications')
-  // },
+  // 알림 목록 조회
+  getNotifications: async (): Promise<Notification[]> => {
+    return get<Notification[]>('/api/notifications')
+  },
 
   // // 알림 읽음 처리
   // markNotificationAsRead: async (notificationId: string): Promise<void> => {

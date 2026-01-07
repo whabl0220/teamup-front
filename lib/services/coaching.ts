@@ -77,6 +77,11 @@ export const coachingService = {
     return post<CreateReportResponse>(`/api/games/${gameId}/report?teamId=${teamId}`);
   },
 
+  // 팀의 게임 기록 조회
+  getTeamGameRecords: async (teamId: number): Promise<FinishGameFeedbackResponse[]> => {
+    return get<FinishGameFeedbackResponse[]>(`/api/teams/${teamId}/game-records`);
+  },
+
   // ========== 향후 사용 예정 (주석 처리) ==========
 
   // // AI 피드백 생성 (경기 후)

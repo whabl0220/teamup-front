@@ -25,6 +25,15 @@ const mockData = {
     status: string
     createdAt: string
   }>,
+  gameRecords: [] as Array<{
+    gameId: number
+    teamId: number
+    teamName: string
+    result: 'WIN' | 'LOSE' | 'DRAW'
+    positionFeedbacksJson: string
+    aiComment: string
+    createdAt: string
+  }>,
 }
 
 // 팀 DNA별 AI 코멘트
@@ -207,18 +216,38 @@ export const handlers = [
     return HttpResponse.json(suggestions)
   }),
 
-  // 내 팀 목록 조회 (향후 사용)
+  // 내 팀 목록 조회
   http.get('*/api/teams/my', () => {
-    return HttpResponse.json([mockMyTeam])
+    // 현재 사용자의 팀 목록 반환 (팀장인 팀만)
+    const currentUser = mockData.users[0]
+    const userTeams = mockData.teams
+      .filter((team) => Number(team.captainId) === Number(currentUser.id))
+      .map((team) => ({
+        ...team,
+        // Team 타입에 맞게 변환
+      }))
+
+    return HttpResponse.json(userTeams.length > 0 ? userTeams : [mockMyTeam])
   }),
 
-  // 팀 상세 조회 (향후 사용)
+  // 팀 상세 조회
   http.get('*/api/teams/:teamId', ({ params }) => {
     const team = mockData.teams.find((t) => t.id === params.teamId)
     if (!team) {
       return HttpResponse.json({ error: 'Team not found' }, { status: 404 })
     }
     return HttpResponse.json(team)
+  }),
+
+  // 팀의 게임 기록 조회
+  http.get('*/api/teams/:teamId/game-records', ({ params }) => {
+    const teamId = Number(params.teamId)
+    // gameRecords 배열에서 해당 팀의 기록만 반환
+    const teamRecords = (mockData.gameRecords || []).filter(
+      (record) => record.teamId === teamId
+    )
+
+    return HttpResponse.json(teamRecords)
   }),
 
   // ========== 게임 관련 API ==========
@@ -260,29 +289,36 @@ export const handlers = [
   http.post('*/api/games/:gameId/finish-and-feedback', async ({ params, request }) => {
     const gameId = Number(params.gameId)
     const body = (await request.json()) as { teamId: number; result: string; positionFeedbacks: unknown[] }
-      const game = mockData.games.find((g) => g.gameId === gameId)
-      const team = mockData.teams.find((t) => Number(t.id) === body.teamId)
+    const game = mockData.games.find((g) => g.gameId === gameId)
+    const team = mockData.teams.find((t) => Number(t.id) === body.teamId)
 
-      if (!game || !team) {
-        return HttpResponse.json({ error: 'Game or team not found' }, { status: 404 })
-      }
-
-      // 게임 상태 업데이트
-      game.status = 'FINISHED'
-
-      const aiComment = getAICoachingComment(team.teamDna || 'BULLS', body.result)
-
-      return HttpResponse.json({
-        gameId,
-        teamId: body.teamId,
-        teamName: team.name,
-        result: body.result,
-        positionFeedbacksJson: JSON.stringify(body.positionFeedbacks),
-        aiComment,
-        createdAt: new Date().toISOString(),
-      })
+    if (!game || !team) {
+      return HttpResponse.json({ error: 'Game or team not found' }, { status: 404 })
     }
-  ),
+
+    // 게임 상태 업데이트
+    game.status = 'FINISHED'
+
+    const aiComment = getAICoachingComment(team.teamDna || 'BULLS', body.result)
+
+    const response = {
+      gameId,
+      teamId: body.teamId,
+      teamName: team.name,
+      result: body.result as 'WIN' | 'LOSE' | 'DRAW',
+      positionFeedbacksJson: JSON.stringify(body.positionFeedbacks),
+      aiComment,
+      createdAt: new Date().toISOString(),
+    }
+
+    // 게임 기록 저장 (통계 계산용)
+    if (!mockData.gameRecords) {
+      mockData.gameRecords = []
+    }
+    mockData.gameRecords.push(response)
+
+    return HttpResponse.json(response)
+  }),
 
   // AI 리포트 생성
   http.post('*/api/games/:gameId/report', async ({ params, request }) => {
@@ -343,7 +379,27 @@ export const handlers = [
 
   // 현재 사용자 정보 조회
   http.get('*/api/users/me', () => {
-    return HttpResponse.json(mockData.users[0])
+    const user = mockData.users[0]
+    if (!user) {
+      return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // User 타입에 맞게 변환
+    return HttpResponse.json({
+      id: user.id,
+      email: user.email,
+      nickname: user.name,
+      mainPosition: user.position || 'GUARD',
+      subPosition: undefined,
+      gender: 'MALE',
+      age: 25,
+      address: user.address || '',
+      height: user.height,
+      playStyle: user.playStyle,
+      statusMsg: user.statusMsg,
+      Team: user.team ? [user.team] : [],
+      createdAt: new Date().toISOString(),
+    })
   }),
 
   // 사용자 조회
@@ -359,7 +415,19 @@ export const handlers = [
 
   // 받은 매칭 요청 목록
   http.get('*/api/match-requests/received', () => {
-    return HttpResponse.json(mockData.matchRequests)
+    // 현재 사용자의 팀으로 온 매칭 요청만 반환
+    const currentUser = mockData.users[0]
+    const currentTeam = currentUser?.team
+
+    if (!currentTeam) {
+      return HttpResponse.json([])
+    }
+
+    const receivedRequests = mockData.matchRequests.filter(
+      (req) => req.toTeam.id === currentTeam.id && req.status === 'pending'
+    )
+
+    return HttpResponse.json(receivedRequests)
   }),
 
   // 매칭 요청 보내기

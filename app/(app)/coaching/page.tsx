@@ -9,11 +9,14 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { TrendingUp, TrendingDown, Minus, Plus, Trophy, Target, Check } from 'lucide-react'
-import { getCurrentUser, getCurrentTeamGameRecords, getCurrentTeamStats, getMatchedTeams, formatTimeAgo } from '@/lib/storage'
+import { userService, teamService, coachingService } from '@/lib/services'
+import { formatTimeAgo } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { GameRecord, Team, MatchedTeam } from '@/types'
 
 export default function CoachingPage() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
   const [records, setRecords] = useState<GameRecord[]>([])
   const [currentTeam, setCurrentTeam] = useState<Team | null>(null)
   const [matchedTeams, setMatchedTeams] = useState<MatchedTeam[]>([])
@@ -25,28 +28,69 @@ export default function CoachingPage() {
   })
 
   useEffect(() => {
-    // 클라이언트 사이드에서만 실행
-    if (typeof window === 'undefined') return
+    const loadData = async () => {
+      try {
+        setIsLoading(true)
 
-    const user = getCurrentUser()
-    if (!user) {
-      router.push('/login')
-      return
+        // 현재 사용자 정보 조회
+        const user = await userService.getMe()
+
+        // 내 팀 목록 조회
+        const teams = await teamService.getMyTeams()
+        const team = teams.length > 0 ? teams[0] : null
+        setCurrentTeam(team)
+
+        if (!team) {
+          router.push('/home')
+          return
+        }
+
+        // 게임 기록 조회
+        try {
+          const gameRecords = await coachingService.getTeamGameRecords(Number(team.id))
+          
+          // GameRecord 타입으로 변환
+          const convertedRecords: GameRecord[] = gameRecords.map((record) => ({
+            id: record.gameId.toString(),
+            teamId: team.id,
+            teamName: team.name,
+            opponent: '상대팀', // Mock 데이터
+            result: record.result,
+            feedbackTag: 'TEAMWORK' as const, // Mock 데이터
+            aiComment: record.aiComment,
+            gameDate: new Date(record.createdAt).toISOString().split('T')[0],
+            createdAt: record.createdAt,
+          }))
+
+          setRecords(convertedRecords)
+
+          // 통계 계산
+          const wins = convertedRecords.filter((r) => r.result === 'WIN').length
+          const losses = convertedRecords.filter((r) => r.result === 'LOSE').length
+          const total = convertedRecords.length
+
+          setStats({
+            totalGames: total,
+            wins,
+            losses,
+            winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
+          })
+        } catch (err) {
+          console.error('게임 기록 조회 실패:', err)
+        }
+
+        // 매칭된 팀 정보 (향후 API 추가 필요)
+        setMatchedTeams([])
+      } catch (err) {
+        console.error('데이터 로드 실패:', err)
+        toast.error('데이터를 불러오는데 실패했습니다.')
+        router.push('/login')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    // Storage에서 실제 데이터 가져오기
-    const gameRecords = getCurrentTeamGameRecords()
-    setRecords(gameRecords)
-
-    // 현재 팀 정보
-    setCurrentTeam(user.team || null)
-
-    // 매칭된 팀 정보
-    setMatchedTeams(getMatchedTeams())
-
-    // 통계 계산
-    const teamStats = getCurrentTeamStats()
-    setStats(teamStats)
+    loadData()
   }, [router])
 
   const getResultIcon = (result: GameRecord['result']) => {
@@ -88,6 +132,33 @@ export default function CoachingPage() {
     const day = date.getDate()
     const dayOfWeek = ['일', '월', '화', '수', '목', '금', '토'][date.getDay()]
     return `${month}/${day} (${dayOfWeek})`
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
+            <Image
+              src="/images/logo.jpg"
+              alt="TeamUp Logo"
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-xl object-contain"
+            />
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">AI 코칭</h1>
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto max-w-lg px-4 py-6">
+          <div className="flex min-h-[60vh] items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        </main>
+        <BottomNav />
+      </div>
+    )
   }
 
   return (

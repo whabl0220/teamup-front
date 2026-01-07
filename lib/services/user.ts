@@ -34,17 +34,15 @@ export interface UserTeamResponse {
 export const userService = {
   // ========== 실제 사용 API ==========
 
+  // 내 정보 조회
+  getMe: async (): Promise<User> => {
+    return get<User>('/api/users/me')
+  },
+
   // 사용자의 팀 목록 조회
   getUserTeams: async (userId: number): Promise<UserTeamResponse[]> => {
     return get<UserTeamResponse[]>(`/api/users/${userId}/teams`)
   },
-
-  // ========== 향후 사용 예정 (주석 처리) ==========
-
-  // // 내 정보 조회
-  // getMe: async (): Promise<User> => {
-  //   return get<User>('/users/me')
-  // },
 
   // // 특정 유저 조회
   // getUser: async (id: string): Promise<User> => {

@@ -79,17 +79,15 @@ export const teamService = {
     return get<MatchSuggestion[]>(`/api/teams/${teamId}/match-suggestions`);
   },
 
-  // ========== 향후 사용 예정 (주석 처리) ==========
+  // 내 팀 목록 조회
+  getMyTeams: async (): Promise<Team[]> => {
+    return get<Team[]>('/api/teams/my')
+  },
 
-  // // 내 팀 목록 조회
-  // getMyTeams: async (): Promise<Team[]> => {
-  //   return get<Team[]>('/teams/my')
-  // },
-
-  // // 팀 상세 조회
-  // getTeam: async (id: string): Promise<Team> => {
-  //   return get<Team>(`/teams/${id}`)
-  // },
+  // 팀 상세 조회
+  getTeam: async (id: string): Promise<Team> => {
+    return get<Team>(`/api/teams/${id}`)
+  },
 
   // // 팀 검색
   // searchTeams: async (

@@ -10,12 +10,11 @@ import { Badge } from '@/components/ui/badge'
 import { Sparkles, Check, Bot } from 'lucide-react'
 import type { Team, MatchedTeam } from '@/types'
 import { TeamCard } from '@/components/shared/team-card'
-import { mockMatchTeams } from '@/lib/mock-data'
-import { getCurrentTeam, getAppData, getMatchedTeams, formatTimeAgo } from '@/lib/storage'
+import { userService, teamService } from '@/lib/services'
+import { formatTimeAgo } from '@/lib/utils'
 import { MatchedTeamsModal } from '@/components/shared/matched-teams-modal'
 import { MatchTeamsModal } from '@/components/shared/match-teams-modal'
 import { toast } from 'sonner'
-import { teamService } from '@/lib/services'
 
 export default function MatchingPage() {
   const [showMatchModal, setShowMatchModal] = useState(false)
@@ -33,11 +32,18 @@ export default function MatchingPage() {
     if (typeof window === 'undefined') return
 
     const loadData = async () => {
-      const team = getCurrentTeam()
-      const appData = getAppData()
-      setCurrentTeam(team)
-      setIsTeamLeader(team && appData.user ? team.captainId === appData.user.id : false)
-      setMatchedTeams(getMatchedTeams())
+      try {
+        // 현재 사용자 정보 조회
+        const user = await userService.getMe()
+
+        // 내 팀 목록 조회
+        const teams = await teamService.getMyTeams()
+        const team = teams.length > 0 ? teams[0] : null
+        setCurrentTeam(team)
+        setIsTeamLeader(team ? Number(team.captainId) === Number(user.id) : false)
+        
+        // 매칭된 팀 정보 (향후 API 추가 필요)
+        setMatchedTeams([])
 
       // API에서 매칭 추천 팀 조회
       if (team?.id) {
@@ -70,14 +76,13 @@ export default function MatchingPage() {
         } catch (err) {
           console.error('매칭 추천 팀 조회 실패:', err)
           toast.error('추천 팀을 불러오는데 실패했습니다.')
-          // 실패 시 Mock 데이터 사용
-          setMatchTeams(mockMatchTeams)
         } finally {
           setIsLoading(false)
         }
-      } else {
-        // 팀이 없으면 Mock 데이터 사용
-        setMatchTeams(mockMatchTeams)
+      }
+      } catch (err) {
+        console.error('데이터 로드 실패:', err)
+        toast.error('데이터를 불러오는데 실패했습니다.')
       }
     }
 
@@ -110,18 +115,17 @@ export default function MatchingPage() {
         description: `${selectedTeam.name}와(과)의 경기가 생성되었습니다!`,
       })
 
-      // localStorage에 매칭된 팀 추가 (UI 표시용)
-      const appData = getAppData()
-      appData.matchedTeams = appData.matchedTeams || []
-      appData.matchedTeams.push({
-        id: response.gameId.toString(),
-        myTeamId: currentTeam.id,
-        matchedTeam: selectedTeam,
-        matchedAt: new Date().toISOString(),
-        requestId: response.gameId.toString(), // gameId를 requestId로 사용
-      })
-      localStorage.setItem('teamup_app_data', JSON.stringify(appData))
-      setMatchedTeams(appData.matchedTeams)
+      // 매칭된 팀 목록 업데이트 (향후 API 추가 필요)
+      setMatchedTeams((prev) => [
+        ...prev,
+        {
+          id: response.gameId.toString(),
+          myTeamId: currentTeam.id,
+          matchedTeam: selectedTeam,
+          matchedAt: new Date().toISOString(),
+          requestId: response.gameId.toString(),
+        },
+      ])
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '게임 생성에 실패했습니다.'
