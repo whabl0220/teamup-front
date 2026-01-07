@@ -66,6 +66,15 @@ npm run dev
 
 현재 MSW에서 mock하는 API 목록:
 
+### 인증 관련
+- ✅ `POST /api/auth/signup` - 회원가입
+- ✅ `POST /api/auth/login` - 로그인
+
+### 사용자 관련
+- ✅ `GET /api/users/{userId}/teams` - 사용자의 팀 목록 조회
+- ✅ `GET /api/users/me` - 현재 사용자 정보
+- ✅ `GET /api/users/{userId}` - 사용자 조회
+
 ### 팀 관련
 - ✅ `POST /api/teams?userId={userId}` - 팀 생성
 - ✅ `GET /api/teams/{teamId}/match-suggestions` - 매칭 추천 팀 조회

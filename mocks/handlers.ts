@@ -53,6 +53,91 @@ const getAICoachingComment = (teamDna: string, result: string): string => {
 }
 
 export const handlers = [
+  // ========== 인증 관련 API ==========
+
+  // 회원가입
+  http.post('*/api/auth/signup', async ({ request }) => {
+    const body = (await request.json()) as {
+      email: string
+      password: string
+      nickname: string
+      gender: string
+      address: string
+      height: number
+      position: string
+      subPosition?: string
+      playStyle?: string
+      statusMsg?: string
+    }
+
+    // 이메일 중복 체크
+    const existingUser = mockData.users.find((u) => u.email === body.email)
+    if (existingUser) {
+      return HttpResponse.json({ error: '이미 사용 중인 이메일입니다.' }, { status: 400 })
+    }
+
+    // 새 사용자 생성
+    const newUser: User = {
+      id: String(Date.now()),
+      email: body.email,
+      name: body.nickname,
+      position: body.position as 'GUARD' | 'FORWARD' | 'CENTER',
+      playStyle: body.playStyle as 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER' | undefined,
+      height: body.height,
+      address: body.address,
+      statusMsg: body.statusMsg,
+    }
+
+    mockData.users.push(newUser)
+
+    return HttpResponse.json({
+      id: Number(newUser.id),
+      email: newUser.email,
+      nickname: newUser.name,
+      gender: body.gender,
+      address: newUser.address || '',
+      height: newUser.height || 0,
+      position: newUser.position || '',
+      subPosition: body.subPosition,
+      playStyle: newUser.playStyle,
+      statusMsg: newUser.statusMsg,
+      createdAt: new Date().toISOString(),
+    })
+  }),
+
+  // 로그인
+  http.post('*/api/auth/login', async ({ request }) => {
+    const body = (await request.json()) as { email: string; password: string }
+
+    // 이메일로 사용자 찾기
+    const user = mockData.users.find((u) => u.email === body.email)
+
+    if (!user) {
+      return HttpResponse.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 })
+    }
+
+    // 비밀번호 검증 (실제로는 해시 비교, 여기서는 간단히 체크)
+    // Mock에서는 모든 비밀번호를 허용하지만, 실제로는 검증 필요
+    if (!body.password || body.password.length < 8) {
+      return HttpResponse.json({ error: '이메일 또는 비밀번호가 올바르지 않습니다.' }, { status: 401 })
+    }
+
+    // 로그인 성공 - 사용자 정보 반환
+    return HttpResponse.json({
+      id: Number(user.id),
+      email: user.email,
+      nickname: user.name,
+      gender: 'MALE', // Mock 데이터
+      address: user.address || '',
+      height: user.height || 0,
+      position: user.position || '',
+      subPosition: undefined,
+      playStyle: user.playStyle,
+      statusMsg: user.statusMsg,
+      createdAt: new Date().toISOString(),
+    })
+  }),
+
   // ========== 팀 관련 API ==========
 
   // 팀 생성
@@ -226,7 +311,35 @@ export const handlers = [
     })
   }),
 
-  // ========== 사용자 관련 API (향후 사용) ==========
+  // ========== 사용자 관련 API ==========
+
+  // 사용자의 팀 목록 조회
+  http.get('*/api/users/:userId/teams', ({ params }) => {
+    const userId = Number(params.userId)
+    const user = mockData.users.find((u) => Number(u.id) === userId)
+
+    if (!user) {
+      return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // 사용자가 속한 팀 목록 반환 (팀장인 팀만)
+    const userTeams = mockData.teams
+      .filter((team) => Number(team.captainId) === userId)
+      .map((team) => ({
+        id: Number(team.id),
+        name: team.name,
+        leaderId: Number(team.captainId),
+        leaderNickname: user.name,
+        teamDna: (team.teamDna || 'BULLS') as 'BULLS' | 'WARRIORS' | 'SPURS',
+        teamLevel: team.teamLevel || 1,
+        teamExp: team.teamExp || 0,
+        emblemUrl: team.logo,
+        memberCount: team.memberCount,
+        createdAt: new Date().toISOString(),
+      }))
+
+    return HttpResponse.json(userTeams)
+  }),
 
   // 현재 사용자 정보 조회
   http.get('*/api/users/me', () => {
