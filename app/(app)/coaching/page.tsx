@@ -79,8 +79,21 @@ export default function CoachingPage() {
           console.error('게임 기록 조회 실패:', err)
         }
 
-        // 매칭된 팀 정보 (향후 API 추가 필요)
-        setMatchedTeams([])
+        // 매칭된 팀 정보 조회
+        try {
+          const matchedTeamsData = await teamService.getMatchedTeams(team.id)
+          const convertedMatchedTeams: MatchedTeam[] = matchedTeamsData.map((match) => ({
+            id: match.gameId.toString(),
+            myTeamId: team.id,
+            matchedTeam: match.matchedTeam,
+            matchedAt: match.matchedAt,
+            requestId: match.gameId.toString(),
+          }))
+          setMatchedTeams(convertedMatchedTeams)
+        } catch (err) {
+          console.error('매칭된 팀 목록 조회 실패:', err)
+          setMatchedTeams([])
+        }
       } catch (err) {
         console.error('데이터 로드 실패:', err)
         toast.error('데이터를 불러오는데 실패했습니다.')

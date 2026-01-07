@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 import type { Team, MatchRequest, User } from '@/types'
-import { mockMatchTeams, mockJoinTeams, mockMyTeam, mockMyTeamMembers } from '@/lib/mock-data'
+import { mockMatchTeams, mockJoinTeams, mockMyTeam, mockMyTeamMembers, mockTeamMembers } from '@/lib/mock-data'
 
 // Mock 데이터 저장소 (메모리 기반)
 const mockData = {
@@ -25,6 +25,12 @@ const mockData = {
     awayTeamId: number
     status: string
     createdAt: string
+  }>,
+  matchedTeams: [] as Array<{
+    gameId: number
+    homeTeamId: number
+    awayTeamId: number
+    matchedAt: string
   }>,
   gameRecords: [] as Array<{
     gameId: number
@@ -261,25 +267,38 @@ export const handlers = [
       return HttpResponse.json(members)
     }
 
-    // 다른 팀의 경우 팀장만 반환
-    const currentUser = mockData.users[0]
-    const members = [
+    // 다른 팀의 경우 mockTeamMembers에서 찾기
+    const teamMembers = mockTeamMembers[teamId] || mockTeamMembers[team.id]
+    if (teamMembers) {
+      const members = teamMembers.slice(0, team.memberCount || teamMembers.length).map((member) => ({
+        id: member.id,
+        name: member.name,
+        position: member.position,
+        isLeader: member.isLeader,
+        email: member.email,
+      }))
+      return HttpResponse.json(members)
+    }
+
+    // 정의되지 않은 팀의 경우 기본 팀장 정보 반환 (captainId 기반)
+    const captainId = team.captainId
+    const members: Array<{ id: string; name: string; position: 'GUARD' | 'FORWARD' | 'CENTER'; isLeader: boolean; email: string }> = [
       {
-        id: currentUser.id,
-        name: currentUser.name,
-        position: currentUser.position || 'FORWARD',
+        id: captainId,
+        name: captainId === 'user1' ? 'Yoo' : captainId === 'user2' ? '이광진' : captainId === 'user3' ? '박강남' : captainId === 'user4' ? '최민수' : captainId === 'user5' ? '정태영' : '팀장',
+        position: 'FORWARD',
         isLeader: true,
-        email: currentUser.email,
+        email: `${captainId}@example.com`,
       },
     ]
 
-    // memberCount에 맞춰 추가 멤버 생성 (간단한 Mock 데이터)
+    // memberCount에 맞춰 추가 멤버 생성
     const memberCount = team.memberCount || 1
     for (let i = 1; i < memberCount; i++) {
       members.push({
         id: `member${i}`,
         name: `멤버${i}`,
-        position: ['GUARD', 'FORWARD', 'CENTER'][i % 3] as 'GUARD' | 'FORWARD' | 'CENTER',
+        position: (['GUARD', 'FORWARD', 'CENTER'][i % 3] as 'GUARD' | 'FORWARD' | 'CENTER'),
         isLeader: false,
         email: `member${i}@example.com`,
       })
@@ -322,6 +341,14 @@ export const handlers = [
 
       mockData.games.push(game)
 
+      // 매칭된 팀 목록에도 추가
+      mockData.matchedTeams.push({
+        gameId,
+        homeTeamId: body.homeTeamId,
+        awayTeamId: body.awayTeamId,
+        matchedAt: game.createdAt,
+      })
+
       return HttpResponse.json({
         gameId,
         homeTeamId: body.homeTeamId,
@@ -333,6 +360,31 @@ export const handlers = [
       })
     }
   ),
+
+  // 매칭된 팀 목록 조회
+  http.get('*/api/teams/:teamId/matched-teams', ({ params }) => {
+    const teamId = Number(params.teamId)
+    const matchedGames = mockData.matchedTeams.filter(
+      (match) => match.homeTeamId === teamId || match.awayTeamId === teamId
+    )
+
+    const matchedTeamsList = matchedGames.map((match) => {
+      const opponentTeamId = match.homeTeamId === teamId ? match.awayTeamId : match.homeTeamId
+      const opponentTeam = mockData.teams.find((t) => Number(t.id) === opponentTeamId)
+
+      if (!opponentTeam) {
+        return null
+      }
+
+      return {
+        gameId: match.gameId,
+        matchedTeam: opponentTeam,
+        matchedAt: match.matchedAt,
+      }
+    }).filter((item): item is NonNullable<typeof item> => item !== null)
+
+    return HttpResponse.json(matchedTeamsList)
+  }),
 
   // 게임 종료 및 피드백 제출
   http.post('*/api/games/:gameId/finish-and-feedback', async ({ params, request }) => {

@@ -93,7 +93,7 @@ export default function TeamDetailPage() {
         const myTeams = await teamService.getMyTeams()
         const isMember = myTeams.some((t) => t.id === teamId)
         setIsTeamMember(isMember)
-        setIsTeamLeader(teamData.captainId === user.id)
+        setIsTeamLeader(String(teamData.captainId) === String(user.id))
 
         // 팀원 목록 조회
         try {

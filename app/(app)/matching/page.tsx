@@ -40,7 +40,7 @@ export default function MatchingPage() {
         const teams = await teamService.getMyTeams()
         const team = teams.length > 0 ? teams[0] : null
         setCurrentTeam(team)
-        setIsTeamLeader(team ? Number(team.captainId) === Number(user.id) : false)
+        setIsTeamLeader(team ? String(team.captainId) === String(user.id) : false)
         
         // 매칭된 팀 정보 (향후 API 추가 필요)
         setMatchedTeams([])

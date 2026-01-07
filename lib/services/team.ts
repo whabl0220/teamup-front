@@ -94,6 +94,11 @@ export const teamService = {
     return get<Array<{ id: string; name: string; position: string; isLeader: boolean; email: string }>>(`/api/teams/${teamId}/members`)
   },
 
+  // 매칭된 팀 목록 조회 (게임 생성된 팀들)
+  getMatchedTeams: async (teamId: string): Promise<Array<{ gameId: number; matchedTeam: Team; matchedAt: string }>> => {
+    return get<Array<{ gameId: number; matchedTeam: Team; matchedAt: string }>>(`/api/teams/${teamId}/matched-teams`)
+  },
+
   // // 팀 검색
   // searchTeams: async (
   //   query: string,
