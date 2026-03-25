@@ -90,6 +90,8 @@ export default function MatchDetailPage() {
       const result = await matchService.applyToMatch(match.id)
       upsertStoredApplication(result)
       setApplication({ applicationId: result.id, status: result.status })
+      const updatedMatch = await matchService.getMatch(match.id)
+      setMatch(updatedMatch)
       toast.success('신청이 완료되었습니다. 입금 후 승인 대기 상태입니다.')
     } catch {
       const fallbackId = `local-${Date.now()}`
@@ -102,6 +104,8 @@ export default function MatchDetailPage() {
         requestedAt: new Date().toISOString(),
       })
       setApplication({ applicationId: fallbackId, status: 'PENDING_DEPOSIT' })
+      const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
+      setMatch(updatedMatch)
       toast.success('신청이 완료되었습니다. 입금 후 승인 대기 상태입니다.')
     } finally {
       setIsSubmitting(false)
@@ -116,10 +120,14 @@ export default function MatchDetailPage() {
       await matchService.cancelApplication(match.id, application.applicationId)
       updateStoredApplicationStatus(application.applicationId, 'CANCELLED')
       setApplication({ ...application, status: 'CANCELLED' })
+      const updatedMatch = await matchService.getMatch(match.id)
+      setMatch(updatedMatch)
       toast.success('신청이 취소되었습니다.')
     } catch {
       updateStoredApplicationStatus(application.applicationId, 'CANCELLED')
       setApplication({ ...application, status: 'CANCELLED' })
+      const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
+      setMatch(updatedMatch)
       toast.success('신청이 취소되었습니다.')
     } finally {
       setIsSubmitting(false)

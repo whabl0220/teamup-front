@@ -44,6 +44,11 @@ export default function HostMatchesPage() {
       </header>
 
       <main className="mx-auto max-w-lg space-y-3 px-4 py-6">
+        <div className="flex gap-2">
+          <Link href="/host/matches/create" className="flex-1">
+            <Button className="w-full">매치 생성하기</Button>
+          </Link>
+        </div>
         {isLoading ? (
           <div className="flex min-h-[40vh] items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
