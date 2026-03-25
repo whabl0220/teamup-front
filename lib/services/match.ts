@@ -13,6 +13,7 @@ import {
   upsertStoredApplication,
 } from '@/lib/match-local-store'
 import { getMatchCourtById } from '@/lib/match-courts'
+import { pushNotification } from '@/lib/local-notifications'
 
 const isBrowser = (): boolean => typeof window !== 'undefined'
 
@@ -105,6 +106,19 @@ const applyToMatchLocal = (matchId: string): MatchApplication => {
   upsertStoredApplication(application)
   const updatedMatch = recalcMatchCounts(match)
   void updatedMatch
+  pushNotification({
+    type: 'MATCH_APPLIED',
+    actor: 'USER',
+    title: '참가 신청 완료',
+    message: `${match.title} 매치 신청이 접수되었습니다. 입금 후 승인 대기 상태입니다.`,
+    meta: {
+      matchId: match.id,
+      matchTitle: match.title,
+      applicationId: application.id,
+      userId,
+      userName,
+    },
+  })
   return application
 }
 
@@ -140,12 +154,28 @@ const confirmApplicationLocal = (matchId: string, applicationId: string): MatchA
 
 const refundApplicationLocal = (matchId: string, applicationId: string): MatchApplication => {
   const match = getMatchLocal(matchId)
+  const applications = getStoredApplicationsByMatchId(matchId)
+  const target = applications.find((a) => a.id === applicationId)
   updateStoredApplicationStatus(applicationId, 'REFUNDED')
   recalcMatchCounts(match)
 
   const apps = getStoredApplicationsByMatchId(matchId)
   const updated = apps.find((a) => a.id === applicationId)
   if (!updated) throw new Error('Application not found after refund')
+
+  pushNotification({
+    type: 'REFUND_COMPLETED',
+    actor: 'HOST',
+    title: '환불 처리 완료',
+    message: `${match.title} 매치 환불 처리가 완료되었습니다.`,
+    meta: {
+      matchId: match.id,
+      matchTitle: match.title,
+      applicationId: updated.id,
+      userId: target?.userId,
+      userName: target?.userName,
+    },
+  })
   return updated
 }
 
@@ -183,7 +213,20 @@ const createMatchLocal = (data: CreateMatchRequest): Match => {
 
 const updateMatchStatusLocal = (matchId: string, data: UpdateMatchStatusRequest): Match => {
   const match = getMatchLocal(matchId)
-  return patchStoredMatch(match.id, { status: data.status })
+  const updated = patchStoredMatch(match.id, { status: data.status })
+  if (data.status === 'CANCELLED') {
+    pushNotification({
+      type: 'MATCH_CANCELLED',
+      actor: 'HOST',
+      title: '매치가 취소되었습니다',
+      message: `${updated.title} 매치가 운영 정책에 따라 취소되었습니다.`,
+      meta: {
+        matchId: updated.id,
+        matchTitle: updated.title,
+      },
+    })
+  }
+  return updated
 }
 
 const buildMatchListQuery = (params?: MatchListParams): string => {

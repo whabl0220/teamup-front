@@ -164,10 +164,14 @@ export default function MyPage() {
               <Separator />
               <div className="flex items-center justify-between p-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                    <Bell className="h-4 w-4 text-primary" />
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <Bell className="h-4 w-4 text-primary" />
+                    </div>
+                    <Link href="/notifications" className="text-sm font-medium hover:underline">
+                      알림 설정
+                    </Link>
                   </div>
-                  <span className="text-sm font-medium">알림 설정</span>
                 </div>
                 <Switch checked={notifications} onCheckedChange={setNotifications} />
               </div>
