@@ -6,6 +6,7 @@ import { ArrowLeft, Bell, CheckCheck, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useRouter } from 'next/navigation'
 import {
   clearNotifications,
   getNotificationTypeLabel,
@@ -27,6 +28,7 @@ const formatDate = (iso: string) =>
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications())
+  const router = useRouter()
 
   const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications])
 
@@ -44,9 +46,11 @@ export default function NotificationsPage() {
     toast.success('알림 로그를 비웠습니다.')
   }
 
-  const handleClickItem = (id: string) => {
-    markNotificationAsRead(id)
+  const handleClickItem = (item: AppNotification) => {
+    markNotificationAsRead(item.id)
     reload()
+    const matchId = item.meta?.matchId
+    if (matchId) router.push(`/matches/${matchId}`)
   }
 
   return (
@@ -90,7 +94,7 @@ export default function NotificationsPage() {
                   <button
                     key={item.id}
                     className="w-full rounded-xl border border-border/50 p-3 text-left transition-colors hover:bg-muted/40"
-                    onClick={() => handleClickItem(item.id)}
+                    onClick={() => handleClickItem(item)}
                   >
                     <div className="mb-1 flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">

@@ -64,3 +64,8 @@ export const patchStoredMatch = (
   return updated
 }
 
+export const clearStoredMatches = () => {
+  if (!isBrowser()) return
+  localStorage.removeItem(MATCHES_KEY)
+}
+

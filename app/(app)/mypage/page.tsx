@@ -8,11 +8,15 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { userService } from '@/lib/services'
+import { clearNotifications, getStoredNotifications } from '@/lib/local-notifications'
+import { clearStoredApplications } from '@/lib/match-local-store'
+import { clearStoredMatches } from '@/lib/match-local-matches-store'
 import type { User, Position, PlayStyle } from '@/types'
 import { useTheme } from 'next-themes'
 import {
@@ -36,6 +40,7 @@ export default function MyPage() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const { theme, setTheme } = useTheme()
 
   useEffect(() => {
@@ -69,6 +74,7 @@ export default function MyPage() {
 
   useEffect(() => {
     setMounted(true)
+    setUnreadCount(getStoredNotifications().filter((item) => !item.read).length)
   }, [])
 
   const handleLogout = () => {
@@ -83,6 +89,18 @@ export default function MyPage() {
     setShowDeleteAccountModal(false)
     toast.success('회원탈퇴가 완료되었습니다.')
     router.push('/')
+  }
+
+  const handleResetLocalMatches = () => {
+    clearStoredMatches()
+    clearStoredApplications()
+    toast.success('로컬 매치/신청 데이터를 초기화했습니다.')
+  }
+
+  const handleResetLocalNotifications = () => {
+    clearNotifications()
+    setUnreadCount(0)
+    toast.success('알림 로그를 비웠습니다.')
   }
 
   if (isLoading) {
@@ -168,8 +186,12 @@ export default function MyPage() {
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                       <Bell className="h-4 w-4 text-primary" />
                     </div>
-                    <Link href="/notifications" className="text-sm font-medium hover:underline">
+                    <Link
+                      href="/notifications"
+                      className="flex items-center gap-2 text-sm font-medium hover:underline"
+                    >
                       알림 설정
+                      {unreadCount > 0 && <Badge variant="secondary">미확인 {unreadCount}</Badge>}
                     </Link>
                   </div>
                 </div>
@@ -248,7 +270,24 @@ export default function MyPage() {
               </Button>
             </div>
             <Separator />
-            <p className="text-xs text-muted-foreground">
+            <p className="font-semibold text-xs text-muted-foreground">개발용 로컬 데이터 초기화</p>
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3"
+                onClick={handleResetLocalMatches}
+              >
+                로컬 매치/신청 초기화
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-3"
+                onClick={handleResetLocalNotifications}
+              >
+                로컬 알림 로그 비우기
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
               기본 프로필과 매치 신청/운영 플로우를 제공합니다.
             </p>
           </CardContent>

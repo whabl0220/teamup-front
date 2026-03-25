@@ -99,8 +99,26 @@ export default function HostMatchDetailPage() {
     return { pending, confirmed, refunded }
   }, [applications])
 
+  const isRefundNeeded = (app: MatchApplication) =>
+    app.status === 'CONFIRMED' || app.status === 'CANCELLED'
+
+  const refundNeededCount = useMemo(
+    () => applications.filter((app) => isRefundNeeded(app)).length,
+    [applications]
+  )
+
+  const displayedApplications = useMemo(() => {
+    if (match?.status !== 'CANCELLED') return applications
+    // 취소 상태에서는 환불 대상이 위로 보이게 정렬
+    return [...applications].sort((a, b) => Number(isRefundNeeded(b)) - Number(isRefundNeeded(a)))
+  }, [applications, match?.status])
+
   const handleConfirm = async (application: MatchApplication) => {
     if (!matchId) return
+    if (!match || match.status !== 'RECRUITING') {
+      toast.info('현재 모집중 상태에서만 참가 확정을 할 수 있습니다.')
+      return
+    }
     if (application.status !== 'PENDING_DEPOSIT') {
       toast.info('입금 대기 상태만 확정할 수 있습니다.')
       return
@@ -121,6 +139,10 @@ export default function HostMatchDetailPage() {
 
   const handleRefund = async (application: MatchApplication) => {
     if (!matchId) return
+    if (!match || match.status !== 'CANCELLED') {
+      toast.info('환불 처리는 매치가 취소된 상태에서만 처리할 수 있습니다.')
+      return
+    }
     if (application.status !== 'CONFIRMED' && application.status !== 'CANCELLED') {
       toast.info('참가 확정 또는 신청 취소 상태에서만 환불 처리할 수 있습니다.')
       return
@@ -170,6 +192,8 @@ export default function HostMatchDetailPage() {
     )
   }
 
+  const start = new Date(match.startAt)
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
@@ -189,7 +213,9 @@ export default function HostMatchDetailPage() {
               <Badge>{getMatchStatusLabel(match.status)}</Badge>
             </div>
             <p className="text-sm text-muted-foreground">{match.court.name}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{match.startAt}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {start.toLocaleDateString()} {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </p>
           </CardContent>
         </Card>
 
@@ -221,12 +247,25 @@ export default function HostMatchDetailPage() {
               <Badge variant="outline">입금 대기 {counts.pending}</Badge>
               <Badge variant="outline">확정 {counts.confirmed}</Badge>
               <Badge variant="outline">환불 {counts.refunded}</Badge>
+                {match.status === 'CANCELLED' && (
+                  <Badge variant="default">환불 필요 {refundNeededCount}</Badge>
+                )}
             </div>
+              {match.status === 'CANCELLED' && (
+                <Card className="mb-4 border-destructive/20 bg-destructive/5">
+                  <CardContent className="p-4">
+                    <p className="text-sm font-semibold text-destructive">환불 처리 대상</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      취소된 매치의 환불 처리 대상 신청자를 우선 확인하세요.
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             <div className="space-y-3">
               {applications.length === 0 ? (
                 <p className="text-sm text-muted-foreground">신청자가 없습니다.</p>
               ) : (
-                applications.map((app) => (
+                displayedApplications.map((app) => (
                   <Card key={app.id} className="border-border/50">
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-center justify-between">
@@ -239,7 +278,7 @@ export default function HostMatchDetailPage() {
                           className="flex-1"
                           size="sm"
                           onClick={() => handleConfirm(app)}
-                          disabled={isSubmitting || app.status !== 'PENDING_DEPOSIT'}
+                          disabled={isSubmitting || match.status !== 'RECRUITING' || app.status !== 'PENDING_DEPOSIT'}
                         >
                           <CircleCheck className="mr-1 h-4 w-4" />
                           참가 확정
@@ -251,6 +290,7 @@ export default function HostMatchDetailPage() {
                           onClick={() => handleRefund(app)}
                           disabled={
                             isSubmitting ||
+                            match.status !== 'CANCELLED' ||
                             (app.status !== 'CONFIRMED' && app.status !== 'CANCELLED') ||
                             app.status === 'REFUNDED'
                           }

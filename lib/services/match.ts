@@ -17,7 +17,7 @@ import { pushNotification } from '@/lib/local-notifications'
 
 const isBrowser = (): boolean => typeof window !== 'undefined'
 
-const getLocalUser = () => {
+export const getLocalUser = () => {
   if (!isBrowser()) return { userId: 'local-user', userName: '내 계정' }
 
   // 기존 appData 구조가 남아있는 경우 활용

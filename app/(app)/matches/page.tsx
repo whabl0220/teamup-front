@@ -12,8 +12,10 @@ import { matchService } from '@/lib/services'
 import { mockMatches } from '@/lib/mock-matches'
 import type { Match } from '@/types/match'
 import { toast } from 'sonner'
+import { getStoredApplications } from '@/lib/match-local-store'
+import { getLocalUser } from '@/lib/services/match'
 
-type DateFilter = 'ALL' | 'TODAY' | 'WEEK'
+type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 
 const getMatchStatusLabel = (status: Match['status']) => {
   if (status === 'RECRUITING') return '모집중'
@@ -42,7 +44,7 @@ const isInThisWeek = (date: Date) => {
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [filter, setFilter] = useState<DateFilter>('ALL')
+  const [mode, setMode] = useState<MatchListMode>('ALL')
 
   useEffect(() => {
     const load = async () => {
@@ -61,14 +63,25 @@ export default function MatchesPage() {
   }, [])
 
   const filteredMatches = useMemo(() => {
-    if (filter === 'ALL') return matches
-    const now = new Date()
-    return matches.filter((match) => {
-      const date = new Date(match.startAt)
-      if (filter === 'TODAY') return date.toDateString() === now.toDateString()
-      return isInThisWeek(date)
-    })
-  }, [matches, filter])
+    if (mode === 'ALL') return matches
+
+    if (mode === 'TODAY') {
+      const now = new Date()
+      return matches.filter((match) => new Date(match.startAt).toDateString() === now.toDateString())
+    }
+
+    if (mode === 'WEEK') {
+      return matches.filter((match) => isInThisWeek(new Date(match.startAt)))
+    }
+
+    const localUser = getLocalUser()
+    const myAppMatchIds = new Set(
+      getStoredApplications()
+        .filter((app) => app.userId === localUser.userId && app.status !== 'REFUNDED')
+        .map((app) => app.matchId)
+    )
+    return matches.filter((match) => myAppMatchIds.has(match.id))
+  }, [matches, mode])
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -83,16 +96,25 @@ export default function MatchesPage() {
           />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">매치 찾기</h1>
-            <p className="text-sm text-muted-foreground">오늘/이번 주 매치를 빠르게 확인하세요</p>
+            <p className="text-sm text-muted-foreground">오늘/이번 주 또는 내 신청 내역을 빠르게 확인하세요</p>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
         <div className="mb-4 flex gap-2">
-          <Button variant={filter === 'ALL' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('ALL')}>전체</Button>
-          <Button variant={filter === 'TODAY' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('TODAY')}>오늘</Button>
-          <Button variant={filter === 'WEEK' ? 'default' : 'outline'} size="sm" onClick={() => setFilter('WEEK')}>이번 주</Button>
+          <Button variant={mode === 'ALL' ? 'default' : 'outline'} size="sm" onClick={() => setMode('ALL')}>
+            전체
+          </Button>
+          <Button variant={mode === 'MY' ? 'default' : 'outline'} size="sm" onClick={() => setMode('MY')}>
+            내 신청
+          </Button>
+          <Button variant={mode === 'TODAY' ? 'default' : 'outline'} size="sm" onClick={() => setMode('TODAY')}>
+            오늘
+          </Button>
+          <Button variant={mode === 'WEEK' ? 'default' : 'outline'} size="sm" onClick={() => setMode('WEEK')}>
+            이번 주
+          </Button>
           <Link href="/host/matches" className="ml-auto">
             <Button variant="ghost" size="sm">주최자</Button>
           </Link>
@@ -105,7 +127,7 @@ export default function MatchesPage() {
         ) : filteredMatches.length === 0 ? (
           <Card className="border-border/50">
             <CardContent className="p-10 text-center text-sm text-muted-foreground">
-              조건에 맞는 매치가 없습니다.
+              {mode === 'MY' ? '내 신청 내역이 없습니다.' : '조건에 맞는 매치가 없습니다.'}
             </CardContent>
           </Card>
         ) : (

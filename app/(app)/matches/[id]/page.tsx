@@ -16,6 +16,7 @@ import {
   upsertStoredApplication,
   updateStoredApplicationStatus,
 } from '@/lib/match-local-store'
+import { getLocalUser } from '@/lib/services/match'
 
 type LocalApplicationState = {
   applicationId: string
@@ -48,9 +49,9 @@ export default function MatchDetailPage() {
 
   useEffect(() => {
     if (!matchId) return
-
+    const localUser = getLocalUser()
     const applications = getStoredApplicationsByMatchId(matchId)
-    const mine = applications.find((app) => app.userId === 'local-user')
+    const mine = applications.find((app) => app.userId === localUser.userId)
     if (mine) setApplication({ applicationId: mine.id, status: mine.status })
   }, [matchId])
 
@@ -199,6 +200,17 @@ export default function MatchDetailPage() {
           </CardContent>
         </Card>
 
+        {match.status === 'CANCELLED' && (
+          <Card className="border-destructive/30 bg-destructive/5">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-destructive">매치가 취소되었습니다.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                운영 정책에 따라 취소된 매치이며, 환불 처리는 운영자 진행으로 처리됩니다.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {application && (
           <Card className="border-primary/40">
             <CardContent className="p-4">
@@ -231,6 +243,7 @@ export default function MatchDetailPage() {
             disabled={
               isSubmitting ||
               !application ||
+              match.status !== 'RECRUITING' ||
               application.status === 'CANCELLED' ||
               application.status === 'REFUNDED'
             }

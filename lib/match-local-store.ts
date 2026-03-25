@@ -47,3 +47,8 @@ export const updateStoredApplicationStatus = (
   setStoredApplications(next)
 }
 
+export const clearStoredApplications = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(MATCH_APPLICATIONS_KEY)
+}
+
