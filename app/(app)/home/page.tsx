@@ -7,7 +7,7 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MessageCircle, MapPin, Users, Trophy, TrendingUp, Plus, UserPlus } from 'lucide-react'
+import { MessageCircle, MapPin, Users, Trophy, TrendingUp, Plus, UserPlus, CalendarDays } from 'lucide-react'
 import { userService, teamService, matchingService, coachingService } from '@/lib/services'
 import { formatTimeAgo } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -252,6 +252,25 @@ export default function HomePage() {
           </h3>
 
           <div className="grid gap-3">
+            {IS_MVP_V2 && (
+              <Link href="/matches">
+                <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+                        <CalendarDays className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="mb-1 font-bold text-foreground">매치 찾기</h4>
+                        <p className="text-xs text-muted-foreground">
+                          오늘/이번 주 매치를 확인하고 참가 신청
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
             {!IS_MVP_V2 && (
               <Link href="/matching">
                 <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">

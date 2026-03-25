@@ -11,6 +11,7 @@ export function BottomNav() {
 
   const navItems = [
     { href: '/home', icon: Home, label: '홈' },
+    ...(IS_MVP_V2 ? [{ href: '/matches', icon: Search, label: '매치' }] : []),
     ...(!IS_MVP_V2 ? [
       { href: '/matching', icon: Search, label: '팀 매칭' },
       { href: '/coaching', icon: Sparkles, label: 'AI 코치' },

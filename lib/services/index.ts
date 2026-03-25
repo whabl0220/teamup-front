@@ -6,6 +6,7 @@ export * from './team'
 export * from './matching'
 export * from './coaching'
 export * from './notification'
+export * from './match'
 export * from './enums'
 
 // 편의를 위한 통합 객체
@@ -15,3 +16,4 @@ export { teamService } from './team'
 export { matchingService } from './matching'
 export { coachingService } from './coaching'
 export { notificationService } from './notification'
+export { matchService } from './match'
