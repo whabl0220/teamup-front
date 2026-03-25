@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { userService } from '@/lib/services'
 import type { User, Position, PlayStyle } from '@/types'
+import { useTheme } from 'next-themes'
 import {
   Bell,
   ChevronRight,
@@ -22,8 +23,10 @@ import {
   Info,
   LogOut,
   Shield,
+  Sun,
   Trash2,
   User as UserIcon,
+  Moon,
 } from 'lucide-react'
 
 export default function MyPage() {
@@ -32,6 +35,8 @@ export default function MyPage() {
   const [user, setUser] = useState<User | null>(null)
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
   const [notifications, setNotifications] = useState(true)
+  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     const load = async () => {
@@ -60,6 +65,10 @@ export default function MyPage() {
     }
 
     load()
+  }, [])
+
+  useEffect(() => {
+    setMounted(true)
   }, [])
 
   const handleLogout = () => {
@@ -140,49 +149,79 @@ export default function MyPage() {
         <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
           <CardContent className="p-5 space-y-3">
             <p className="font-semibold">계정 설정</p>
-            <div className="space-y-2">
+            <div className="rounded-lg border border-border/50 bg-card/70">
               <Link href="/profile/basic">
-                <button className="flex w-full items-center justify-between rounded-md p-2 transition-colors hover:bg-muted/40">
+                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
-                    <UserIcon className="h-4 w-4 text-primary" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <UserIcon className="h-4 w-4 text-primary" />
+                    </div>
                     <span className="text-sm font-medium">기본 정보 수정</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
               </Link>
-              <div className="flex items-center justify-between rounded-md p-2">
+              <Separator />
+              <div className="flex items-center justify-between p-3">
                 <div className="flex items-center gap-2">
-                  <Bell className="h-4 w-4 text-primary" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Bell className="h-4 w-4 text-primary" />
+                  </div>
                   <span className="text-sm font-medium">알림 설정</span>
                 </div>
                 <Switch checked={notifications} onCheckedChange={setNotifications} />
               </div>
+              <Separator />
+              <div className="flex items-center justify-between p-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    {mounted && theme === 'dark' ? (
+                      <Moon className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Sun className="h-4 w-4 text-primary" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium">다크 모드</span>
+                </div>
+                <Switch
+                  checked={mounted ? theme === 'dark' : true}
+                  onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+                />
+              </div>
             </div>
             <Separator />
             <p className="font-semibold">기타</p>
-            <div className="space-y-2">
+            <div className="rounded-lg border border-border/50 bg-card/70">
               <Link href="/terms">
-                <button className="flex w-full items-center justify-between rounded-md p-2 transition-colors hover:bg-muted/40">
+                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <span className="text-sm font-medium">이용약관</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
               </Link>
+              <Separator />
               <Link href="/privacy">
-                <button className="flex w-full items-center justify-between rounded-md p-2 transition-colors hover:bg-muted/40">
+                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                      <Shield className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <span className="text-sm font-medium">개인정보 처리방침</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
               </Link>
+              <Separator />
               <Link href="/about">
-                <button className="flex w-full items-center justify-between rounded-md p-2 transition-colors hover:bg-muted/40">
+                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                      <Info className="h-4 w-4 text-muted-foreground" />
+                    </div>
                     <span className="text-sm font-medium">앱 정보</span>
                   </div>
                   <div className="flex items-center gap-2">
