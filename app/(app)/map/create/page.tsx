@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import type { PostType } from '@/types'
 import DaumPostcodeEmbed from 'react-daum-postcode'
 import useKakaoLoader from '@/hooks/useKakaoLoader'
 import { toast } from 'sonner'
+import { IS_MVP_V2 } from '@/lib/config/mvp'
 
 export default function CreatePostPage() {
   useKakaoLoader()
@@ -30,6 +31,12 @@ export default function CreatePostPage() {
   const [showPostcode, setShowPostcode] = useState(false)
   const [showDateTimePicker, setShowDateTimePicker] = useState(false)
   const [kakaoLinkError, setKakaoLinkError] = useState('')
+
+  useEffect(() => {
+    if (IS_MVP_V2) {
+      router.replace('/home')
+    }
+  }, [router])
 
   // 시간 옵션
   const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))

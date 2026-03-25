@@ -13,6 +13,7 @@ import { userService, teamService, coachingService } from '@/lib/services'
 import { formatTimeAgo } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { GameRecord, Team, MatchedTeam } from '@/types'
+import { IS_MVP_V2 } from '@/lib/config/mvp'
 
 export default function CoachingPage() {
   const router = useRouter()
@@ -28,6 +29,11 @@ export default function CoachingPage() {
   })
 
   useEffect(() => {
+    if (IS_MVP_V2) {
+      router.replace('/home')
+      return
+    }
+
     const loadData = async () => {
       try {
         setIsLoading(true)

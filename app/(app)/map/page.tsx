@@ -14,6 +14,7 @@ import type { Post, Team } from '@/types'
 import KakaoMap, { type MarkerData } from '@/components/shared/KakaoMap'
 import { mockMatchTeams } from '@/lib/mock-data'
 import { toast } from 'sonner'
+import { IS_MVP_V2 } from '@/lib/config/mvp'
 
 // 용병 모집 글
 const mockGuestPosts: Post[] = [
@@ -102,7 +103,7 @@ const mockMatchPosts: Post[] = mockMatchTeams.map((team, index) => ({
   createdAt: '2025-12-01 10:00',
 }))
 
-const mockPosts: Post[] = [...mockGuestPosts, ...mockMatchPosts]
+const mockPosts: Post[] = IS_MVP_V2 ? mockGuestPosts : [...mockGuestPosts, ...mockMatchPosts]
 
 // 광진구 농구장 타입
 interface Court {
@@ -224,8 +225,11 @@ export default function MapPage() {
     const savedPosts = localStorage.getItem('teamup_posts')
     if (savedPosts) {
       const parsedPosts: Post[] = JSON.parse(savedPosts)
+      const filteredPosts = IS_MVP_V2
+        ? parsedPosts.filter((post) => post.type === 'GUEST')
+        : parsedPosts
       // Mock 데이터와 합치기
-      setNearbyPosts([...mockPosts, ...parsedPosts])
+      setNearbyPosts([...mockPosts, ...filteredPosts])
     }
 
     // 팀 정보 로드 (storage.ts의 구조에 맞게 수정)
@@ -389,33 +393,37 @@ export default function MapPage() {
                       className="object-contain"
                     />
                   </div>
-                  <span className="text-foreground font-semibold">용병 모집</span>
+                    <span className="text-foreground font-semibold">용병 모집</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-6 flex items-center justify-center">
-                    <Image
-                      src="/icons/vs-marker.svg"
-                      alt="팀 경기 모집"
-                      width={16}
-                      height={16}
-                      className="object-contain"
-                    />
+                {!IS_MVP_V2 && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-5 h-6 flex items-center justify-center">
+                      <Image
+                        src="/icons/vs-marker.svg"
+                        alt="팀 경기 모집"
+                        width={16}
+                        height={16}
+                        className="object-contain"
+                      />
+                    </div>
+                    <span className="text-foreground font-semibold">팀 경기 모집</span>
                   </div>
-                  <span className="text-foreground font-semibold">팀 경기 모집</span>
-                </div>
+                )}
               </div>
             </div>
           )}
 
           {/* 플로팅 버튼 - 모집글 작성 */}
-          <Link href="/map/create">
-            <Button
-              size="lg"
-              className="fixed bottom-24 right-6 z-30 h-14 w-14 rounded-full shadow-lg"
-            >
-              <Plus className="h-6 w-6" />
-            </Button>
-          </Link>
+          {!IS_MVP_V2 && (
+            <Link href="/map/create">
+              <Button
+                size="lg"
+                className="fixed bottom-24 right-6 z-30 h-14 w-14 rounded-full shadow-lg"
+              >
+                <Plus className="h-6 w-6" />
+              </Button>
+            </Link>
+          )}
         </main>
 
         <BottomNav />

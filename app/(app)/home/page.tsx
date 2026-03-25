@@ -7,11 +7,12 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles, MessageCircle, MapPin, Bell, Users, Trophy, TrendingUp, Plus, UserPlus } from 'lucide-react'
+import { MessageCircle, MapPin, Users, Trophy, TrendingUp, Plus, UserPlus } from 'lucide-react'
 import { userService, teamService, matchingService, coachingService } from '@/lib/services'
 import { formatTimeAgo } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { MatchRequest, Team } from '@/types'
+import { IS_MVP_V2 } from '@/lib/config/mvp'
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -143,7 +144,7 @@ export default function HomePage() {
             </div>
             <h2 className="mb-3 text-2xl font-bold text-balance">아직 팀이 없습니다</h2>
             <p className="mb-8 text-muted-foreground text-balance">
-              팀을 만들거나 기존 팀에 참여하여<br />AI 매칭과 코칭을 시작하세요
+              팀을 만들거나 기존 팀에 참여해<br />농구 활동을 시작하세요
             </p>
 
             <div className="flex w-full max-w-sm flex-col gap-3">
@@ -251,23 +252,25 @@ export default function HomePage() {
           </h3>
 
           <div className="grid gap-3">
-            <Link href="/matching">
-              <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
-                      <Users className="h-6 w-6 text-primary" />
+            {!IS_MVP_V2 && (
+              <Link href="/matching">
+                <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+                        <Users className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="mb-1 font-bold text-foreground">팀 매칭</h4>
+                        <p className="text-xs text-muted-foreground">
+                          내 팀 관리, 팀 찾기, AI 추천 매칭
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="mb-1 font-bold text-foreground">팀 매칭</h4>
-                      <p className="text-xs text-muted-foreground">
-                        내 팀 관리, 팀 찾기, AI 추천 매칭
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
 
             <Link href="/map">
               <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">

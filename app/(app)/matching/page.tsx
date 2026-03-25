@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,8 +16,10 @@ import { formatTimeAgo } from '@/lib/utils'
 import { MatchedTeamsModal } from '@/components/shared/matched-teams-modal'
 import { MatchTeamsModal } from '@/components/shared/match-teams-modal'
 import { toast } from 'sonner'
+import { IS_MVP_V2 } from '@/lib/config/mvp'
 
 export default function MatchingPage() {
+  const router = useRouter()
   const [showMatchModal, setShowMatchModal] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [showMatchedTeamsModal, setShowMatchedTeamsModal] = useState(false)
@@ -30,6 +33,10 @@ export default function MatchingPage() {
   // 클라이언트에서만 데이터 로드 (hydration 오류 방지)
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (IS_MVP_V2) {
+      router.replace('/home')
+      return
+    }
 
     const loadData = async () => {
       try {
@@ -87,7 +94,7 @@ export default function MatchingPage() {
     }
 
     loadData()
-  }, [])
+  }, [router])
 
   const handleMatchRequest = (team: Team) => {
     if (!isTeamLeader) {
