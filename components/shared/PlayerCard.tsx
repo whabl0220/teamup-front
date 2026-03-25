@@ -1,7 +1,6 @@
 'use client'
 
 import { User, Position, PlayStyle, CardSkin, Team } from '@/types'
-import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Sword, Target, Shield, Users, Mail, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -153,7 +152,11 @@ export function PlayerCard({ user, currentTeam, showExtendedInfo = false, classN
           {/* 하단: 한 줄 각오 */}
           {user.statusMsg && (
             <div className="rounded-lg bg-black/30 p-2 text-center">
-              <p className="text-sm italic text-white/90">"{user.statusMsg}"</p>
+              <p className="text-sm italic text-white/90">
+                {'"'}
+                {user.statusMsg}
+                {'"'}
+              </p>
             </div>
           )}
 

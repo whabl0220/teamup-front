@@ -2,21 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Sparkles, Map, User } from 'lucide-react'
+import { Home, Search, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { IS_MVP_V2 } from '@/lib/config/mvp'
 
 export function BottomNav() {
   const pathname = usePathname()
 
   const navItems = [
     { href: '/home', icon: Home, label: '홈' },
-    ...(IS_MVP_V2 ? [{ href: '/matches', icon: Search, label: '매치' }] : []),
-    ...(!IS_MVP_V2 ? [
-      { href: '/matching', icon: Search, label: '팀 매칭' },
-      { href: '/coaching', icon: Sparkles, label: 'AI 코치' },
-    ] : []),
-    { href: '/map', icon: Map, label: '지도' },
+    { href: '/matches', icon: Search, label: '매치' },
     { href: '/mypage', icon: User, label: '마이' },
   ]
 
