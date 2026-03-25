@@ -10,6 +10,7 @@ import { ArrowLeft, MapPin, Calendar as CalendarIcon, Clock } from 'lucide-react
 import type { PostType } from '@/types'
 import DaumPostcodeEmbed from 'react-daum-postcode'
 import useKakaoLoader from '@/hooks/useKakaoLoader'
+import { toast } from 'sonner'
 
 export default function CreatePostPage() {
   useKakaoLoader()
@@ -87,12 +88,12 @@ export default function CreatePostPage() {
 
   const handleSubmit = () => {
     if (!selectedDate || !selectedHour || !selectedMinute || !address || !location || !kakaoLink) {
-      alert('모든 필수 항목을 입력해주세요.')
+      toast.error('모든 필수 항목을 입력해주세요.')
       return
     }
 
     if (!latitude || !longitude) {
-      alert('주소에서 위치를 찾을 수 없습니다. 다시 검색해주세요.')
+      toast.error('주소에서 위치를 찾을 수 없습니다. 다시 검색해주세요.')
       return
     }
 
@@ -103,7 +104,7 @@ export default function CreatePostPage() {
     // 현재 사용자 정보 가져오기
     const userData = localStorage.getItem('teamup_app_data')
     if (!userData) {
-      alert('사용자 정보를 찾을 수 없습니다.')
+      toast.error('사용자 정보를 찾을 수 없습니다.')
       return
     }
 
@@ -112,7 +113,7 @@ export default function CreatePostPage() {
     const currentTeam = currentUser.team
 
     if (!currentTeam) {
-      alert('팀에 소속되어야 모집글을 작성할 수 있습니다.')
+      toast.error('팀에 소속되어야 모집글을 작성할 수 있습니다.')
       return
     }
 
@@ -146,7 +147,7 @@ export default function CreatePostPage() {
     existingPosts.push(newPost)
     localStorage.setItem('teamup_posts', JSON.stringify(existingPosts))
 
-    alert('모집글이 등록되었습니다!')
+    toast.success('모집글이 등록되었습니다!')
     router.push('/map')
   }
 

@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { POSITION_COLORS } from '@/lib/constants'
 import { X } from 'lucide-react'
+import { toast } from 'sonner'
 
 // 공통 질문 (모든 포지션 동일)
 const COMMON_QUESTIONS = [
@@ -97,7 +98,7 @@ export function PositionFeedbackModal({
     const allAnswered = allQuestionIds.every((id) => answers[id])
 
     if (!allAnswered) {
-      alert('모든 질문에 답변해주세요.')
+      toast.error('모든 질문에 답변해주세요.')
       return
     }
 
