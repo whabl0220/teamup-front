@@ -20,6 +20,19 @@ import {
 import { toast } from 'sonner'
 
 const STATUS_OPTIONS: Match['status'][] = ['RECRUITING', 'FULL', 'CANCELLED', 'ENDED']
+const getMatchStatusLabel = (status: Match['status']) => {
+  if (status === 'RECRUITING') return '모집중'
+  if (status === 'FULL') return '마감'
+  if (status === 'CANCELLED') return '취소'
+  return '종료'
+}
+
+const getApplicationStatusLabel = (status: MatchApplication['status']) => {
+  if (status === 'PENDING_DEPOSIT') return '입금 대기'
+  if (status === 'CONFIRMED') return '참가 확정'
+  if (status === 'REFUNDED') return '환불 완료'
+  return '신청 취소'
+}
 
 export default function HostMatchDetailPage() {
   const params = useParams<{ id: string }>()
@@ -33,6 +46,15 @@ export default function HostMatchDetailPage() {
   const reloadLocalApplications = (id: string) => {
     const local = getStoredApplicationsByMatchId(id)
     setApplications(local)
+  }
+
+  const refreshMatchAndApplications = async (id: string) => {
+    const [matchData, appData] = await Promise.all([
+      matchService.getMatch(id),
+      matchService.listApplications(id),
+    ])
+    setMatch(matchData)
+    setApplications(appData)
   }
 
   useEffect(() => {
@@ -79,15 +101,18 @@ export default function HostMatchDetailPage() {
 
   const handleConfirm = async (application: MatchApplication) => {
     if (!matchId) return
+    if (application.status !== 'PENDING_DEPOSIT') {
+      toast.info('입금 대기 상태만 확정할 수 있습니다.')
+      return
+    }
     try {
       setIsSubmitting(true)
       await matchService.confirmApplication(matchId, application.id)
-      updateStoredApplicationStatus(application.id, 'CONFIRMED')
-      reloadLocalApplications(matchId)
+      await refreshMatchAndApplications(matchId)
       toast.success(`${application.userName} 참가를 확정했습니다.`)
     } catch {
       updateStoredApplicationStatus(application.id, 'CONFIRMED')
-      reloadLocalApplications(matchId)
+      await refreshMatchAndApplications(matchId)
       toast.success(`${application.userName} 참가를 확정했습니다.`)
     } finally {
       setIsSubmitting(false)
@@ -96,15 +121,18 @@ export default function HostMatchDetailPage() {
 
   const handleRefund = async (application: MatchApplication) => {
     if (!matchId) return
+    if (application.status !== 'CONFIRMED' && application.status !== 'CANCELLED') {
+      toast.info('참가 확정 또는 신청 취소 상태에서만 환불 처리할 수 있습니다.')
+      return
+    }
     try {
       setIsSubmitting(true)
       await matchService.refundApplication(matchId, application.id)
-      updateStoredApplicationStatus(application.id, 'REFUNDED')
-      reloadLocalApplications(matchId)
+      await refreshMatchAndApplications(matchId)
       toast.success(`${application.userName} 환불 처리를 완료했습니다.`)
     } catch {
       updateStoredApplicationStatus(application.id, 'REFUNDED')
-      reloadLocalApplications(matchId)
+      await refreshMatchAndApplications(matchId)
       toast.success(`${application.userName} 환불 처리를 완료했습니다.`)
     } finally {
       setIsSubmitting(false)
@@ -113,14 +141,22 @@ export default function HostMatchDetailPage() {
 
   const handleMatchStatusChange = async (nextStatus: Match['status']) => {
     if (!matchId || !match) return
+    if (nextStatus === 'FULL' && counts.confirmed < match.capacity) {
+      toast.error('확정 인원이 정원에 도달했을 때만 마감 처리할 수 있습니다.')
+      return
+    }
+    if (nextStatus === 'RECRUITING' && match.status === 'ENDED') {
+      toast.error('종료된 매치는 다시 모집중으로 변경할 수 없습니다.')
+      return
+    }
     try {
       setIsSubmitting(true)
       const updated = await matchService.updateMatchStatus(matchId, { status: nextStatus })
       setMatch(updated)
-      toast.success(`매치 상태를 ${nextStatus}로 변경했습니다.`)
+      toast.success(`매치 상태를 ${getMatchStatusLabel(nextStatus)}로 변경했습니다.`)
     } catch {
       setMatch({ ...match, status: nextStatus })
-      toast.success(`매치 상태를 ${nextStatus}로 변경했습니다.`)
+      toast.success(`매치 상태를 ${getMatchStatusLabel(nextStatus)}로 변경했습니다.`)
     } finally {
       setIsSubmitting(false)
     }
@@ -150,7 +186,7 @@ export default function HostMatchDetailPage() {
           <CardContent className="p-5">
             <div className="mb-2 flex items-center justify-between">
               <p className="font-semibold">{match.title}</p>
-              <Badge>{match.status}</Badge>
+              <Badge>{getMatchStatusLabel(match.status)}</Badge>
             </div>
             <p className="text-sm text-muted-foreground">{match.court.name}</p>
             <p className="mt-1 text-sm text-muted-foreground">{match.startAt}</p>
@@ -168,7 +204,7 @@ export default function HostMatchDetailPage() {
                   onClick={() => handleMatchStatusChange(status)}
                   disabled={isSubmitting}
                 >
-                  {status}
+                  {getMatchStatusLabel(status)}
                 </Button>
               ))}
             </div>
@@ -195,7 +231,7 @@ export default function HostMatchDetailPage() {
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-center justify-between">
                         <p className="font-medium">{app.userName}</p>
-                        <Badge variant="outline">{app.status}</Badge>
+                        <Badge variant="outline">{getApplicationStatusLabel(app.status)}</Badge>
                       </div>
                       <p className="mb-3 text-xs text-muted-foreground">신청 시각: {app.requestedAt}</p>
                       <div className="flex gap-2">
@@ -203,7 +239,7 @@ export default function HostMatchDetailPage() {
                           className="flex-1"
                           size="sm"
                           onClick={() => handleConfirm(app)}
-                          disabled={isSubmitting || app.status === 'CONFIRMED'}
+                          disabled={isSubmitting || app.status !== 'PENDING_DEPOSIT'}
                         >
                           <CircleCheck className="mr-1 h-4 w-4" />
                           참가 확정
@@ -213,7 +249,11 @@ export default function HostMatchDetailPage() {
                           className="flex-1"
                           size="sm"
                           onClick={() => handleRefund(app)}
-                          disabled={isSubmitting || app.status === 'REFUNDED'}
+                          disabled={
+                            isSubmitting ||
+                            (app.status !== 'CONFIRMED' && app.status !== 'CANCELLED') ||
+                            app.status === 'REFUNDED'
+                          }
                         >
                           <RotateCcw className="mr-1 h-4 w-4" />
                           환불 처리

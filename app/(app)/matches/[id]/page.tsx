@@ -29,6 +29,13 @@ const getStatusLabel = (status: MatchApplicationStatus) => {
   return '취소됨'
 }
 
+const getMatchStatusLabel = (status: Match['status']) => {
+  if (status === 'RECRUITING') return '모집중'
+  if (status === 'FULL') return '마감'
+  if (status === 'CANCELLED') return '취소'
+  return '종료'
+}
+
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
@@ -160,7 +167,7 @@ export default function MatchDetailPage() {
           <CardContent className="p-5">
             <div className="mb-3 flex items-start justify-between gap-2">
               <h2 className="text-lg font-semibold">{match.title}</h2>
-              <Badge>{match.status}</Badge>
+              <Badge>{getMatchStatusLabel(match.status)}</Badge>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />{start.toLocaleDateString()}</p>
@@ -221,7 +228,12 @@ export default function MatchDetailPage() {
             variant="outline"
             className="flex-1"
             onClick={handleCancel}
-            disabled={isSubmitting || !application || application.status === 'CANCELLED'}
+            disabled={
+              isSubmitting ||
+              !application ||
+              application.status === 'CANCELLED' ||
+              application.status === 'REFUNDED'
+            }
           >
             신청 취소
           </Button>
