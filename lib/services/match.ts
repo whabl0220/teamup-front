@@ -184,6 +184,7 @@ const refundApplicationLocal = (matchId: string, applicationId: string): MatchAp
   assertLocalHostAccess(match)
   const applications = getStoredApplicationsByMatchId(matchId)
   const target = applications.find((a) => a.id === applicationId)
+  if (!target) throw new Error('Application not found')
   updateStoredApplicationStatus(applicationId, 'REFUNDED')
   recalcMatchCounts(match)
 
