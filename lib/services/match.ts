@@ -78,6 +78,13 @@ const getApplicationsLocal = (matchId: string): MatchApplication[] => {
   return getStoredApplicationsByMatchId(matchId)
 }
 
+const assertLocalHostAccess = (match: Match) => {
+  const { userId } = getLocalUser()
+  if (match.hostId !== userId) {
+    throw new Error('FORBIDDEN_HOST_ACCESS')
+  }
+}
+
 const applyToMatchLocal = (matchId: string): MatchApplication => {
   const match = getMatchLocal(matchId)
   if (match.status !== 'RECRUITING') {
@@ -134,11 +141,14 @@ const cancelApplicationLocal = (matchId: string, applicationId: string): void =>
 }
 
 const listApplicationsLocal = (matchId: string): MatchApplication[] => {
+  const match = getMatchLocal(matchId)
+  assertLocalHostAccess(match)
   return getApplicationsLocal(matchId)
 }
 
 const confirmApplicationLocal = (matchId: string, applicationId: string): MatchApplication => {
   const match = getMatchLocal(matchId)
+  assertLocalHostAccess(match)
   if (match.status !== 'RECRUITING' && match.status !== 'FULL') {
     // 취소/종료면 확정 불가
   }
@@ -154,6 +164,7 @@ const confirmApplicationLocal = (matchId: string, applicationId: string): MatchA
 
 const refundApplicationLocal = (matchId: string, applicationId: string): MatchApplication => {
   const match = getMatchLocal(matchId)
+  assertLocalHostAccess(match)
   const applications = getStoredApplicationsByMatchId(matchId)
   const target = applications.find((a) => a.id === applicationId)
   updateStoredApplicationStatus(applicationId, 'REFUNDED')
@@ -185,6 +196,7 @@ const createMatchLocal = (data: CreateMatchRequest): Match => {
     throw new Error(`Court not found: ${data.courtId}`)
   }
 
+  const { userId, userName } = getLocalUser()
   const now = new Date().toISOString()
   const match: Match = {
     id: `match-${Date.now()}`,
@@ -200,8 +212,8 @@ const createMatchLocal = (data: CreateMatchRequest): Match => {
     status: 'RECRUITING',
     cancellationPolicy: data.cancellationPolicy,
     notes: data.notes,
-    hostId: 'host-local',
-    hostName: 'TeamUp 운영팀',
+    hostId: userId,
+    hostName: userName,
     depositAccount: data.depositAccount,
     createdAt: now,
     updatedAt: now,
@@ -213,6 +225,7 @@ const createMatchLocal = (data: CreateMatchRequest): Match => {
 
 const updateMatchStatusLocal = (matchId: string, data: UpdateMatchStatusRequest): Match => {
   const match = getMatchLocal(matchId)
+  assertLocalHostAccess(match)
   const updated = patchStoredMatch(match.id, { status: data.status })
   if (data.status === 'CANCELLED') {
     pushNotification({
@@ -286,6 +299,13 @@ export const matchService = {
     } catch {
       return createMatchLocal(data)
     }
+  },
+
+  // 주최자용: 내 매치 목록 조회
+  listHostedMatches: async (): Promise<Match[]> => {
+    const { userId } = getLocalUser()
+    const all = await matchService.listMatches()
+    return all.filter((match) => match.hostId === userId)
   },
 
   // 주최자용: 신청자 목록 조회

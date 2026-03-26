@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner'
 import { formatDateTimeKorean } from '@/lib/date-format'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
+import { getLocalUser } from '@/lib/services/match'
 
 const STATUS_OPTIONS: Match['status'][] = ['RECRUITING', 'FULL', 'CANCELLED', 'ENDED']
 
@@ -44,6 +45,12 @@ export default function HostMatchDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>('ALL')
   const [showRefundAllDialog, setShowRefundAllDialog] = useState(false)
+  const [hasHostAccess, setHasHostAccess] = useState(true)
+
+  const ensureHostAccess = (targetMatch: Match): boolean => {
+    const { userId } = getLocalUser()
+    return targetMatch.hostId === userId
+  }
 
   const reloadLocalApplications = (id: string) => {
     const local = getStoredApplicationsByMatchId(id)
@@ -68,12 +75,24 @@ export default function HostMatchDetailPage() {
           matchService.getMatch(matchId),
           matchService.listApplications(matchId),
         ])
+        if (!ensureHostAccess(matchData)) {
+          setHasHostAccess(false)
+          toast.error('내가 주최한 매치만 관리할 수 있습니다.')
+          router.replace('/host/matches')
+          return
+        }
         setMatch(matchData)
         setApplications(appData)
       } catch {
         const mockMatch = getMockMatchById(matchId)
         if (!mockMatch) {
           toast.error('매치를 찾을 수 없습니다.')
+          router.replace('/host/matches')
+          return
+        }
+        if (!ensureHostAccess(mockMatch)) {
+          setHasHostAccess(false)
+          toast.error('내가 주최한 매치만 관리할 수 있습니다.')
           router.replace('/host/matches')
           return
         }
@@ -122,6 +141,7 @@ export default function HostMatchDetailPage() {
 
   const handleConfirm = async (application: MatchApplication) => {
     if (!matchId) return
+    if (!hasHostAccess) return
     if (!match || match.status !== 'RECRUITING') {
       toast.info('현재 모집중 상태에서만 참가 확정을 할 수 있습니다.')
       return
@@ -146,6 +166,7 @@ export default function HostMatchDetailPage() {
 
   const handleRefund = async (application: MatchApplication) => {
     if (!matchId) return
+    if (!hasHostAccess) return
     if (!match || match.status !== 'CANCELLED') {
       toast.info('환불 처리는 매치가 취소된 상태에서만 처리할 수 있습니다.')
       return
@@ -170,6 +191,7 @@ export default function HostMatchDetailPage() {
 
   const handleRefundAll = async () => {
     if (!matchId || !match) return
+    if (!hasHostAccess) return
     if (match.status !== 'CANCELLED') {
       toast.info('일괄 환불은 매치가 취소된 상태에서만 처리할 수 있습니다.')
       return
@@ -205,6 +227,7 @@ export default function HostMatchDetailPage() {
 
   const handleMatchStatusChange = async (nextStatus: Match['status']) => {
     if (!matchId || !match) return
+    if (!hasHostAccess) return
     if (nextStatus === 'FULL' && counts.confirmed < match.capacity) {
       toast.error('확정 인원이 정원에 도달했을 때만 마감 처리할 수 있습니다.')
       return
@@ -226,7 +249,7 @@ export default function HostMatchDetailPage() {
     }
   }
 
-  if (isLoading || !match) {
+  if (isLoading || !match || !hasHostAccess) {
     return (
       <div className="min-h-screen bg-background">
         <main className="mx-auto max-w-lg space-y-4 px-4 py-6">

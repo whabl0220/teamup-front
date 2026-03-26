@@ -9,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
-import { mockMatches } from '@/lib/mock-matches'
 import type { Match } from '@/types/match'
 import { toast } from 'sonner'
 import { formatDateTimeKorean } from '@/lib/date-format'
@@ -25,9 +24,9 @@ export default function HostMatchesPage() {
     try {
       setIsLoading(true)
       setHasLoadError(false)
-      setMatches(await matchService.listMatches())
+      setMatches(await matchService.listHostedMatches())
     } catch {
-      setMatches(mockMatches)
+      setMatches([])
       setHasLoadError(true)
       toast.info('데이터 로딩에 실패하여 목데이터로 운영 화면을 표시합니다.')
     } finally {
@@ -74,7 +73,7 @@ export default function HostMatchesPage() {
         ) : hasLoadError ? (
           <Card className="border-border/50">
             <CardContent className="space-y-4 p-8 text-center">
-              <p className="text-sm text-muted-foreground">운영자 매치 데이터를 불러오지 못했습니다.</p>
+              <p className="text-sm text-muted-foreground">내 주최 매치 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => void loadMatches()}>
                   새로고침
@@ -88,7 +87,7 @@ export default function HostMatchesPage() {
         ) : matches.length === 0 ? (
           <Card className="border-border/50">
             <CardContent className="space-y-4 p-8 text-center">
-              <p className="text-sm text-muted-foreground">등록된 매치가 없습니다.</p>
+              <p className="text-sm text-muted-foreground">내가 주최한 매치가 없습니다.</p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => void loadMatches()}>
                   새로고침

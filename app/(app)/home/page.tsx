@@ -1,13 +1,35 @@
 'use client'
 
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CalendarDays, Settings, UserPen } from 'lucide-react'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import { matchService } from '@/lib/services'
 
 export default function HomePage() {
+  const [hostedCount, setHostedCount] = useState(0)
+
+  const refreshHostedCount = useCallback(async () => {
+    try {
+      const hosted = await matchService.listHostedMatches()
+      setHostedCount(hosted.length)
+    } catch {
+      setHostedCount(0)
+    }
+  }, [])
+
+  useEffect(() => {
+    void refreshHostedCount()
+    const onFocus = () => void refreshHostedCount()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refreshHostedCount])
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
@@ -77,16 +99,26 @@ export default function HomePage() {
               toast.info('주최자 화면은 매치 운영(확정/환불)을 위한 공간입니다.')
             }}
           >
-            <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+            <Card className={cn(
+              "cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50",
+              hostedCount > 0 && "border-primary/50 ring-1 ring-primary/20"
+            )}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
                     <Settings className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="mb-1 font-bold text-foreground">주최자 관리</h3>
+                    <div className="mb-1 flex items-center gap-2">
+                      <h3 className="font-bold text-foreground">주최자 관리</h3>
+                      {hostedCount > 0 && (
+                        <Badge variant="secondary">내 매치 {hostedCount}</Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
-                      신청자 확인, 참가 확정, 환불을 처리합니다.
+                      {hostedCount > 0
+                        ? '내가 주최한 매치가 있어요. 신청자/상태 관리를 진행해보세요.'
+                        : '신청자 확인, 참가 확정, 환불을 처리합니다.'}
                     </p>
                   </div>
                 </div>
