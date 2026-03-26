@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, CircleCheck, PencilLine, RotateCcw, Users } from 'lucide-react'
-import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -269,7 +268,6 @@ export default function HostMatchDetailPage() {
             </CardContent>
           </Card>
         </main>
-        <BottomNav />
       </div>
     )
   }
@@ -488,7 +486,6 @@ export default function HostMatchDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <BottomNav />
     </div>
   )
 }

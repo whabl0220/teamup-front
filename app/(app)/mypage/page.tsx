@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { BottomNav } from '@/components/layout/bottom-nav'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -355,7 +354,6 @@ export default function MyPage() {
         </DialogContent>
       </Dialog>
 
-      <BottomNav />
     </div>
   )
 }

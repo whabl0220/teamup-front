@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { RefreshCw, Settings } from 'lucide-react'
-import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -172,7 +171,6 @@ export default function HostMatchesPage() {
           </div>
         )}
       </main>
-      <BottomNav />
     </div>
   )
 }

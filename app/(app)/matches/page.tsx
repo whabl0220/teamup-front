@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CalendarDays, MapPin, RefreshCw, Users } from 'lucide-react'
-import { BottomNav } from '@/components/layout/bottom-nav'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -271,7 +270,6 @@ export default function MatchesPage() {
           </div>
         )}
       </main>
-      <BottomNav />
     </div>
   )
 }

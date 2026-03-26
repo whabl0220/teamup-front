@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Wallet, Building2, CalendarDays } from 'lucide-react'
-import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -163,7 +162,6 @@ export default function HostMatchEditPage() {
             </CardContent>
           </Card>
         </main>
-        <BottomNav />
       </div>
     )
   }
@@ -294,7 +292,6 @@ export default function HostMatchEditPage() {
           </Button>
         </div>
       </main>
-      <BottomNav />
     </div>
   )
 }

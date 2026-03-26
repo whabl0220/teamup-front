@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CalendarDays, Settings, UserPen } from 'lucide-react'
-import { BottomNav } from '@/components/layout/bottom-nav'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -128,7 +127,6 @@ export default function HomePage() {
         </div>
       </main>
 
-      <BottomNav />
     </div>
   )
 }
