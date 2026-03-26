@@ -22,8 +22,8 @@ import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 type MyStatusFilter = 'ALL' | MatchApplicationStatus
 
-const getApplyAvailabilityLabel = (status: Match['status']) =>
-  status === 'RECRUITING' ? '신청 가능' : '신청 불가'
+const getApplyAvailabilityLabel = (status: Match['status'], isMyHostedMatch: boolean) =>
+  isMyHostedMatch ? '내 주최' : status === 'RECRUITING' ? '신청 가능' : '신청 불가'
 
 const getMyApplicationStatusLabel = (status: MatchApplicationStatus) => {
   return APPLICATION_STATUS_META[status].shortLabel
@@ -46,6 +46,7 @@ export default function MatchesPage() {
   const [hasLoadError, setHasLoadError] = useState(false)
   const [mode, setMode] = useState<MatchListMode>('ALL')
   const [myStatusFilter, setMyStatusFilter] = useState<MyStatusFilter>('ALL')
+  const localUserId = useMemo(() => getLocalUser().userId, [])
 
   const loadMatches = async () => {
     try {
@@ -224,6 +225,7 @@ export default function MatchesPage() {
             {filteredMatches.map((match) => {
               const occupancy = `${match.confirmedCount + match.pendingCount}/${match.capacity}`
               const myApplication = myLatestApplicationByMatch.get(match.id)
+              const isMyHostedMatch = match.hostId === localUserId
               return (
                 <Link key={match.id} href={`/matches/${match.id}`} className="block">
                   <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
@@ -237,8 +239,8 @@ export default function MatchesPage() {
                           >
                             {MATCH_STATUS_META[match.status].label}
                           </Badge>
-                          <Badge variant={match.status === 'RECRUITING' ? 'default' : 'outline'}>
-                            {getApplyAvailabilityLabel(match.status)}
+                          <Badge variant={match.status === 'RECRUITING' && !isMyHostedMatch ? 'default' : 'outline'}>
+                            {getApplyAvailabilityLabel(match.status, isMyHostedMatch)}
                           </Badge>
                         </div>
                       </div>
@@ -269,9 +271,7 @@ export default function MatchesPage() {
           </div>
         )}
       </main>
-
       <BottomNav />
     </div>
   )
 }
-

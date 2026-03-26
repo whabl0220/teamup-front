@@ -26,13 +26,17 @@ type LocalApplicationState = {
   status: MatchApplicationStatus
 }
 
-const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean) => {
+const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean, isMyHostedMatch: boolean) => {
   if (isSubmitting) return '처리 중...'
+  if (isMyHostedMatch) return '내 주최 경기'
   if (matchStatus === 'RECRUITING') return '참가 신청'
   if (matchStatus === 'FULL') return '신청 마감'
   if (matchStatus === 'CANCELLED') return '취소된 경기'
   return '종료된 경기'
 }
+
+const isSelfHostApplyForbiddenError = (err: unknown): boolean =>
+  err instanceof Error && err.message.includes('SELF_HOST_APPLY_FORBIDDEN')
 
 const getCancelButtonLabel = (
   matchStatus: Match['status'],
@@ -102,8 +106,18 @@ export default function MatchDetailPage() {
     return `${match.confirmedCount + match.pendingCount}/${match.capacity}`
   }, [match])
 
+  const isMyHostedMatch = useMemo(() => {
+    if (!match) return false
+    const localUser = getLocalUser()
+    return match.hostId === localUser.userId
+  }, [match])
+
   const handleApply = async () => {
     if (!match) return
+    if (isMyHostedMatch) {
+      toast.error('내가 주최한 경기는 참가 신청할 수 없습니다.')
+      return
+    }
     if (match.status !== 'RECRUITING') {
       toast.error('현재 신청할 수 없는 경기입니다.')
       return
@@ -121,7 +135,11 @@ export default function MatchDetailPage() {
       const updatedMatch = await matchService.getMatch(match.id)
       setMatch(updatedMatch)
       toast.success('참가 신청이 완료되었습니다. 입금 후 승인을 기다려주세요.')
-    } catch {
+    } catch (err) {
+      if (isSelfHostApplyForbiddenError(err)) {
+        toast.error('내가 주최한 경기는 참가 신청할 수 없습니다.')
+        return
+      }
       const localUser = getLocalUser()
       const fallbackId = `local-${Date.now()}`
       upsertStoredApplication({
@@ -280,8 +298,12 @@ export default function MatchDetailPage() {
 
       <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 p-4 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg gap-2">
-          <Button className="flex-1" onClick={handleApply} disabled={isSubmitting || match.status !== 'RECRUITING'}>
-            {getApplyButtonLabel(match.status, isSubmitting)}
+          <Button
+            className="flex-1"
+            onClick={handleApply}
+            disabled={isSubmitting || match.status !== 'RECRUITING' || isMyHostedMatch}
+          >
+            {getApplyButtonLabel(match.status, isSubmitting, isMyHostedMatch)}
           </Button>
           <Button
             variant="outline"

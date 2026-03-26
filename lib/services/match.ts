@@ -92,6 +92,9 @@ const applyToMatchLocal = (matchId: string): MatchApplication => {
   }
 
   const { userId, userName } = getLocalUser()
+  if (match.hostId === userId) {
+    throw new Error('SELF_HOST_APPLY_FORBIDDEN')
+  }
 
   // 이미 신청한 경우: 중복 신청 방지
   const existing = getStoredApplicationsByMatchId(matchId).find(
@@ -277,6 +280,11 @@ export const matchService = {
   // 참가자용: 매치 신청(입금 대기)
   applyToMatch: async (matchId: string): Promise<MatchApplication> => {
     try {
+      const match = await matchService.getMatch(matchId)
+      const { userId } = getLocalUser()
+      if (match.hostId === userId) {
+        throw new Error('SELF_HOST_APPLY_FORBIDDEN')
+      }
       return await post<MatchApplication>(`/api/matches/${matchId}/applications`)
     } catch {
       return applyToMatchLocal(matchId)

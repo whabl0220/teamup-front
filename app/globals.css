@@ -168,6 +168,11 @@
 }
 
 @layer base {
+  html {
+    /* Keep layout width stable when vertical scrollbar appears/disappears. */
+    scrollbar-gutter: stable;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
