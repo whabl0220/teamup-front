@@ -1,4 +1,4 @@
-import { del, get, post, put } from './client'
+import { del, get, isNetworkOrTimeoutError, post, put } from './client'
 import { ensureMatchesSeeded, patchStoredMatch, upsertStoredMatch } from '@/lib/match-local-matches-store'
 import type {
   CreateMatchRequest,
@@ -295,12 +295,15 @@ const buildMatchListQuery = (params?: MatchListParams): string => {
   return queryString ? `?${queryString}` : ''
 }
 
+const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
+
 export const matchService = {
   // 참가자용: 매치 목록 조회
   listMatches: async (params?: MatchListParams): Promise<Match[]> => {
     try {
       return await get<Match[]>(`/api/matches${buildMatchListQuery(params)}`)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return listMatchesLocal(params)
     }
   },
@@ -309,7 +312,8 @@ export const matchService = {
   getMatch: async (matchId: string): Promise<Match> => {
     try {
       return await get<Match>(`/api/matches/${matchId}`)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return getMatchLocal(matchId)
     }
   },
@@ -323,7 +327,8 @@ export const matchService = {
         throw new Error('SELF_HOST_APPLY_FORBIDDEN')
       }
       return await post<MatchApplication>(`/api/matches/${matchId}/applications`)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return applyToMatchLocal(matchId)
     }
   },
@@ -332,7 +337,8 @@ export const matchService = {
   cancelApplication: async (matchId: string, applicationId: string): Promise<void> => {
     try {
       return await del<void>(`/api/matches/${matchId}/applications/${applicationId}`)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return cancelApplicationLocal(matchId, applicationId)
     }
   },
@@ -341,7 +347,8 @@ export const matchService = {
   createMatch: async (data: CreateMatchRequest): Promise<Match> => {
     try {
       return await post<Match>('/api/matches', data)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return createMatchLocal(data)
     }
   },
@@ -357,7 +364,8 @@ export const matchService = {
   listApplications: async (matchId: string): Promise<MatchApplication[]> => {
     try {
       return await get<MatchApplication[]>(`/api/matches/${matchId}/applications`)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return listApplicationsLocal(matchId)
     }
   },
@@ -368,7 +376,8 @@ export const matchService = {
       return await put<MatchApplication>(
         `/api/matches/${matchId}/applications/${applicationId}/confirm`
       )
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return confirmApplicationLocal(matchId, applicationId)
     }
   },
@@ -377,7 +386,8 @@ export const matchService = {
   refundApplication: async (matchId: string, applicationId: string): Promise<MatchApplication> => {
     try {
       return await put<MatchApplication>(`/api/matches/${matchId}/applications/${applicationId}/refund`)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return refundApplicationLocal(matchId, applicationId)
     }
   },
@@ -386,7 +396,8 @@ export const matchService = {
   updateMatchStatus: async (matchId: string, data: UpdateMatchStatusRequest): Promise<Match> => {
     try {
       return await put<Match>(`/api/matches/${matchId}/status`, data)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return updateMatchStatusLocal(matchId, data)
     }
   },
@@ -395,7 +406,8 @@ export const matchService = {
   updateMatch: async (matchId: string, data: UpdateMatchRequest): Promise<Match> => {
     try {
       return await put<Match>(`/api/matches/${matchId}`, data)
-    } catch {
+    } catch (error) {
+      if (!shouldFallbackToLocal(error)) throw error
       return updateMatchLocal(matchId, data)
     }
   },

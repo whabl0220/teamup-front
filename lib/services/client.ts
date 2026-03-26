@@ -24,6 +24,22 @@ export interface ApiResponse<T = unknown> {
   message?: string
 }
 
+export class ApiError extends Error {
+  status?: number
+  constructor(message: string, status?: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+export const isNetworkOrTimeoutError = (error: unknown): boolean => {
+  if (error instanceof ApiError) return false
+  if (error instanceof DOMException && error.name === 'AbortError') return true
+  if (error instanceof TypeError) return true
+  return false
+}
+
 // Fetch 공통 로직 추출
 async function baseFetch(endpoint: string, options?: RequestInit, timeout = 30000) {
   const token = getAccessToken();
@@ -42,7 +58,7 @@ async function baseFetch(endpoint: string, options?: RequestInit, timeout = 3000
     });
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(errorText || `API Error: ${response.statusText}`);
+      throw new ApiError(errorText || `API Error: ${response.statusText}`, response.status);
     }
     return response;
   } finally {
@@ -53,10 +69,6 @@ async function baseFetch(endpoint: string, options?: RequestInit, timeout = 3000
 // Fetch wrapper (JSON 응답)
 export async function fetchAPI<T = unknown>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await baseFetch(endpoint, options);
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `API Error: ${response.statusText}`);
-  }
   const contentLength = response.headers.get('content-length');
   if (response.status === 204 || contentLength === '0') {
     return undefined as T;
