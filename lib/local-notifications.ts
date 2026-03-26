@@ -1,8 +1,14 @@
 import type { AppNotification, NotificationActor, NotificationType } from '@/types/notification'
 
 const STORAGE_KEY = 'teamup_notifications_v1'
+export const NOTIFICATIONS_UPDATED_EVENT = 'teamup:notifications-updated'
 
 const isBrowser = () => typeof window !== 'undefined'
+
+const emitNotificationsUpdated = () => {
+  if (!isBrowser()) return
+  window.dispatchEvent(new Event(NOTIFICATIONS_UPDATED_EVENT))
+}
 
 export const getStoredNotifications = (): AppNotification[] => {
   if (!isBrowser()) return []
@@ -21,6 +27,7 @@ export const getStoredNotifications = (): AppNotification[] => {
 export const setStoredNotifications = (notifications: AppNotification[]) => {
   if (!isBrowser()) return
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications))
+  emitNotificationsUpdated()
 }
 
 export const pushNotification = (

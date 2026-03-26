@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CalendarDays, MapPin, RefreshCw, Users } from 'lucide-react'
+import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -100,7 +101,8 @@ export default function MatchesPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-4">
+          <div className="flex items-center gap-3">
           <Image
             src="/images/logo.jpg"
             alt="TeamUp Logo"
@@ -110,8 +112,10 @@ export default function MatchesPage() {
           />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">참가하기</h1>
-            <p className="text-sm text-muted-foreground">오늘/이번 주 또는 내 신청 내역을 빠르게 확인하세요</p>
+            <p className="text-sm text-muted-foreground">농구 경기를 참가하세요</p>
           </div>
+          </div>
+          <HeaderNotificationButton />
         </div>
       </header>
 

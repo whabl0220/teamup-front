@@ -118,7 +118,7 @@ export default function NotificationsPage() {
           </Button>
           <Button variant="outline" className="flex-1 gap-2" onClick={handleClear}>
             <Trash2 className="h-4 w-4" />
-            로그 비우기
+            내역 삭제하기
           </Button>
         </div>
 

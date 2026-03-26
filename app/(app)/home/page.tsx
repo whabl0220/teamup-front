@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CalendarDays, Settings, UserPen } from 'lucide-react'
+import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
@@ -43,6 +44,7 @@ export default function HomePage() {
             />
             <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
           </div>
+          <HeaderNotificationButton />
         </div>
       </header>
 

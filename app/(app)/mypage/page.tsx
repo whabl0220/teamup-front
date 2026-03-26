@@ -4,16 +4,16 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { userService } from '@/lib/services'
-import { clearNotifications, getStoredNotifications } from '@/lib/local-notifications'
+import { clearNotifications } from '@/lib/local-notifications'
 import { clearStoredApplications, getStoredApplications } from '@/lib/match-local-store'
 import { clearStoredMatches } from '@/lib/match-local-matches-store'
 import { getLocalUser } from '@/lib/services/match'
@@ -40,7 +40,6 @@ export default function MyPage() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
   const [notifications, setNotifications] = useState(true)
   const [mounted, setMounted] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
   const [activitySummary, setActivitySummary] = useState({
     applied: 0,
     confirmed: 0,
@@ -49,7 +48,6 @@ export default function MyPage() {
   const { theme, setTheme } = useTheme()
 
   const refreshLocalSummary = useCallback(() => {
-    setUnreadCount(getStoredNotifications().filter((item) => !item.read).length)
     const localUser = getLocalUser()
     const myApps = getStoredApplications().filter((app) => app.userId === localUser.userId)
     setActivitySummary({
@@ -154,6 +152,7 @@ export default function MyPage() {
             />
             <h1 className="text-2xl font-bold tracking-tight">마이페이지</h1>
           </div>
+          <HeaderNotificationButton />
         </div>
       </header>
 
@@ -217,18 +216,10 @@ export default function MyPage() {
               <Separator />
               <div className="flex items-center justify-between p-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="teamup-icon-soft flex h-8 w-8 items-center justify-center rounded-lg">
-                      <Bell className="h-4 w-4 text-primary" />
-                    </div>
-                    <Link
-                      href="/notifications"
-                      className="flex items-center gap-2 text-sm font-medium hover:underline"
-                    >
-                      알림 설정
-                      {unreadCount > 0 && <Badge variant="secondary">미확인 {unreadCount}</Badge>}
-                    </Link>
+                  <div className="teamup-icon-soft flex h-8 w-8 items-center justify-center rounded-lg">
+                    <Bell className="h-4 w-4 text-primary" />
                   </div>
+                  <span className="text-sm font-medium">알림 수신</span>
                 </div>
                 <Switch checked={notifications} onCheckedChange={setNotifications} />
               </div>

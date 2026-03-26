@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { RefreshCw, Settings } from 'lucide-react'
+import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -62,7 +63,8 @@ export default function HostMatchesPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-4">
+          <div className="flex items-center gap-3">
           <Image
             src="/images/logo.jpg"
             alt="TeamUp Logo"
@@ -72,8 +74,10 @@ export default function HostMatchesPage() {
           />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">주최하기</h1>
-            <p className="text-sm text-muted-foreground">내가 주최한 경기의 신청/상태를 관리하세요</p>
+            <p className="text-sm text-muted-foreground">농구 경기를 주최해보세요</p>
           </div>
+          </div>
+          <HeaderNotificationButton />
         </div>
       </header>
 
