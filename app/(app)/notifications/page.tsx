@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { AlertTriangle, ArrowLeft, Bell, CheckCheck, CircleCheck, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -94,16 +93,22 @@ export default function NotificationsPage() {
     if (matchId) router.push(`/matches/${matchId}?from=notifications`)
   }
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push('/mypage')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-4">
           <div className="flex items-center gap-3">
-            <Link href="/mypage">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" onClick={handleBack}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
             <h1 className="text-xl font-bold">알림 로그</h1>
           </div>
           <Badge variant="outline">미확인 {unreadCount}</Badge>

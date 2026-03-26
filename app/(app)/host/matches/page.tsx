@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { RefreshCw, Settings } from 'lucide-react'
+import { ClipboardList, RefreshCw } from 'lucide-react'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -165,7 +165,7 @@ export default function HostMatchesPage() {
                     <p className="text-sm text-muted-foreground">{match.court.name}</p>
                     <p className="text-xs text-muted-foreground">{formatDateTimeKorean(match.startAt)}</p>
                     <div className="mt-2 flex items-center gap-2 text-xs text-primary">
-                      <Settings className="h-4 w-4" />
+                      <ClipboardList className="h-4 w-4" />
                       <span>신청자/상태 관리</span>
                     </div>
                   </CardContent>
