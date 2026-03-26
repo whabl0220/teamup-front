@@ -203,7 +203,7 @@ export default function SignupPage() {
 
             <Button
               type="submit"
-              className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/95"
               disabled={isLoading}
             >
               다음

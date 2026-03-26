@@ -1,326 +1,178 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { BottomNav } from '@/components/layout/bottom-nav'
+import { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, ArrowLeft, Bell, CheckCheck, CircleCheck, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Bell, ShieldAlert, UserPlus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+  clearNotifications,
+  getNotificationTypeLabel,
+  getStoredNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+} from '@/lib/local-notifications'
+import type { AppNotification } from '@/types/notification'
 import { toast } from 'sonner'
-import { userService, teamService, matchingService } from '@/lib/services'
-import { formatTimeAgo } from '@/lib/utils'
-import type { MatchRequest, JoinRequest } from '@/types'
-import { MatchRequestsModal } from '@/components/shared/match-requests-modal'
-import { JoinRequestsModal } from '@/components/shared/join-requests-modal'
+import type { NotificationType } from '@/types/notification'
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+const SCROLL_KEY = 'teamup_notifications_scroll_y'
+
+const getNotificationMeta = (type: NotificationType) => {
+  if (type === 'MATCH_APPLIED') {
+    return {
+      icon: CircleCheck,
+      iconClass: 'text-emerald-600',
+      badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    }
+  }
+  if (type === 'MATCH_CANCELLED') {
+    return {
+      icon: AlertTriangle,
+      iconClass: 'text-rose-600',
+      badgeClass: 'border-rose-200 bg-rose-50 text-rose-700',
+    }
+  }
+  return {
+    icon: RotateCcw,
+    iconClass: 'text-blue-600',
+    badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+  }
+}
 
 export default function NotificationsPage() {
-  const [isLoading, setIsLoading] = useState(true)
-  const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
-  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([])
-  const [showMatchRequestsModal, setShowMatchRequestsModal] = useState(false)
-  const [showJoinRequestsModal, setShowJoinRequestsModal] = useState(false)
-  const [isTeamLeader, setIsTeamLeader] = useState(false)
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications())
+  const router = useRouter()
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true)
+  const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications])
 
-      // 현재 사용자 정보 조회
-      const user = await userService.getMe()
-
-      // 내 팀 목록 조회
-      const teams = await teamService.getMyTeams()
-      const currentTeam = teams.length > 0 ? teams[0] : null
-
-      if (currentTeam) {
-        // 팀장 권한 체크
-        setIsTeamLeader(Number(currentTeam.captainId) === Number(user.id))
-
-        // 매칭 요청 조회
-        try {
-          const requests = await matchingService.getMatchRequests()
-          setMatchRequests(requests)
-        } catch (err) {
-          console.error('매칭 요청 조회 실패:', err)
-        }
-
-        // 팀 참여 요청 조회
-        try {
-          const joins = await teamService.getJoinRequests(currentTeam.id)
-          setJoinRequests(joins)
-        } catch (err) {
-          console.error('팀 참여 요청 조회 실패:', err)
-        }
-      }
-    } catch (err) {
-      console.error('데이터 로드 실패:', err)
-      toast.error('데이터를 불러오는데 실패했습니다.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const reload = () => setNotifications(getStoredNotifications())
 
   useEffect(() => {
-    loadData()
+    const raw = sessionStorage.getItem(SCROLL_KEY)
+    if (raw) {
+      const y = Number(raw)
+      if (!Number.isNaN(y)) window.scrollTo({ top: y, behavior: 'auto' })
+    }
+
+    const handleScroll = () => {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleAcceptRequest = async (requestId: string, teamName: string) => {
-    try {
-      await matchingService.acceptMatchRequest(requestId)
-      toast.success(`${teamName}의 매칭 요청을 수락했습니다!`)
-      loadData()
-    } catch (err) {
-      console.error('매칭 요청 수락 실패:', err)
-      toast.error('매칭 요청 수락에 실패했습니다.')
-    }
+  const handleMarkAllRead = () => {
+    markAllNotificationsAsRead()
+    reload()
+    toast.success('모든 알림을 읽음 처리했습니다.')
   }
 
-  const handleRejectRequest = async (requestId: string) => {
-    try {
-      await matchingService.rejectMatchRequest(requestId)
-      toast.success('매칭 요청을 거절했습니다')
-      loadData()
-    } catch (err) {
-      console.error('매칭 요청 거절 실패:', err)
-      toast.error('매칭 요청 거절에 실패했습니다.')
-    }
+  const handleClear = () => {
+    clearNotifications()
+    reload()
+    toast.success('알림 로그를 비웠습니다.')
   }
 
-  const handleAcceptJoinRequest = async (requestId: string, userName: string) => {
-    try {
-      const teams = await teamService.getMyTeams()
-      const currentTeam = teams.length > 0 ? teams[0] : null
-      if (!currentTeam) {
-        toast.error('팀을 찾을 수 없습니다.')
-        return
-      }
-      await teamService.acceptJoinRequest(currentTeam.id, requestId)
-      toast.success(`${userName}님의 팀 참여 요청을 수락했습니다!`)
-      loadData()
-    } catch (err) {
-      console.error('팀 참여 요청 수락 실패:', err)
-      toast.error('팀 참여 요청 수락에 실패했습니다.')
-    }
+  const handleClickItem = (item: AppNotification) => {
+    markNotificationAsRead(item.id)
+    reload()
+    const matchId = item.meta?.matchId
+    sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))
+    if (matchId) router.push(`/matches/${matchId}?from=notifications`)
   }
 
-  const handleRejectJoinRequest = async (requestId: string) => {
-    try {
-      const teams = await teamService.getMyTeams()
-      const currentTeam = teams.length > 0 ? teams[0] : null
-      if (!currentTeam) {
-        toast.error('팀을 찾을 수 없습니다.')
-        return
-      }
-      await teamService.rejectJoinRequest(currentTeam.id, requestId)
-      toast.success('팀 참여 요청을 거절했습니다')
-      loadData()
-    } catch (err) {
-      console.error('팀 참여 요청 거절 실패:', err)
-      toast.error('팀 참여 요청 거절에 실패했습니다.')
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back()
+      return
     }
+    router.push('/mypage')
   }
-
-  const hasNotifications = matchRequests.length > 0 || joinRequests.length > 0
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
-          <Image
-            src="/images/logo.jpg"
-            alt="TeamUp Logo"
-            width={40}
-            height={40}
-            className="h-10 w-10 rounded-xl object-contain"
-          />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">팀 알림</h1>
-            <p className="text-sm text-muted-foreground">매칭 요청 및 알림</p>
+        <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={handleBack}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-xl font-bold">알림 로그</h1>
           </div>
+          <Badge variant="outline">미확인 {unreadCount}</Badge>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-4 py-6">
-        {isLoading ? (
-          <div className="flex min-h-[60vh] items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          </div>
-        ) : !hasNotifications && (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-secondary">
-              <Bell className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="mb-2 text-lg font-bold text-foreground">알림이 없습니다</h3>
-            <p className="text-sm text-muted-foreground">
-              받은 매칭 요청이나 알림이 여기에 표시됩니다
-            </p>
-          </div>
-        )}
+      <main className="mx-auto max-w-lg space-y-4 px-4 py-6 pb-24">
+        <div className="flex gap-2">
+          <Button variant="outline" className="flex-1 gap-2" onClick={handleMarkAllRead}>
+            <CheckCheck className="h-4 w-4" />
+            모두 읽음
+          </Button>
+          <Button variant="outline" className="flex-1 gap-2" onClick={handleClear}>
+            <Trash2 className="h-4 w-4" />
+            내역 삭제하기
+          </Button>
+        </div>
 
-        {/* 팀장 권한 안내 */}
-        {!isTeamLeader && matchRequests.length > 0 && (
-          <Card className="mb-4 border-yellow-500/50 bg-yellow-500/10">
-            <CardContent className="flex items-center gap-3 p-4">
-              <ShieldAlert className="h-5 w-5 text-yellow-600" />
-              <p className="text-sm text-foreground">
-                <span className="font-semibold">팀장만</span> 매칭 요청을 수락하거나 거절할 수 있습니다.
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 받은 매칭 요청 */}
-        {matchRequests.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-primary" />
-                <h2 className="font-bold text-foreground">받은 매칭 요청</h2>
-                <Badge className="bg-primary">{matchRequests.length}</Badge>
+        <Card>
+          <CardContent className="p-4">
+            {notifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <Bell className="mb-2 h-6 w-6 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">아직 기록된 알림이 없습니다.</p>
               </div>
-              {matchRequests.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowMatchRequestsModal(true)}
-                  className="text-primary hover:text-primary"
-                >
-                  전체
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {matchRequests.slice(0, 3).map((request) => (
-                <Card key={request.id} className="border-primary/50 bg-primary/5">
-                  <CardContent className="p-4">
-                    <div className="mb-3 flex items-start justify-between">
-                      <div>
-                        <h3 className="mb-1 font-bold text-foreground">{request.fromTeam.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">레벨 {request.fromTeam.level}</Badge>
-                          <span className="text-xs text-muted-foreground">{request.fromTeam.region}</span>
+            ) : (
+              <div className="space-y-3">
+                {notifications.map((item) => (
+                  <button
+                    key={item.id}
+                    className="w-full rounded-xl border border-border/50 p-3 text-left transition-colors hover:bg-muted/40"
+                    onClick={() => handleClickItem(item)}
+                  >
+                    {(() => {
+                      const meta = getNotificationMeta(item.type)
+                      const Icon = meta.icon
+                      return (
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted/60">
+                            <Icon className={`h-4 w-4 ${meta.iconClass}`} />
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={item.read ? '' : meta.badgeClass}
+                          >
+                            {getNotificationTypeLabel(item.type)}
+                          </Badge>
+                          {!item.read && <span className="text-xs font-medium text-primary">NEW</span>}
                         </div>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{formatTimeAgo(request.createdAt)}</span>
+                      )
+                    })()}
+                    <div className="mb-1 flex items-start justify-between gap-2">
+                      <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
                     </div>
-                    <p className="mb-3 text-sm text-muted-foreground">{request.message}</p>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          className="flex-1 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleRejectRequest(request.id)}
-                          disabled={!isTeamLeader}
-                        >
-                          거절
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex-1 text-green-600 hover:bg-green-600/10"
-                          onClick={() => handleAcceptRequest(request.id, request.fromTeam.name)}
-                          disabled={!isTeamLeader}
-                        >
-                          수락
-                        </Button>
-                      </div>
-                      <Link href={`/team/${request.fromTeam.id}?from=match-request`} className="w-full">
-                        <Button variant="outline" className="w-full hover:bg-orange-400! hover:text-black! hover:border-none!">상세 보기</Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 팀 참여 요청 */}
-        {joinRequests.length > 0 && (
-          <div className="mb-6">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-blue-500" />
-                <h2 className="font-bold text-foreground">팀 참여 요청</h2>
-                <Badge className="bg-blue-500/10 text-blue-600 text-xs">{joinRequests.length}</Badge>
+                    <p className="text-sm font-semibold">{item.title}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>
+                  </button>
+                ))}
               </div>
-              {joinRequests.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowJoinRequestsModal(true)}
-                  className="text-blue-600 hover:text-blue-700"
-                >
-                  전체
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-3">
-              {joinRequests.slice(0, 3).map((request) => (
-                <Card key={request.id} className="border-blue-500/50 bg-blue-500/5">
-                  <CardContent className="p-4">
-                    <div className="mb-3 flex items-start justify-between">
-                      <div>
-                        <h3 className="mb-1 font-bold text-foreground">{request.userName}</h3>
-                        <Badge variant="secondary" className="text-xs">팀 참여</Badge>
-                      </div>
-                      <span className="text-xs text-muted-foreground">{formatTimeAgo(request.createdAt)}</span>
-                    </div>
-                    <p className="mb-3 text-sm text-muted-foreground">{request.message}</p>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          className="flex-1 text-destructive hover:bg-blue-600! hover:text-white! hover:border-none!"
-                          onClick={() => handleRejectJoinRequest(request.id)}
-                          disabled={!isTeamLeader}
-                        >
-                          거절
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="flex-1 text-green-600 hover:bg-blue-600! hover:text-white! hover:border-none!"
-                          onClick={() => handleAcceptJoinRequest(request.id, request.userName)}
-                          disabled={!isTeamLeader}
-                        >
-                          수락
-                        </Button>
-                      </div>
-                      <Link href={`/player/${request.userId}`} className="w-full">
-                        <Button variant="outline" className="w-full hover:bg-blue-600! hover:text-white! hover:border-none!">상세 보기</Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
+            )}
+          </CardContent>
+        </Card>
       </main>
-
-      {/* 받은 매칭 요청 전체 모달 */}
-      <MatchRequestsModal
-        open={showMatchRequestsModal}
-        onOpenChange={setShowMatchRequestsModal}
-        matchRequests={matchRequests}
-        onAccept={handleAcceptRequest}
-        onReject={handleRejectRequest}
-      />
-
-      {/* 팀 참여 요청 전체 모달 */}
-      <JoinRequestsModal
-        open={showJoinRequestsModal}
-        onOpenChange={setShowJoinRequestsModal}
-        joinRequests={joinRequests}
-        onAccept={handleAcceptJoinRequest}
-        onReject={handleRejectJoinRequest}
-      />
-
-      <BottomNav />
     </div>
   )
 }
+

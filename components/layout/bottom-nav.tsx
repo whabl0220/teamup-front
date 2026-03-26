@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Search, Sparkles, Map, User } from 'lucide-react'
+import { ClipboardList, Home, Search, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function BottomNav() {
@@ -10,9 +10,8 @@ export function BottomNav() {
 
   const navItems = [
     { href: '/home', icon: Home, label: '홈' },
-    { href: '/matching', icon: Search, label: '팀 매칭' },
-    { href: '/coaching', icon: Sparkles, label: 'AI 코치' },
-    { href: '/map', icon: Map, label: '지도' },
+    { href: '/matches', icon: Search, label: '참가' },
+    { href: '/host/matches', icon: ClipboardList, label: '주최' },
     { href: '/mypage', icon: User, label: '마이' },
   ]
 
@@ -20,7 +19,10 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-card/95 backdrop-blur-lg">
       <div className="mx-auto flex max-w-lg items-center justify-around px-4 py-2">
         {navItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive =
+            pathname === item.href ||
+            (item.href === '/matches' && pathname.startsWith('/matches')) ||
+            (item.href === '/host/matches' && pathname.startsWith('/host/matches'))
           const Icon = item.icon
           return (
             <Link

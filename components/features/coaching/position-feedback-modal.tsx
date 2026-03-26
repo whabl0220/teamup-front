@@ -9,10 +9,11 @@ import {
   DialogTitle,
   DialogClose,
 } from '@/components/ui/dialog'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { POSITION_COLORS } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 import { X } from 'lucide-react'
+import { toast } from 'sonner'
 
 // 공통 질문 (모든 포지션 동일)
 const COMMON_QUESTIONS = [
@@ -79,7 +80,6 @@ export function PositionFeedbackModal({
   onSubmit,
 }: PositionFeedbackModalProps) {
   const [answers, setAnswers] = useState<Record<string, string>>({})
-  const [isCancelHovered, setIsCancelHovered] = useState(false)
 
   const positionQuestion = POSITION_QUESTIONS[positionId]
   const positionColor = POSITION_COLORS[positionId as keyof typeof POSITION_COLORS]
@@ -97,7 +97,7 @@ export function PositionFeedbackModal({
     const allAnswered = allQuestionIds.every((id) => answers[id])
 
     if (!allAnswered) {
-      alert('모든 질문에 답변해주세요.')
+      toast.error('모든 질문에 답변해주세요.')
       return
     }
 
@@ -109,28 +109,22 @@ export function PositionFeedbackModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-h-[80vh] overflow-y-auto sm:max-w-lg border-4"
+        className={cn(
+          'position-feedback-modal max-h-[80vh] overflow-y-auto sm:max-w-lg border-4',
+          positionColor.themeClass
+        )}
         showCloseButton={false}
-        style={{
-          borderColor: positionColor.hex,
-          background: `linear-gradient(135deg, ${positionColor.hex}08 0%, ${positionColor.hex}03 100%)`,
-        }}
       >
         {/* 커스텀 X 버튼 */}
         <DialogClose className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none">
-          <X className="h-4 w-4" style={{ color: positionColor.hex }} />
+          <X className="h-4 w-4 text-[var(--position-accent)]" />
           <span className="sr-only">Close</span>
         </DialogClose>
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Badge
-              className="text-sm font-bold border-2"
-              style={{
-                backgroundColor: positionColor.hex,
-                borderColor: positionColor.hex,
-                color: 'white',
-              }}
+              className="text-sm font-bold border-2 border-[var(--position-accent)] bg-[var(--position-accent)] text-white"
             >
               {POSITION_LABELS[positionId]}
             </Badge>
@@ -152,27 +146,27 @@ export function PositionFeedbackModal({
                 {question.options.map((option) => {
                   const isSelected = answers[question.id] === option
                   return (
-                    <Card
+                    <button
                       key={option}
-                      className="cursor-pointer border-2 transition-all hover:scale-[1.01]"
-                      style={{
-                        borderColor: isSelected ? positionColor.hex : 'hsl(var(--border))',
-                        backgroundColor: isSelected ? `${positionColor.hex}20` : 'transparent',
-                      }}
+                      type="button"
+                      aria-pressed={isSelected}
+                      className={cn(
+                        'w-full rounded-lg p-2.5 text-left cursor-pointer border-2 transition-all hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--position-accent)] focus-visible:ring-offset-2',
+                        isSelected
+                          ? 'border-[var(--position-accent)] bg-[color:rgb(var(--position-accent-rgb)/0.12)]'
+                          : 'border-border bg-transparent'
+                      )}
                       onClick={() => handleAnswerSelect(question.id, option)}
                     >
-                      <CardContent className="p-2.5">
-                        <p
-                          className="text-sm font-medium"
-                          style={{
-                            color: isSelected ? positionColor.hex : 'hsl(var(--foreground))',
-                            fontWeight: isSelected ? 'bold' : 'medium',
-                          }}
-                        >
-                          {option}
-                        </p>
-                      </CardContent>
-                    </Card>
+                      <p
+                        className={cn(
+                          'text-sm font-medium text-foreground',
+                          isSelected && 'font-bold text-[var(--position-accent)]'
+                        )}
+                      >
+                        {option}
+                      </p>
+                    </button>
                   )
                 })}
               </div>
@@ -189,27 +183,27 @@ export function PositionFeedbackModal({
                 {positionQuestion.options.map((option) => {
                   const isSelected = answers['position_question'] === option
                   return (
-                    <Card
+                    <button
                       key={option}
-                      className="cursor-pointer border-2 transition-all hover:scale-[1.01]"
-                      style={{
-                        borderColor: isSelected ? positionColor.hex : 'hsl(var(--border))',
-                        backgroundColor: isSelected ? `${positionColor.hex}20` : 'transparent',
-                      }}
+                      type="button"
+                      aria-pressed={isSelected}
+                      className={cn(
+                        'w-full rounded-lg p-2.5 text-left cursor-pointer border-2 transition-all hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--position-accent)] focus-visible:ring-offset-2',
+                        isSelected
+                          ? 'border-[var(--position-accent)] bg-[color:rgb(var(--position-accent-rgb)/0.12)]'
+                          : 'border-border bg-transparent'
+                      )}
                       onClick={() => handleAnswerSelect('position_question', option)}
                     >
-                      <CardContent className="p-2.5">
-                        <p
-                          className="text-sm font-medium"
-                          style={{
-                            color: isSelected ? positionColor.hex : 'hsl(var(--foreground))',
-                            fontWeight: isSelected ? 'bold' : 'medium',
-                          }}
-                        >
-                          {option}
-                        </p>
-                      </CardContent>
-                    </Card>
+                      <p
+                        className={cn(
+                          'text-sm font-medium text-foreground',
+                          isSelected && 'font-bold text-[var(--position-accent)]'
+                        )}
+                      >
+                        {option}
+                      </p>
+                    </button>
                   )
                 })}
               </div>
@@ -221,24 +215,13 @@ export function PositionFeedbackModal({
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            onMouseEnter={() => setIsCancelHovered(true)}
-            onMouseLeave={() => setIsCancelHovered(false)}
-            className="flex-1 h-9 px-4 py-2 rounded-md text-sm font-medium border-2 transition-all outline-none"
-            style={{
-              borderColor: positionColor.hex,
-              backgroundColor: isCancelHovered ? `${positionColor.hex}20` : 'transparent',
-              color: positionColor.hex,
-            }}
+            className="flex-1 h-9 px-4 py-2 rounded-md text-sm font-medium border-2 transition-all outline-none border-[var(--position-accent)] text-[var(--position-accent)] hover:bg-[color:rgb(var(--position-accent-rgb)/0.12)]"
           >
             취소
           </button>
           <button
             onClick={handleSubmit}
-            className="flex-1 h-9 px-4 py-2 rounded-md text-sm font-bold transition-all outline-none hover:opacity-90"
-            style={{
-              backgroundColor: positionColor.hex,
-              color: 'white',
-            }}
+            className="flex-1 h-9 px-4 py-2 rounded-md text-sm font-bold transition-all outline-none hover:opacity-90 bg-[var(--position-accent)] text-white"
           >
             제출하기
           </button>

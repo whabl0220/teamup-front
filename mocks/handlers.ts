@@ -539,9 +539,9 @@ export const handlers = [
     if (body.gender) user.gender = body.gender
     if (body.address) user.address = body.address
     if (body.height !== undefined) user.height = body.height
-    if (body.mainPosition) user.position = body.mainPosition as any
-    if (body.subPosition) user.subPosition = body.subPosition as any
-    if (body.playStyle) user.playStyle = body.playStyle as any
+    if (body.mainPosition) user.position = body.mainPosition as 'GUARD' | 'FORWARD' | 'CENTER'
+    if (body.subPosition) user.subPosition = body.subPosition as 'GUARD' | 'FORWARD' | 'CENTER'
+    if (body.playStyle) user.playStyle = body.playStyle as 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'
     if (body.statusMsg) user.statusMsg = body.statusMsg
 
     return HttpResponse.json({
