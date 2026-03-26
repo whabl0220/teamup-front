@@ -33,12 +33,13 @@ export const setStoredNotifications = (notifications: AppNotification[]) => {
 export const pushNotification = (
   data: Omit<AppNotification, 'id' | 'createdAt' | 'read'> & { actor?: NotificationActor }
 ) => {
+  const { actor, ...rest } = data
   const next: AppNotification = {
     id: `noti-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     createdAt: new Date().toISOString(),
     read: false,
-    actor: data.actor ?? 'SYSTEM',
-    ...data,
+    ...rest,
+    actor: actor ?? 'SYSTEM',
   }
 
   const current = getStoredNotifications()
