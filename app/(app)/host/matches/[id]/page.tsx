@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, CircleCheck, RotateCcw, Users } from 'lucide-react'
+import { ArrowLeft, CircleCheck, PencilLine, RotateCcw, Users } from 'lucide-react'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -301,6 +301,12 @@ export default function HostMatchDetailPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {formatDateTimeKorean(match.startAt)}
             </p>
+            <Link href={`/host/matches/${match.id}/edit`} className="mt-4 block">
+              <Button className="w-full" size="sm">
+                <PencilLine className="mr-1 h-4 w-4" />
+                경기 정보 수정
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 

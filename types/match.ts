@@ -73,6 +73,19 @@ export interface CreateMatchRequest {
   depositAccount: string
 }
 
+export interface UpdateMatchRequest {
+  title: string
+  startAt: string
+  endAt?: string
+  courtId: string
+  fee: number
+  capacity: number
+  level: MatchLevel
+  cancellationPolicy?: string
+  notes?: string
+  depositAccount: string
+}
+
 export interface UpdateMatchStatusRequest {
   status: Extract<MatchStatus, 'RECRUITING' | 'FULL' | 'CANCELLED' | 'ENDED'>
   reason?: string

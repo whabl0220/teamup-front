@@ -5,6 +5,7 @@ import type {
   Match,
   MatchApplication,
   MatchListParams,
+  UpdateMatchRequest,
   UpdateMatchStatusRequest,
 } from '@/types/match'
 import {
@@ -245,6 +246,28 @@ const updateMatchStatusLocal = (matchId: string, data: UpdateMatchStatusRequest)
   return updated
 }
 
+const updateMatchLocal = (matchId: string, data: UpdateMatchRequest): Match => {
+  const match = getMatchLocal(matchId)
+  assertLocalHostAccess(match)
+  const court = getMatchCourtById(data.courtId)
+  if (!court) {
+    throw new Error(`Court not found: ${data.courtId}`)
+  }
+
+  return patchStoredMatch(matchId, {
+    title: data.title,
+    startAt: data.startAt,
+    endAt: data.endAt,
+    court,
+    fee: data.fee,
+    capacity: data.capacity,
+    level: data.level,
+    cancellationPolicy: data.cancellationPolicy,
+    notes: data.notes,
+    depositAccount: data.depositAccount,
+  })
+}
+
 const buildMatchListQuery = (params?: MatchListParams): string => {
   if (!params) return ''
 
@@ -351,6 +374,15 @@ export const matchService = {
       return await put<Match>(`/api/matches/${matchId}/status`, data)
     } catch {
       return updateMatchStatusLocal(matchId, data)
+    }
+  },
+
+  // 주최자용: 매치 수정
+  updateMatch: async (matchId: string, data: UpdateMatchRequest): Promise<Match> => {
+    try {
+      return await put<Match>(`/api/matches/${matchId}`, data)
+    } catch {
+      return updateMatchLocal(matchId, data)
     }
   },
 }
