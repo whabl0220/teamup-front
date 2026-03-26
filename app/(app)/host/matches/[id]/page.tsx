@@ -443,8 +443,7 @@ export default function HostMatchDetailPage() {
                           disabled={
                             isSubmitting ||
                             match.status !== 'CANCELLED' ||
-                            (app.status !== 'CONFIRMED' && app.status !== 'CANCELLED') ||
-                            app.status === 'REFUNDED'
+                            (app.status !== 'CONFIRMED' && app.status !== 'CANCELLED')
                           }
                         >
                           <RotateCcw className="mr-1 h-4 w-4" />
