@@ -11,6 +11,20 @@ import { matchService } from '@/lib/services'
 import { mockMatches } from '@/lib/mock-matches'
 import type { Match } from '@/types/match'
 import { toast } from 'sonner'
+import { formatDateTimeKorean } from '@/lib/date-format'
+
+const getMatchStatusLabel = (status: Match['status']) => {
+  if (status === 'RECRUITING') return '모집중'
+  if (status === 'FULL') return '마감'
+  if (status === 'CANCELLED') return '취소'
+  return '종료'
+}
+
+const getMatchStatusVariant = (status: Match['status']) => {
+  if (status === 'RECRUITING') return 'default'
+  if (status === 'FULL') return 'secondary'
+  return 'outline'
+}
 
 export default function HostMatchesPage() {
   const router = useRouter()
@@ -60,9 +74,12 @@ export default function HostMatchesPage() {
                 <CardContent className="p-4">
                   <div className="mb-2 flex items-center justify-between">
                     <p className="font-semibold">{match.title}</p>
-                    <Badge variant="outline">{match.status}</Badge>
+                    <Badge variant={getMatchStatusVariant(match.status)}>
+                      {getMatchStatusLabel(match.status)}
+                    </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">{match.court.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatDateTimeKorean(match.startAt)}</p>
                   <div className="mt-2 flex items-center gap-2 text-sm text-primary">
                     <Settings className="h-4 w-4" />
                     <span>신청자/상태 관리</span>

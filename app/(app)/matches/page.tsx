@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CalendarDays, Clock3, MapPin, Users } from 'lucide-react'
+import { CalendarDays, MapPin, Users } from 'lucide-react'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { getStoredApplications } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { MatchApplicationStatus } from '@/types/match'
+import { formatDateTimeKorean } from '@/lib/date-format'
 
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 type MyStatusFilter = 'ALL' | MatchApplicationStatus
@@ -33,10 +34,16 @@ const getMatchStatusVariant = (status: Match['status']) => {
 }
 
 const getMyApplicationStatusLabel = (status: MatchApplicationStatus) => {
-  if (status === 'PENDING_DEPOSIT') return '내 상태: 입금 대기'
-  if (status === 'CONFIRMED') return '내 상태: 참가 확정'
-  if (status === 'CANCELLED') return '내 상태: 신청 취소'
-  return '내 상태: 환불 완료'
+  if (status === 'PENDING_DEPOSIT') return '입금대기'
+  if (status === 'CONFIRMED') return '확정'
+  if (status === 'CANCELLED') return '취소'
+  return '환불'
+}
+
+const getMyApplicationStatusVariant = (status: MatchApplicationStatus) => {
+  if (status === 'PENDING_DEPOSIT') return 'default'
+  if (status === 'CONFIRMED') return 'secondary'
+  return 'outline'
 }
 
 const isInThisWeek = (date: Date) => {
@@ -196,7 +203,6 @@ export default function MatchesPage() {
         ) : (
           <div className="space-y-3">
             {filteredMatches.map((match) => {
-              const start = new Date(match.startAt)
               const occupancy = `${match.confirmedCount + match.pendingCount}/${match.capacity}`
               const myApplication = myLatestApplicationByMatch.get(match.id)
               return (
@@ -208,8 +214,7 @@ export default function MatchesPage() {
                         <Badge variant={getMatchStatusVariant(match.status)}>{getMatchStatusLabel(match.status)}</Badge>
                       </div>
                       <div className="space-y-1.5 text-sm text-muted-foreground">
-                        <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />{start.toLocaleDateString()}</p>
-                        <p className="flex items-center gap-2"><Clock3 className="h-4 w-4" />{start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />{formatDateTimeKorean(match.startAt)}</p>
                         <p className="flex items-center gap-2"><MapPin className="h-4 w-4" />{match.court.name}</p>
                         <p className="flex items-center gap-2"><Users className="h-4 w-4" />{occupancy}</p>
                       </div>
@@ -217,7 +222,7 @@ export default function MatchesPage() {
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{match.level}</Badge>
                           {myApplication && (
-                            <Badge variant="secondary">
+                            <Badge variant={getMyApplicationStatusVariant(myApplication.status)}>
                               {getMyApplicationStatusLabel(myApplication.status)}
                             </Badge>
                           )}

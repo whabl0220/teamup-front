@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, CalendarDays, Clock3, MapPin, Users } from 'lucide-react'
+import { ArrowLeft, CalendarDays, MapPin, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +17,7 @@ import {
   updateStoredApplicationStatus,
 } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
+import { formatDateTimeKorean } from '@/lib/date-format'
 
 type LocalApplicationState = {
   applicationId: string
@@ -150,8 +151,6 @@ export default function MatchDetailPage() {
     )
   }
 
-  const start = new Date(match.startAt)
-
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
@@ -171,8 +170,7 @@ export default function MatchDetailPage() {
               <Badge>{getMatchStatusLabel(match.status)}</Badge>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />{start.toLocaleDateString()}</p>
-              <p className="flex items-center gap-2"><Clock3 className="h-4 w-4" />{start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />{formatDateTimeKorean(match.startAt)}</p>
               <p className="flex items-center gap-2"><MapPin className="h-4 w-4" />{match.court.name} ({match.court.address})</p>
               <p className="flex items-center gap-2"><Users className="h-4 w-4" />{participantText}</p>
             </div>

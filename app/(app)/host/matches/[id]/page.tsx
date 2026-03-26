@@ -18,6 +18,7 @@ import {
   getStoredApplications,
 } from '@/lib/match-local-store'
 import { toast } from 'sonner'
+import { formatDateTimeKorean } from '@/lib/date-format'
 
 const STATUS_OPTIONS: Match['status'][] = ['RECRUITING', 'FULL', 'CANCELLED', 'ENDED']
 const getMatchStatusLabel = (status: Match['status']) => {
@@ -192,8 +193,6 @@ export default function HostMatchDetailPage() {
     )
   }
 
-  const start = new Date(match.startAt)
-
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
@@ -214,7 +213,7 @@ export default function HostMatchDetailPage() {
             </div>
             <p className="text-sm text-muted-foreground">{match.court.name}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {start.toLocaleDateString()} {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {formatDateTimeKorean(match.startAt)}
             </p>
           </CardContent>
         </Card>
@@ -272,7 +271,9 @@ export default function HostMatchDetailPage() {
                         <p className="font-medium">{app.userName}</p>
                         <Badge variant="outline">{getApplicationStatusLabel(app.status)}</Badge>
                       </div>
-                      <p className="mb-3 text-xs text-muted-foreground">신청 시각: {app.requestedAt}</p>
+                      <p className="mb-3 text-xs text-muted-foreground">
+                        신청 시각: {formatDateTimeKorean(app.requestedAt)}
+                      </p>
                       <div className="flex gap-2">
                         <Button
                           className="flex-1"
