@@ -7,7 +7,8 @@ export const getStoredApplications = (): MatchApplication[] => {
   const raw = localStorage.getItem(MATCH_APPLICATIONS_KEY)
   if (!raw) return []
   try {
-    return JSON.parse(raw) as MatchApplication[]
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as MatchApplication[]) : []
   } catch {
     return []
   }

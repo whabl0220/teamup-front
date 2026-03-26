@@ -18,7 +18,7 @@ export const getStoredMatches = (): Match[] => {
   if (!isBrowser()) return mockMatches
 
   const parsed = safeParse<Match[]>(localStorage.getItem(MATCHES_KEY))
-  if (!parsed || parsed.length === 0) return []
+  if (!Array.isArray(parsed) || parsed.length === 0) return []
   return parsed
 }
 

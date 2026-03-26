@@ -96,6 +96,23 @@ export function PlayerCard({ user, currentTeam, showExtendedInfo = false, classN
     }
   }
 
+  const getShadowClass = () => {
+    switch (cardSkin) {
+      case 'PG_BLUE':
+        return 'player-card-shadow-pg'
+      case 'SG_CYAN':
+        return 'player-card-shadow-sg'
+      case 'SF_GREEN':
+        return 'player-card-shadow-sf'
+      case 'PF_ORANGE':
+        return 'player-card-shadow-pf'
+      case 'C_PURPLE':
+        return 'player-card-shadow-c'
+      default:
+        return 'player-card-shadow-pg'
+    }
+  }
+
   const panelClass =
     'player-card-panel rounded-lg p-2 text-center'
   const mutedLabelClass = 'player-card-muted-label text-xs'
@@ -104,7 +121,7 @@ export function PlayerCard({ user, currentTeam, showExtendedInfo = false, classN
     <div className={`relative ${className}`}>
       {/* FIFA 스타일 카드 */}
       <div
-        className={`player-card-shadow relative overflow-hidden rounded-2xl border-4 bg-gradient-to-br ${getBorderClass()} ${getGradientClass()}`}
+        className={`player-card-shadow ${getShadowClass()} relative overflow-hidden rounded-2xl border-4 bg-gradient-to-br ${getBorderClass()} ${getGradientClass()}`}
       >
         {/* 카드 배경 패턴 */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/60 via-transparent to-transparent opacity-70 dark:from-white/[0.08] dark:opacity-100" />

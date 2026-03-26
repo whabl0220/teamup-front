@@ -29,21 +29,21 @@ export function HeaderNotificationButton() {
   const badgeText = useMemo(() => (unreadCount > 99 ? '99+' : String(unreadCount)), [unreadCount])
 
   return (
-    <Link href="/notifications">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative h-12 w-12 hover:bg-transparent active:bg-transparent"
-        aria-label="알림 확인"
-      >
+    <Button
+      asChild
+      variant="ghost"
+      size="icon"
+      className="relative h-12 w-12 hover:bg-transparent active:bg-transparent"
+    >
+      <Link href="/notifications" aria-label="알림 확인">
         <Bell className="size-6" />
         {unreadCount > 0 && (
           <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
             {badgeText}
           </span>
         )}
-      </Button>
-    </Link>
+      </Link>
+    </Button>
   )
 }
 

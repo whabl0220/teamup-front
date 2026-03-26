@@ -9,7 +9,6 @@ import {
   DialogTitle,
   DialogClose,
 } from '@/components/ui/dialog'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { POSITION_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -147,27 +146,27 @@ export function PositionFeedbackModal({
                 {question.options.map((option) => {
                   const isSelected = answers[question.id] === option
                   return (
-                    <Card
+                    <button
                       key={option}
+                      type="button"
+                      aria-pressed={isSelected}
                       className={cn(
-                        'cursor-pointer border-2 transition-all hover:scale-[1.01]',
+                        'w-full rounded-lg p-2.5 text-left cursor-pointer border-2 transition-all hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--position-accent)] focus-visible:ring-offset-2',
                         isSelected
                           ? 'border-[var(--position-accent)] bg-[color:rgb(var(--position-accent-rgb)/0.12)]'
                           : 'border-border bg-transparent'
                       )}
                       onClick={() => handleAnswerSelect(question.id, option)}
                     >
-                      <CardContent className="p-2.5">
-                        <p
-                          className={cn(
-                            'text-sm font-medium text-foreground',
-                            isSelected && 'font-bold text-[var(--position-accent)]'
-                          )}
-                        >
-                          {option}
-                        </p>
-                      </CardContent>
-                    </Card>
+                      <p
+                        className={cn(
+                          'text-sm font-medium text-foreground',
+                          isSelected && 'font-bold text-[var(--position-accent)]'
+                        )}
+                      >
+                        {option}
+                      </p>
+                    </button>
                   )
                 })}
               </div>
@@ -184,27 +183,27 @@ export function PositionFeedbackModal({
                 {positionQuestion.options.map((option) => {
                   const isSelected = answers['position_question'] === option
                   return (
-                    <Card
+                    <button
                       key={option}
+                      type="button"
+                      aria-pressed={isSelected}
                       className={cn(
-                        'cursor-pointer border-2 transition-all hover:scale-[1.01]',
+                        'w-full rounded-lg p-2.5 text-left cursor-pointer border-2 transition-all hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--position-accent)] focus-visible:ring-offset-2',
                         isSelected
                           ? 'border-[var(--position-accent)] bg-[color:rgb(var(--position-accent-rgb)/0.12)]'
                           : 'border-border bg-transparent'
                       )}
                       onClick={() => handleAnswerSelect('position_question', option)}
                     >
-                      <CardContent className="p-2.5">
-                        <p
-                          className={cn(
-                            'text-sm font-medium text-foreground',
-                            isSelected && 'font-bold text-[var(--position-accent)]'
-                          )}
-                        >
-                          {option}
-                        </p>
-                      </CardContent>
-                    </Card>
+                      <p
+                        className={cn(
+                          'text-sm font-medium text-foreground',
+                          isSelected && 'font-bold text-[var(--position-accent)]'
+                        )}
+                      >
+                        {option}
+                      </p>
+                    </button>
                   )
                 })}
               </div>

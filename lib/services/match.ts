@@ -137,6 +137,10 @@ const cancelApplicationLocal = (matchId: string, applicationId: string): void =>
   const applications = getStoredApplicationsByMatchId(matchId)
   const found = applications.find((a) => a.id === applicationId)
   if (!found) throw new Error('Application not found')
+  const { userId } = getLocalUser()
+  if (found.userId !== userId) {
+    throw new Error('FORBIDDEN_APPLICATION_CANCEL')
+  }
 
   updateStoredApplicationStatus(applicationId, 'CANCELLED')
 
