@@ -267,7 +267,7 @@ const updateMatchLocal = (matchId: string, data: UpdateMatchRequest): Match => {
     throw new Error(`Court not found: ${data.courtId}`)
   }
 
-  return patchStoredMatch(matchId, {
+  const updated = patchStoredMatch(matchId, {
     title: data.title,
     startAt: data.startAt,
     endAt: data.endAt,
@@ -279,6 +279,7 @@ const updateMatchLocal = (matchId: string, data: UpdateMatchRequest): Match => {
     notes: data.notes,
     depositAccount: data.depositAccount,
   })
+  return recalcMatchCounts(updated)
 }
 
 const buildMatchListQuery = (params?: MatchListParams): string => {
