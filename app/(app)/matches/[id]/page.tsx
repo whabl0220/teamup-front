@@ -7,6 +7,7 @@ import { ArrowLeft, CalendarDays, MapPin, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
 import { getMockMatchById } from '@/lib/mock-matches'
 import type { Match, MatchApplicationStatus } from '@/types/match'
@@ -18,24 +19,11 @@ import {
 } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
 import { formatDateTimeKorean } from '@/lib/date-format'
+import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 
 type LocalApplicationState = {
   applicationId: string
   status: MatchApplicationStatus
-}
-
-const getStatusLabel = (status: MatchApplicationStatus) => {
-  if (status === 'PENDING_DEPOSIT') return '입금 대기'
-  if (status === 'CONFIRMED') return '참가 확정'
-  if (status === 'REFUNDED') return '환불 완료'
-  return '취소됨'
-}
-
-const getMatchStatusLabel = (status: Match['status']) => {
-  if (status === 'RECRUITING') return '모집중'
-  if (status === 'FULL') return '마감'
-  if (status === 'CANCELLED') return '취소'
-  return '종료'
 }
 
 const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean) => {
@@ -70,6 +58,7 @@ export default function MatchDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [application, setApplication] = useState<LocalApplicationState | null>(null)
+  const [highlightMatchCard, setHighlightMatchCard] = useState(false)
 
   useEffect(() => {
     if (!matchId) return
@@ -100,6 +89,13 @@ export default function MatchDetailPage() {
     }
     load()
   }, [matchId, router])
+
+  useEffect(() => {
+    if (!fromNotifications) return
+    setHighlightMatchCard(true)
+    const timer = window.setTimeout(() => setHighlightMatchCard(false), 1400)
+    return () => window.clearTimeout(timer)
+  }, [fromNotifications])
 
   const participantText = useMemo(() => {
     if (!match) return ''
@@ -169,8 +165,25 @@ export default function MatchDetailPage() {
 
   if (isLoading || !match) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-background">
+        <main className="mx-auto max-w-lg space-y-4 px-4 py-6">
+          <Card className="border-border/50">
+            <CardContent className="space-y-3 p-5">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-60" />
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-36" />
+            </CardContent>
+          </Card>
+          <Card className="border-border/50">
+            <CardContent className="space-y-3 p-5">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-full" />
+            </CardContent>
+          </Card>
+        </main>
       </div>
     )
   }
@@ -187,11 +200,16 @@ export default function MatchDetailPage() {
       </header>
 
       <main className="mx-auto max-w-lg space-y-4 px-4 py-6 pb-28">
-        <Card>
+        <Card className={highlightMatchCard ? 'ring-2 ring-primary/40 animate-pulse' : ''}>
           <CardContent className="p-5">
             <div className="mb-3 flex items-start justify-between gap-2">
-              <h2 className="text-lg font-semibold">{match.title}</h2>
-              <Badge>{getMatchStatusLabel(match.status)}</Badge>
+              <h2 className="text-base font-semibold">{match.title}</h2>
+              <Badge
+                variant={MATCH_STATUS_META[match.status].variant}
+                className={MATCH_STATUS_META[match.status].className}
+              >
+                {MATCH_STATUS_META[match.status].label}
+              </Badge>
             </div>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />{formatDateTimeKorean(match.startAt)}</p>
@@ -236,8 +254,15 @@ export default function MatchDetailPage() {
         {application && (
           <Card className="border-primary/40">
             <CardContent className="p-4">
-              <p className="text-sm text-muted-foreground">내 신청 상태</p>
-              <p className="text-base font-semibold text-foreground">{getStatusLabel(application.status)}</p>
+              <p className="text-xs text-muted-foreground">내 신청 상태</p>
+              <div className="mt-1">
+                <Badge
+                  variant={APPLICATION_STATUS_META[application.status].variant}
+                  className={APPLICATION_STATUS_META[application.status].className}
+                >
+                  {APPLICATION_STATUS_META[application.status].label}
+                </Badge>
+              </div>
             </CardContent>
           </Card>
         )}

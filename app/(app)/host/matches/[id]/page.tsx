@@ -7,6 +7,7 @@ import { ArrowLeft, CircleCheck, RotateCcw, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -27,21 +28,9 @@ import {
 } from '@/lib/match-local-store'
 import { toast } from 'sonner'
 import { formatDateTimeKorean } from '@/lib/date-format'
+import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 
 const STATUS_OPTIONS: Match['status'][] = ['RECRUITING', 'FULL', 'CANCELLED', 'ENDED']
-const getMatchStatusLabel = (status: Match['status']) => {
-  if (status === 'RECRUITING') return '모집중'
-  if (status === 'FULL') return '마감'
-  if (status === 'CANCELLED') return '취소'
-  return '종료'
-}
-
-const getApplicationStatusLabel = (status: MatchApplication['status']) => {
-  if (status === 'PENDING_DEPOSIT') return '입금 대기'
-  if (status === 'CONFIRMED') return '참가 확정'
-  if (status === 'REFUNDED') return '환불 완료'
-  return '신청 취소'
-}
 
 type ApplicationFilter = 'ALL' | MatchApplication['status'] | 'REFUND_NEEDED'
 
@@ -228,10 +217,10 @@ export default function HostMatchDetailPage() {
       setIsSubmitting(true)
       const updated = await matchService.updateMatchStatus(matchId, { status: nextStatus })
       setMatch(updated)
-      toast.success(`매치 상태를 ${getMatchStatusLabel(nextStatus)}로 변경했습니다.`)
+      toast.success(`매치 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
     } catch {
       setMatch({ ...match, status: nextStatus })
-      toast.success(`매치 상태를 ${getMatchStatusLabel(nextStatus)}로 변경했습니다.`)
+      toast.success(`매치 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
     } finally {
       setIsSubmitting(false)
     }
@@ -239,8 +228,23 @@ export default function HostMatchDetailPage() {
 
   if (isLoading || !match) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-background">
+        <main className="mx-auto max-w-lg space-y-4 px-4 py-6">
+          <Card className="border-border/50">
+            <CardContent className="space-y-3 p-5">
+              <Skeleton className="h-6 w-52" />
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-4 w-40" />
+            </CardContent>
+          </Card>
+          <Card className="border-border/50">
+            <CardContent className="space-y-3 p-5">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-full" />
+            </CardContent>
+          </Card>
+        </main>
       </div>
     )
   }
@@ -260,8 +264,13 @@ export default function HostMatchDetailPage() {
         <Card>
           <CardContent className="p-5">
             <div className="mb-2 flex items-center justify-between">
-              <p className="font-semibold">{match.title}</p>
-              <Badge>{getMatchStatusLabel(match.status)}</Badge>
+              <p className="text-base font-semibold">{match.title}</p>
+              <Badge
+                variant={MATCH_STATUS_META[match.status].variant}
+                className={MATCH_STATUS_META[match.status].className}
+              >
+                {MATCH_STATUS_META[match.status].label}
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground">{match.court.name}</p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -281,7 +290,7 @@ export default function HostMatchDetailPage() {
                   onClick={() => handleMatchStatusChange(status)}
                   disabled={isSubmitting}
                 >
-                  {getMatchStatusLabel(status)}
+                  {MATCH_STATUS_META[status].label}
                 </Button>
               ))}
             </div>
@@ -370,7 +379,12 @@ export default function HostMatchDetailPage() {
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-center justify-between">
                         <p className="font-medium">{app.userName}</p>
-                        <Badge variant="outline">{getApplicationStatusLabel(app.status)}</Badge>
+                        <Badge
+                          variant={APPLICATION_STATUS_META[app.status].variant}
+                          className={APPLICATION_STATUS_META[app.status].className}
+                        >
+                          {APPLICATION_STATUS_META[app.status].label}
+                        </Badge>
                       </div>
                       <p className="mb-3 text-xs text-muted-foreground">
                         신청 시각: {formatDateTimeKorean(app.requestedAt)}

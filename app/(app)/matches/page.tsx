@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/layout/bottom-nav'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
 import { mockMatches } from '@/lib/mock-matches'
 import type { Match } from '@/types/match'
@@ -16,37 +17,16 @@ import { getStoredApplications } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { MatchApplicationStatus } from '@/types/match'
 import { formatDateTimeKorean } from '@/lib/date-format'
+import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 type MyStatusFilter = 'ALL' | MatchApplicationStatus
-
-const getMatchStatusLabel = (status: Match['status']) => {
-  if (status === 'RECRUITING') return '모집중'
-  if (status === 'FULL') return '마감'
-  if (status === 'CANCELLED') return '취소'
-  return '종료'
-}
-
-const getMatchStatusVariant = (status: Match['status']) => {
-  if (status === 'RECRUITING') return 'default'
-  if (status === 'FULL') return 'secondary'
-  return 'outline'
-}
 
 const getApplyAvailabilityLabel = (status: Match['status']) =>
   status === 'RECRUITING' ? '신청 가능' : '신청 불가'
 
 const getMyApplicationStatusLabel = (status: MatchApplicationStatus) => {
-  if (status === 'PENDING_DEPOSIT') return '입금대기'
-  if (status === 'CONFIRMED') return '확정'
-  if (status === 'CANCELLED') return '취소'
-  return '환불'
-}
-
-const getMyApplicationStatusVariant = (status: MatchApplicationStatus) => {
-  if (status === 'PENDING_DEPOSIT') return 'default'
-  if (status === 'CONFIRMED') return 'secondary'
-  return 'outline'
+  return APPLICATION_STATUS_META[status].shortLabel
 }
 
 const isInThisWeek = (date: Date) => {
@@ -194,8 +174,20 @@ export default function MatchesPage() {
         )}
 
         {isLoading ? (
-          <div className="flex min-h-[50vh] items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <Card key={idx} className="border-border/50">
+                <CardContent className="space-y-3 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <Skeleton className="h-5 w-44" />
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                  <Skeleton className="h-4 w-56" />
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-4 w-36" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : hasLoadError ? (
           <Card className="border-border/50">
@@ -241,10 +233,13 @@ export default function MatchesPage() {
                   <Card className="cursor-pointer border-border/50 transition-all hover:border-primary/40">
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-start justify-between gap-2">
-                        <h3 className="font-semibold text-foreground">{match.title}</h3>
+                        <h3 className="text-base font-semibold text-foreground">{match.title}</h3>
                         <div className="flex items-center gap-2">
-                          <Badge variant={getMatchStatusVariant(match.status)}>
-                            {getMatchStatusLabel(match.status)}
+                          <Badge
+                            variant={MATCH_STATUS_META[match.status].variant}
+                            className={MATCH_STATUS_META[match.status].className}
+                          >
+                            {MATCH_STATUS_META[match.status].label}
                           </Badge>
                           <Badge variant={match.status === 'RECRUITING' ? 'default' : 'outline'}>
                             {getApplyAvailabilityLabel(match.status)}
@@ -260,12 +255,15 @@ export default function MatchesPage() {
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">{match.level}</Badge>
                           {myApplication && (
-                            <Badge variant={getMyApplicationStatusVariant(myApplication.status)}>
+                            <Badge
+                              variant={APPLICATION_STATUS_META[myApplication.status].variant}
+                              className={APPLICATION_STATUS_META[myApplication.status].className}
+                            >
                               {getMyApplicationStatusLabel(myApplication.status)}
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm font-semibold text-foreground">{match.fee.toLocaleString()}원</p>
+                        <p className="text-xs font-semibold text-foreground">{match.fee.toLocaleString()}원</p>
                       </div>
                     </CardContent>
                   </Card>
