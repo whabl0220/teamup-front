@@ -30,20 +30,24 @@ export default function HostMatchesPage() {
   const router = useRouter()
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasLoadError, setHasLoadError] = useState(false)
+
+  const loadMatches = async () => {
+    try {
+      setIsLoading(true)
+      setHasLoadError(false)
+      setMatches(await matchService.listMatches())
+    } catch {
+      setMatches(mockMatches)
+      setHasLoadError(true)
+      toast.info('데이터 로딩에 실패하여 목데이터로 운영 화면을 표시합니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setIsLoading(true)
-        setMatches(await matchService.listMatches())
-      } catch {
-        setMatches(mockMatches)
-        toast.info('목데이터로 운영 화면을 표시합니다.')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    load()
+    void loadMatches()
   }, [])
 
   return (
@@ -67,6 +71,34 @@ export default function HostMatchesPage() {
           <div className="flex min-h-[40vh] items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
+        ) : hasLoadError ? (
+          <Card className="border-border/50">
+            <CardContent className="space-y-4 p-8 text-center">
+              <p className="text-sm text-muted-foreground">운영자 매치 데이터를 불러오지 못했습니다.</p>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => void loadMatches()}>
+                  새로고침
+                </Button>
+                <Link href="/host/matches/create">
+                  <Button>매치 생성하기</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        ) : matches.length === 0 ? (
+          <Card className="border-border/50">
+            <CardContent className="space-y-4 p-8 text-center">
+              <p className="text-sm text-muted-foreground">등록된 매치가 없습니다.</p>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => void loadMatches()}>
+                  새로고침
+                </Button>
+                <Link href="/host/matches/create">
+                  <Button>매치 생성하기</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           matches.map((match) => (
             <Link key={match.id} href={`/host/matches/${match.id}`}>

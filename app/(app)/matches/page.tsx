@@ -60,23 +60,27 @@ const isInThisWeek = (date: Date) => {
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasLoadError, setHasLoadError] = useState(false)
   const [mode, setMode] = useState<MatchListMode>('ALL')
   const [myStatusFilter, setMyStatusFilter] = useState<MyStatusFilter>('ALL')
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setIsLoading(true)
-        const data = await matchService.listMatches()
-        setMatches(data)
-      } catch {
-        setMatches(mockMatches)
-        toast.info('목데이터로 매치를 표시합니다.')
-      } finally {
-        setIsLoading(false)
-      }
+  const loadMatches = async () => {
+    try {
+      setIsLoading(true)
+      setHasLoadError(false)
+      const data = await matchService.listMatches()
+      setMatches(data)
+    } catch {
+      setMatches(mockMatches)
+      setHasLoadError(true)
+      toast.info('데이터 로딩에 실패하여 목데이터로 표시합니다.')
+    } finally {
+      setIsLoading(false)
     }
-    load()
+  }
+
+  useEffect(() => {
+    void loadMatches()
   }, [])
 
   const myLatestApplicationByMatch = useMemo(() => {
@@ -190,14 +194,38 @@ export default function MatchesPage() {
           <div className="flex min-h-[50vh] items-center justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
+        ) : hasLoadError ? (
+          <Card className="border-border/50">
+            <CardContent className="space-y-4 p-8 text-center">
+              <p className="text-sm text-muted-foreground">매치 데이터를 불러오지 못했습니다.</p>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => void loadMatches()}>
+                  새로고침
+                </Button>
+                <Link href="/host/matches/create">
+                  <Button>호스트 생성 화면</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         ) : filteredMatches.length === 0 ? (
           <Card className="border-border/50">
-            <CardContent className="p-10 text-center text-sm text-muted-foreground">
-              {mode === 'MY'
-                ? myStatusFilter === 'ALL'
-                  ? '내 신청 내역이 없습니다.'
-                  : '선택한 상태의 내 신청 내역이 없습니다.'
-                : '조건에 맞는 매치가 없습니다.'}
+            <CardContent className="space-y-4 p-10 text-center">
+              <p className="text-sm text-muted-foreground">
+                {mode === 'MY'
+                  ? myStatusFilter === 'ALL'
+                    ? '내 신청 내역이 없습니다.'
+                    : '선택한 상태의 내 신청 내역이 없습니다.'
+                  : '조건에 맞는 매치가 없습니다.'}
+              </p>
+              <div className="flex justify-center gap-2">
+                <Button variant="outline" onClick={() => void loadMatches()}>
+                  새로고침
+                </Button>
+                <Link href="/host/matches/create">
+                  <Button>호스트 생성 화면</Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         ) : (
