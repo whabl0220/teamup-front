@@ -162,6 +162,40 @@ export default function HostMatchDetailPage() {
     }
   }
 
+  const handleRefundAll = async () => {
+    if (!matchId || !match) return
+    if (match.status !== 'CANCELLED') {
+      toast.info('일괄 환불은 매치가 취소된 상태에서만 처리할 수 있습니다.')
+      return
+    }
+
+    const targets = applications.filter((app) => isRefundNeeded(app))
+    if (targets.length === 0) {
+      toast.info('환불이 필요한 신청자가 없습니다.')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      let successCount = 0
+
+      for (const app of targets) {
+        try {
+          await matchService.refundApplication(matchId, app.id)
+          successCount += 1
+        } catch {
+          updateStoredApplicationStatus(app.id, 'REFUNDED')
+          successCount += 1
+        }
+      }
+
+      await refreshMatchAndApplications(matchId)
+      toast.success(`환불 ${successCount}건을 일괄 처리했습니다.`)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleMatchStatusChange = async (nextStatus: Match['status']) => {
     if (!matchId || !match) return
     if (nextStatus === 'FULL' && counts.confirmed < match.capacity) {
@@ -253,7 +287,17 @@ export default function HostMatchDetailPage() {
               {match.status === 'CANCELLED' && (
                 <Card className="mb-4 border-destructive/20 bg-destructive/5">
                   <CardContent className="p-4">
-                    <p className="text-sm font-semibold text-destructive">환불 처리 대상</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-destructive">환불 처리 대상</p>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleRefundAll}
+                        disabled={isSubmitting || refundNeededCount === 0}
+                      >
+                        일괄 환불 처리
+                      </Button>
+                    </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       취소된 매치의 환불 처리 대상 신청자를 우선 확인하세요.
                     </p>
