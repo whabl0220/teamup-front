@@ -209,3 +209,225 @@
     background-color: oklch(0.98 0 0 / 25%);
   }
 }
+
+@layer components {
+  /* 상태 뱃지 색상은 여기서 중앙 관리 */
+  .status-badge-recruiting {
+    @apply border-transparent bg-emerald-600 text-white hover:bg-emerald-600;
+  }
+
+  .status-badge-full {
+    @apply border-transparent bg-slate-700 text-white hover:bg-slate-700;
+  }
+
+  .status-badge-cancelled {
+    @apply border-rose-300 text-rose-600 dark:border-rose-400/60 dark:text-rose-300;
+  }
+
+  .status-badge-ended {
+    @apply border-muted-foreground/30 text-muted-foreground;
+  }
+
+  .status-badge-pending-deposit {
+    @apply border-transparent bg-amber-500 text-white hover:bg-amber-500;
+  }
+
+  .status-badge-confirmed {
+    @apply border-transparent bg-blue-600 text-white hover:bg-blue-600;
+  }
+
+  .status-badge-application-cancelled {
+    @apply border-slate-300 text-slate-600 dark:border-slate-500/60 dark:text-slate-300;
+  }
+
+  .status-badge-refunded {
+    @apply border-violet-300 text-violet-600 dark:border-violet-400/60 dark:text-violet-300;
+  }
+
+  .player-card-border-pg {
+    @apply border-sky-200 dark:border-sky-500/45;
+  }
+  .player-card-border-sg {
+    @apply border-cyan-200 dark:border-cyan-500/45;
+  }
+  .player-card-border-sf {
+    @apply border-emerald-200 dark:border-emerald-500/45;
+  }
+  .player-card-border-pf {
+    @apply border-amber-200 dark:border-amber-500/45;
+  }
+  .player-card-border-c {
+    @apply border-violet-200 dark:border-violet-500/45;
+  }
+
+  .player-card-gradient-pg {
+    @apply from-sky-100 via-sky-50 to-white dark:from-sky-950/85 dark:via-slate-900 dark:to-slate-950;
+  }
+  .player-card-gradient-sg {
+    @apply from-cyan-100 via-cyan-50 to-white dark:from-cyan-950/85 dark:via-slate-900 dark:to-slate-950;
+  }
+  .player-card-gradient-sf {
+    @apply from-emerald-100 via-emerald-50 to-white dark:from-emerald-950/85 dark:via-slate-900 dark:to-slate-950;
+  }
+  .player-card-gradient-pf {
+    @apply from-amber-100 via-amber-50 to-white dark:from-amber-950/85 dark:via-slate-900 dark:to-slate-950;
+  }
+  .player-card-gradient-c {
+    @apply from-violet-100 via-violet-50 to-white dark:from-violet-950/85 dark:via-slate-900 dark:to-slate-950;
+  }
+
+  .player-card-accent-pg {
+    @apply text-sky-700 dark:text-sky-300;
+  }
+  .player-card-accent-sg {
+    @apply text-cyan-700 dark:text-cyan-300;
+  }
+  .player-card-accent-sf {
+    @apply text-emerald-700 dark:text-emerald-300;
+  }
+  .player-card-accent-pf {
+    @apply text-amber-700 dark:text-amber-300;
+  }
+  .player-card-accent-c {
+    @apply text-violet-700 dark:text-violet-300;
+  }
+
+  .player-card-position-guard {
+    @apply text-sky-600 dark:text-sky-400;
+  }
+  .player-card-position-forward {
+    @apply text-emerald-600 dark:text-emerald-400;
+  }
+  .player-card-position-center {
+    @apply text-violet-600 dark:text-violet-400;
+  }
+
+  .player-card-playstyle-slasher {
+    @apply text-red-500 dark:text-red-400;
+  }
+  .player-card-playstyle-shooter {
+    @apply text-orange-500 dark:text-orange-400;
+  }
+  .player-card-playstyle-defender {
+    @apply text-blue-600 dark:text-blue-400;
+  }
+  .player-card-playstyle-passer {
+    @apply text-green-600 dark:text-green-400;
+  }
+
+  .player-card-panel {
+    @apply bg-white/70 dark:border dark:border-white/10 dark:bg-white/5 dark:backdrop-blur-sm;
+  }
+  .player-card-muted-label {
+    @apply text-slate-600 dark:text-slate-400;
+  }
+  .player-card-shadow {
+    @apply shadow-2xl dark:shadow-[0_0_40px_-8px_rgba(14,165,233,0.15)];
+  }
+  .player-card-email-icon {
+    @apply text-slate-500 dark:text-slate-400;
+  }
+  .player-card-email {
+    @apply text-slate-600 dark:text-slate-300;
+  }
+  .player-card-divider {
+    @apply text-slate-400 dark:text-slate-500;
+  }
+  .player-card-status-msg {
+    @apply text-slate-700 dark:text-slate-300;
+  }
+  .player-card-team {
+    @apply bg-white/75 hover:bg-white/90 dark:border dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10;
+  }
+  .player-card-team-level {
+    @apply bg-primary/10 text-slate-700 dark:bg-primary/20 dark:text-slate-200;
+  }
+  .player-card-chevron {
+    @apply text-slate-500 dark:text-slate-400;
+  }
+  .player-card-backdrop {
+    @apply opacity-45 dark:opacity-30;
+  }
+
+  /* Position color tokens */
+  .position-token-pg-text { @apply text-sky-400; }
+  .position-token-pg-border { @apply border-sky-300; }
+  .position-token-pg-bg { @apply bg-sky-400; }
+  .position-token-pg-bg-gradient { @apply from-sky-400 to-sky-500; }
+  .position-token-pg-bg-light { @apply bg-sky-50; }
+  .position-token-pg-bg-light-strong { @apply bg-sky-100; }
+  .position-token-pg-hover-bg { @apply hover:bg-sky-500; }
+  .position-token-pg-shadow { @apply shadow-sky-300/50; }
+  .position-token-pg-ring { @apply ring-sky-300; }
+
+  .position-token-sg-text { @apply text-cyan-400; }
+  .position-token-sg-border { @apply border-cyan-300; }
+  .position-token-sg-bg { @apply bg-cyan-400; }
+  .position-token-sg-bg-gradient { @apply from-cyan-400 to-cyan-500; }
+  .position-token-sg-bg-light { @apply bg-cyan-50; }
+  .position-token-sg-bg-light-strong { @apply bg-cyan-100; }
+  .position-token-sg-hover-bg { @apply hover:bg-cyan-500; }
+  .position-token-sg-shadow { @apply shadow-cyan-300/50; }
+  .position-token-sg-ring { @apply ring-cyan-300; }
+
+  .position-token-sf-text { @apply text-emerald-400; }
+  .position-token-sf-border { @apply border-emerald-300; }
+  .position-token-sf-bg { @apply bg-emerald-400; }
+  .position-token-sf-bg-gradient { @apply from-emerald-400 to-emerald-500; }
+  .position-token-sf-bg-light { @apply bg-green-50; }
+  .position-token-sf-bg-light-strong { @apply bg-green-100; }
+  .position-token-sf-hover-bg { @apply hover:bg-emerald-500; }
+  .position-token-sf-shadow { @apply shadow-emerald-300/50; }
+  .position-token-sf-ring { @apply ring-emerald-300; }
+
+  .position-token-pf-text { @apply text-amber-400; }
+  .position-token-pf-border { @apply border-amber-300; }
+  .position-token-pf-bg { @apply bg-amber-400; }
+  .position-token-pf-bg-gradient { @apply from-amber-400 to-amber-500; }
+  .position-token-pf-bg-light { @apply bg-orange-50; }
+  .position-token-pf-bg-light-strong { @apply bg-orange-100; }
+  .position-token-pf-hover-bg { @apply hover:bg-amber-500; }
+  .position-token-pf-shadow { @apply shadow-amber-300/50; }
+  .position-token-pf-ring { @apply ring-amber-300; }
+
+  .position-token-c-text { @apply text-violet-400; }
+  .position-token-c-border { @apply border-violet-300; }
+  .position-token-c-bg { @apply bg-violet-400; }
+  .position-token-c-bg-gradient { @apply from-violet-400 to-violet-500; }
+  .position-token-c-bg-light { @apply bg-purple-50; }
+  .position-token-c-bg-light-strong { @apply bg-purple-100; }
+  .position-token-c-hover-bg { @apply hover:bg-violet-500; }
+  .position-token-c-shadow { @apply shadow-violet-300/50; }
+  .position-token-c-ring { @apply ring-violet-300; }
+
+  /* Position theme vars (for non-tokenizable inline colors) */
+  .position-theme-pg {
+    --position-accent: #7dd3fc;
+    --position-accent-rgb: 125 211 252;
+  }
+  .position-theme-sg {
+    --position-accent: #67e8f9;
+    --position-accent-rgb: 103 232 249;
+  }
+  .position-theme-sf {
+    --position-accent: #6ee7b7;
+    --position-accent-rgb: 110 231 183;
+  }
+  .position-theme-pf {
+    --position-accent: #fcd34d;
+    --position-accent-rgb: 252 211 77;
+  }
+  .position-theme-c {
+    --position-accent: #c4b5fd;
+    --position-accent-rgb: 196 181 253;
+  }
+
+  .position-feedback-modal {
+    border-color: var(--position-accent);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--position-accent-rgb) / 0.08) 0%,
+      rgb(var(--position-accent-rgb) / 0.03) 100%
+    );
+  }
+}

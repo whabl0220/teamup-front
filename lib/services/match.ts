@@ -246,7 +246,7 @@ export const matchService = {
   // 참가자용: 매치 목록 조회
   listMatches: async (params?: MatchListParams): Promise<Match[]> => {
     try {
-      return get<Match[]>(`/api/matches${buildMatchListQuery(params)}`)
+      return await get<Match[]>(`/api/matches${buildMatchListQuery(params)}`)
     } catch {
       return listMatchesLocal(params)
     }
@@ -255,7 +255,7 @@ export const matchService = {
   // 참가자용: 매치 상세 조회
   getMatch: async (matchId: string): Promise<Match> => {
     try {
-      return get<Match>(`/api/matches/${matchId}`)
+      return await get<Match>(`/api/matches/${matchId}`)
     } catch {
       return getMatchLocal(matchId)
     }
@@ -264,7 +264,7 @@ export const matchService = {
   // 참가자용: 매치 신청(입금 대기)
   applyToMatch: async (matchId: string): Promise<MatchApplication> => {
     try {
-      return post<MatchApplication>(`/api/matches/${matchId}/applications`)
+      return await post<MatchApplication>(`/api/matches/${matchId}/applications`)
     } catch {
       return applyToMatchLocal(matchId)
     }
@@ -273,7 +273,7 @@ export const matchService = {
   // 참가자용: 신청 취소
   cancelApplication: async (matchId: string, applicationId: string): Promise<void> => {
     try {
-      return del<void>(`/api/matches/${matchId}/applications/${applicationId}`)
+      return await del<void>(`/api/matches/${matchId}/applications/${applicationId}`)
     } catch {
       return cancelApplicationLocal(matchId, applicationId)
     }
@@ -282,7 +282,7 @@ export const matchService = {
   // 주최자용: 매치 생성
   createMatch: async (data: CreateMatchRequest): Promise<Match> => {
     try {
-      return post<Match>('/api/matches', data)
+      return await post<Match>('/api/matches', data)
     } catch {
       return createMatchLocal(data)
     }
@@ -291,7 +291,7 @@ export const matchService = {
   // 주최자용: 신청자 목록 조회
   listApplications: async (matchId: string): Promise<MatchApplication[]> => {
     try {
-      return get<MatchApplication[]>(`/api/matches/${matchId}/applications`)
+      return await get<MatchApplication[]>(`/api/matches/${matchId}/applications`)
     } catch {
       return listApplicationsLocal(matchId)
     }
@@ -300,7 +300,7 @@ export const matchService = {
   // 주최자용: 입금 확인 후 참가 확정
   confirmApplication: async (matchId: string, applicationId: string): Promise<MatchApplication> => {
     try {
-      return put<MatchApplication>(
+      return await put<MatchApplication>(
         `/api/matches/${matchId}/applications/${applicationId}/confirm`
       )
     } catch {
@@ -311,7 +311,7 @@ export const matchService = {
   // 주최자용: 환불 처리 완료
   refundApplication: async (matchId: string, applicationId: string): Promise<MatchApplication> => {
     try {
-      return put<MatchApplication>(`/api/matches/${matchId}/applications/${applicationId}/refund`)
+      return await put<MatchApplication>(`/api/matches/${matchId}/applications/${applicationId}/refund`)
     } catch {
       return refundApplicationLocal(matchId, applicationId)
     }
@@ -320,7 +320,7 @@ export const matchService = {
   // 주최자용: 상태 변경(마감/취소/종료)
   updateMatchStatus: async (matchId: string, data: UpdateMatchStatusRequest): Promise<Match> => {
     try {
-      return put<Match>(`/api/matches/${matchId}/status`, data)
+      return await put<Match>(`/api/matches/${matchId}/status`, data)
     } catch {
       return updateMatchStatusLocal(matchId, data)
     }

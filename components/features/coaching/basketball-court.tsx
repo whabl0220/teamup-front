@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { POSITION_COLORS } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 interface Position {
   id: number
@@ -45,27 +46,22 @@ export function BasketballCourt({ onPositionClick, selectedPosition }: Basketbal
             <button
               key={position.id}
               onClick={() => onPositionClick(position.id, position.shortLabel)}
-              className="absolute -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 border-4"
+              className={cn(
+                'absolute -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 border-4 border-[var(--position-accent)]',
+                positionColor.themeClass,
+                isSelected
+                  ? 'bg-[var(--position-accent)] text-white shadow-[0_4px_8px_rgba(0,0,0,0.2)]'
+                  : 'bg-white text-[var(--position-accent)] shadow-[0_2px_4px_rgba(0,0,0,0.1)]'
+              )}
               style={{
                 top: position.top,
                 left: position.left,
-                backgroundColor: isSelected ? positionColor.hex : 'white',
-                borderColor: positionColor.hex,
-                color: isSelected ? 'white' : positionColor.hex,
-                boxShadow: isSelected
-                  ? '0 4px 8px rgba(0, 0, 0, 0.2)'
-                  : '0 2px 4px rgba(0, 0, 0, 0.1)',
               }}
             >
               <span className="text-lg font-bold leading-none">
                 {position.id}
               </span>
-              <span
-                className="text-[11px] mt-1 uppercase tracking-wider font-semibold"
-                style={{
-                  color: isSelected ? 'white' : positionColor.hex,
-                }}
-              >
+              <span className="text-[11px] mt-1 uppercase tracking-wider font-semibold">
                 {position.shortLabel}
               </span>
             </button>

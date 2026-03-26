@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { matchService } from '@/lib/services'
-import { MATCH_COURT_PRESETS } from '@/lib/match-courts'
+import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
 import type { MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
 
@@ -73,6 +73,22 @@ export default function HostMatchCreatePage() {
       return
     }
 
+    if (!getMatchCourtById(courtId)) {
+      toast.error('유효한 구장을 다시 선택해주세요.')
+      return
+    }
+
+    const startDate = new Date(startAt)
+    const endDate = endAt ? new Date(endAt) : null
+    if (Number.isNaN(startDate.getTime()) || (endDate && Number.isNaN(endDate.getTime()))) {
+      toast.error('시작/종료 시간을 다시 확인해주세요.')
+      return
+    }
+    if (endDate && endDate.getTime() <= startDate.getTime()) {
+      toast.error('종료 시간은 시작 시간보다 늦어야 합니다.')
+      return
+    }
+
     try {
       setIsSubmitting(true)
 
@@ -93,7 +109,8 @@ export default function HostMatchCreatePage() {
       toast.success('매치가 생성되었습니다.')
       router.push(`/host/matches/${created.id}`)
     } catch (err) {
-      toast.error('매치 생성에 실패했습니다.')
+      const message = err instanceof Error ? err.message : '알 수 없는 오류'
+      toast.error(`매치 생성에 실패했습니다: ${message}`)
       console.error(err)
     } finally {
       setIsSubmitting(false)
