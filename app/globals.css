@@ -61,7 +61,7 @@
   --popover-foreground: oklch(0.10 0 0);
 
   /* Primary - 오렌지 */
-  --primary: oklch(0.72 0.18 45);
+  --primary: #f2b538;
   --primary-foreground: oklch(0.10 0 0);
 
   /* Secondary - 밝은 회색 */
@@ -73,7 +73,7 @@
   --muted-foreground: oklch(0.60 0.01 264);
 
   /* Accent - 오렌지 */
-  --accent: oklch(0.72 0.18 45);
+  --accent: #f2b538;
   --accent-foreground: oklch(0.10 0 0);
 
   /* Destructive - 빨강 */
@@ -82,7 +82,7 @@
   /* Border */
   --border: oklch(0.90 0.01 160);
   --input: oklch(0.90 0.01 160);
-  --ring: oklch(0.72 0.18 45); /* Primary 오렌지 */
+  --ring: #f2b538; /* Primary 오렌지 */
 
   /* Charts */
   --chart-1: oklch(0.52 0.12 160); /* 초록 */
@@ -103,8 +103,8 @@
 
   /* 라이트 모드 배경: 아이보리 + 오렌지 계열 그라데이션 */
   --app-bg-gradient:
-    radial-gradient(1200px 700px at 12% -8%, rgba(245, 98, 34, 0.14), transparent 55%),
-    radial-gradient(900px 620px at 100% 0%, rgba(255, 176, 95, 0.14), transparent 58%),
+    radial-gradient(1200px 700px at 12% -8%, rgba(245, 98, 34, 0.08), transparent 55%),
+    radial-gradient(900px 620px at 100% 0%, rgba(255, 176, 95, 0.08), transparent 58%),
     linear-gradient(180deg, #fff9f0 0%, #fff7eb 52%, #fffdf8 100%);
 }
 
@@ -124,7 +124,7 @@
   --popover-foreground: oklch(0.98 0 0);
 
   /* Primary - 오렌지 */
-  --primary: oklch(0.72 0.18 45);
+  --primary: #f2b538;
   --primary-foreground: oklch(0.12 0.01 264);
 
   /* Secondary - 어두운 회색 */
@@ -136,7 +136,7 @@
   --muted-foreground: oklch(0.60 0.01 264);
 
   /* Accent - 오렌지 */
-  --accent: oklch(0.72 0.18 45);
+  --accent: #f2b538;
   --accent-foreground: oklch(0.10 0 0);
 
   /* Destructive */
@@ -145,7 +145,7 @@
   /* Border */
   --border: oklch(0.98 0 0 / 12%);
   --input: oklch(0.98 0 0 / 18%);
-  --ring: oklch(0.72 0.18 45); /* Primary 오렌지 */
+  --ring: #f2b538; /* Primary 오렌지 */
 
   /* Charts */
   --chart-1: oklch(0.55 0.13 160); /* 초록 */
@@ -434,5 +434,22 @@
       rgb(var(--position-accent-rgb) / 0.08) 0%,
       rgb(var(--position-accent-rgb) / 0.03) 100%
     );
+  }
+
+  /* TeamUp soft tone semantic classes */
+  .teamup-card-soft {
+    @apply overflow-hidden border-border/50 bg-gradient-to-br from-primary/6 via-primary/2 to-transparent transition-all hover:border-primary/30;
+  }
+
+  .teamup-card-soft-highlight {
+    @apply border-primary/30 ring-1 ring-primary/10;
+  }
+
+  .teamup-icon-soft {
+    @apply bg-primary/8;
+  }
+
+  .teamup-icon-soft-strong {
+    @apply bg-primary/12;
   }
 }

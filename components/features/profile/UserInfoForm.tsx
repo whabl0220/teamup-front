@@ -235,7 +235,7 @@ export function UserInfoForm({
       {/* 제출 버튼 */}
       <Button
         type="submit"
-        className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+        className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/95"
         disabled={isLoading}
       >
         {isLoading ? (

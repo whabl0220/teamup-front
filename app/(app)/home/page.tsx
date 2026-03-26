@@ -57,10 +57,10 @@ export default function HomePage() {
 
         <div className="grid gap-3">
           <Link href="/matches">
-            <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+            <Card className="teamup-card-soft cursor-pointer">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20">
+                  <div className="teamup-icon-soft-strong flex h-12 w-12 items-center justify-center rounded-xl">
                     <CalendarDays className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
@@ -75,10 +75,10 @@ export default function HomePage() {
           </Link>
 
           <Link href="/profile/basic">
-            <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+            <Card className="teamup-card-soft cursor-pointer">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <div className="teamup-icon-soft flex h-12 w-12 items-center justify-center rounded-xl">
                     <UserPen className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
@@ -100,12 +100,12 @@ export default function HomePage() {
             }}
           >
             <Card className={cn(
-              "cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50",
-              hostedCount > 0 && "border-primary/50 ring-1 ring-primary/20"
+              "teamup-card-soft cursor-pointer",
+              hostedCount > 0 && "teamup-card-soft-highlight"
             )}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                  <div className="teamup-icon-soft flex h-12 w-12 items-center justify-center rounded-xl">
                     <Settings className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">

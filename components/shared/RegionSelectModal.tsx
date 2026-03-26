@@ -79,7 +79,7 @@ export function RegionSelectModal({ open, onOpenChange, onSelect }: RegionSelect
                   onClick={() => handleDistrictClick(district)}
                   className={cn(
                     "w-full px-4 py-3 text-left text-sm hover:bg-muted/50 transition-colors",
-                    selectedDistrict === district && "bg-primary/10 text-primary font-medium"
+                    selectedDistrict === district && "bg-primary/8 text-primary font-medium"
                   )}
                 >
                   {district}

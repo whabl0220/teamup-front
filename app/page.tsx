@@ -38,7 +38,7 @@ export default function LandingPage() {
             <Link href="/login" className="block w-full">
               <Button
                 size="lg"
-                className="h-12 w-full bg-primary text-lg font-semibold text-primary-foreground hover:bg-primary/90"
+                className="h-12 w-full bg-primary text-lg font-semibold text-primary-foreground hover:bg-primary/95"
               >
                 로그인
               </Button>

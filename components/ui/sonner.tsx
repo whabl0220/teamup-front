@@ -43,7 +43,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           warning:
             "group-[.toaster]:bg-amber-500/10 group-[.toaster]:text-foreground group-[.toaster]:border-amber-500/40",
           loading:
-            "group-[.toaster]:bg-primary/10 group-[.toaster]:text-foreground group-[.toaster]:border-primary/35",
+            "group-[.toaster]:bg-primary/8 group-[.toaster]:text-foreground group-[.toaster]:border-primary/30",
         },
       }}
       className="toaster group"

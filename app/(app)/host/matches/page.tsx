@@ -148,7 +148,7 @@ export default function HostMatchesPage() {
           <div className="space-y-4">
             {filteredMatches.map((match) => (
               <Link key={match.id} href={`/host/matches/${match.id}`} className="block">
-                <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+                <Card className="teamup-card-soft cursor-pointer">
                   <CardContent className="p-4">
                     <div className="mb-2 flex items-center justify-between">
                       <p className="text-base font-semibold">{match.title}</p>

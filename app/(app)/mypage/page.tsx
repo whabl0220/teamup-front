@@ -159,7 +159,7 @@ export default function MyPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6 space-y-6">
-        <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+        <Card className="teamup-card-soft">
           <CardContent className="p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="font-semibold">내 프로필</p>
@@ -174,7 +174,7 @@ export default function MyPage() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+        <Card className="teamup-card-soft">
           <CardContent className="p-5 space-y-3">
             <p className="font-semibold">나의 활동</p>
             <div className="grid grid-cols-3 gap-2">
@@ -200,14 +200,14 @@ export default function MyPage() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
+        <Card className="teamup-card-soft">
           <CardContent className="p-5 space-y-3">
             <p className="font-semibold">계정 설정</p>
             <div className="rounded-lg border border-border/50 bg-card/70">
               <Link href="/profile/basic">
                 <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <div className="teamup-icon-soft flex h-8 w-8 items-center justify-center rounded-lg">
                       <UserIcon className="h-4 w-4 text-primary" />
                     </div>
                     <span className="text-sm font-medium">기본 정보 수정</span>
@@ -219,7 +219,7 @@ export default function MyPage() {
               <div className="flex items-center justify-between p-3">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <div className="teamup-icon-soft flex h-8 w-8 items-center justify-center rounded-lg">
                       <Bell className="h-4 w-4 text-primary" />
                     </div>
                     <Link
@@ -236,7 +236,7 @@ export default function MyPage() {
               <Separator />
               <div className="flex items-center justify-between p-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                  <div className="teamup-icon-soft flex h-8 w-8 items-center justify-center rounded-lg">
                     {mounted && theme === 'dark' ? (
                       <Moon className="h-4 w-4 text-primary" />
                     ) : (
