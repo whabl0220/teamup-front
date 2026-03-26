@@ -38,6 +38,27 @@ const getMatchStatusLabel = (status: Match['status']) => {
   return '종료'
 }
 
+const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean) => {
+  if (isSubmitting) return '처리 중...'
+  if (matchStatus === 'RECRUITING') return '참가 신청'
+  if (matchStatus === 'FULL') return '신청 마감'
+  if (matchStatus === 'CANCELLED') return '취소된 매치'
+  return '종료된 매치'
+}
+
+const getCancelButtonLabel = (
+  matchStatus: Match['status'],
+  application: LocalApplicationState | null,
+  isSubmitting: boolean
+) => {
+  if (isSubmitting) return '처리 중...'
+  if (!application) return '신청 취소'
+  if (application.status === 'REFUNDED') return '환불 완료'
+  if (application.status === 'CANCELLED') return '취소 완료'
+  if (matchStatus !== 'RECRUITING') return '취소 불가'
+  return '신청 취소'
+}
+
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
@@ -86,7 +107,7 @@ export default function MatchDetailPage() {
   const handleApply = async () => {
     if (!match) return
     if (match.status !== 'RECRUITING') {
-      toast.error('현재 신청 가능한 매치가 아닙니다.')
+      toast.error('현재 신청할 수 없는 매치입니다.')
       return
     }
     if (application && (application.status === 'PENDING_DEPOSIT' || application.status === 'CONFIRMED')) {
@@ -101,21 +122,22 @@ export default function MatchDetailPage() {
       setApplication({ applicationId: result.id, status: result.status })
       const updatedMatch = await matchService.getMatch(match.id)
       setMatch(updatedMatch)
-      toast.success('신청이 완료되었습니다. 입금 후 승인 대기 상태입니다.')
+      toast.success('참가 신청이 완료되었습니다. 입금 후 승인을 기다려주세요.')
     } catch {
+      const localUser = getLocalUser()
       const fallbackId = `local-${Date.now()}`
       upsertStoredApplication({
         id: fallbackId,
         matchId: match.id,
-        userId: 'local-user',
-        userName: '내 계정',
+        userId: localUser.userId,
+        userName: localUser.userName,
         status: 'PENDING_DEPOSIT',
         requestedAt: new Date().toISOString(),
       })
       setApplication({ applicationId: fallbackId, status: 'PENDING_DEPOSIT' })
       const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
       setMatch(updatedMatch)
-      toast.success('신청이 완료되었습니다. 입금 후 승인 대기 상태입니다.')
+      toast.success('참가 신청이 완료되었습니다. 입금 후 승인을 기다려주세요.')
     } finally {
       setIsSubmitting(false)
     }
@@ -131,13 +153,13 @@ export default function MatchDetailPage() {
       setApplication({ ...application, status: 'CANCELLED' })
       const updatedMatch = await matchService.getMatch(match.id)
       setMatch(updatedMatch)
-      toast.success('신청이 취소되었습니다.')
+      toast.success('참가 신청 취소가 완료되었습니다.')
     } catch {
       updateStoredApplicationStatus(application.applicationId, 'CANCELLED')
       setApplication({ ...application, status: 'CANCELLED' })
       const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
       setMatch(updatedMatch)
-      toast.success('신청이 취소되었습니다.')
+      toast.success('참가 신청 취소가 완료되었습니다.')
     } finally {
       setIsSubmitting(false)
     }
@@ -232,7 +254,7 @@ export default function MatchDetailPage() {
       <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 p-4 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg gap-2">
           <Button className="flex-1" onClick={handleApply} disabled={isSubmitting || match.status !== 'RECRUITING'}>
-            참가 신청
+            {getApplyButtonLabel(match.status, isSubmitting)}
           </Button>
           <Button
             variant="outline"
@@ -246,7 +268,7 @@ export default function MatchDetailPage() {
               application.status === 'REFUNDED'
             }
           >
-            신청 취소
+            {getCancelButtonLabel(match.status, application, isSubmitting)}
           </Button>
         </div>
       </div>

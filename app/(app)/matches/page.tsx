@@ -33,6 +33,9 @@ const getMatchStatusVariant = (status: Match['status']) => {
   return 'outline'
 }
 
+const getApplyAvailabilityLabel = (status: Match['status']) =>
+  status === 'RECRUITING' ? '신청 가능' : '신청 불가'
+
 const getMyApplicationStatusLabel = (status: MatchApplicationStatus) => {
   if (status === 'PENDING_DEPOSIT') return '입금대기'
   if (status === 'CONFIRMED') return '확정'
@@ -239,7 +242,14 @@ export default function MatchesPage() {
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-foreground">{match.title}</h3>
-                        <Badge variant={getMatchStatusVariant(match.status)}>{getMatchStatusLabel(match.status)}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={getMatchStatusVariant(match.status)}>
+                            {getMatchStatusLabel(match.status)}
+                          </Badge>
+                          <Badge variant={match.status === 'RECRUITING' ? 'default' : 'outline'}>
+                            {getApplyAvailabilityLabel(match.status)}
+                          </Badge>
+                        </div>
                       </div>
                       <div className="space-y-1.5 text-sm text-muted-foreground">
                         <p className="flex items-center gap-2"><CalendarDays className="h-4 w-4" />{formatDateTimeKorean(match.startAt)}</p>
