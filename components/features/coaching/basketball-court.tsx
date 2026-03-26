@@ -45,6 +45,8 @@ export function BasketballCourt({ onPositionClick, selectedPosition }: Basketbal
           return (
             <button
               key={position.id}
+              type="button"
+              aria-pressed={isSelected}
               onClick={() => onPositionClick(position.id, position.shortLabel)}
               className={cn(
                 'absolute -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 border-4 border-[var(--position-accent)]',
