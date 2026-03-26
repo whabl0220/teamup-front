@@ -157,15 +157,24 @@ const listApplicationsLocal = (matchId: string): MatchApplication[] => {
 const confirmApplicationLocal = (matchId: string, applicationId: string): MatchApplication => {
   const match = getMatchLocal(matchId)
   assertLocalHostAccess(match)
-  if (match.status !== 'RECRUITING' && match.status !== 'FULL') {
-    // 취소/종료면 확정 불가
+  const applications = getStoredApplicationsByMatchId(matchId)
+  const target = applications.find((a) => a.id === applicationId)
+  if (!target) throw new Error('Application not found')
+  if (match.status === 'CANCELLED' || match.status === 'ENDED') {
+    throw new Error('MATCH_NOT_RECRUITING')
+  }
+  if (target.status !== 'PENDING_DEPOSIT') {
+    throw new Error('INVALID_APPLICATION_STATUS')
+  }
+  const confirmedCount = applications.filter((a) => a.status === 'CONFIRMED').length
+  if (confirmedCount >= match.capacity) {
+    throw new Error('MATCH_ALREADY_FULL')
   }
 
   updateStoredApplicationStatus(applicationId, 'CONFIRMED')
   recalcMatchCounts(match)
 
-  const apps = getStoredApplicationsByMatchId(matchId)
-  const updated = apps.find((a) => a.id === applicationId)
+  const updated = getStoredApplicationsByMatchId(matchId).find((a) => a.id === applicationId)
   if (!updated) throw new Error('Application not found after confirm')
   return updated
 }
