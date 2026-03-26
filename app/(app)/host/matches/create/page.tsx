@@ -1,8 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, PlusCircle, Wallet, Building2, CalendarDays } from 'lucide-react'
+import { PlusCircle, Wallet, Building2, CalendarDays } from 'lucide-react'
+import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -118,13 +120,20 @@ export default function HostMatchCreatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/host/matches')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-bold">주최 경기 생성</h1>
+          <Image
+            src="/images/logo.jpg"
+            alt="TeamUp Logo"
+            width={40}
+            height={40}
+            className="h-10 w-10 rounded-xl object-contain"
+          />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">주최 경기 생성</h1>
+            <p className="text-sm text-muted-foreground">새로운 주최 경기를 등록하세요</p>
+          </div>
           <Badge variant="secondary" className="ml-auto">로컬 생성</Badge>
         </div>
       </header>
@@ -248,6 +257,7 @@ export default function HostMatchCreatePage() {
           </Button>
         </div>
       </main>
+      <BottomNav />
     </div>
   )
 }

@@ -1,31 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Search, Settings, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { matchService } from '@/lib/services'
 
 export function BottomNav() {
   const pathname = usePathname()
-  const [hostedCount, setHostedCount] = useState(0)
-
-  const refreshHostedCount = useCallback(async () => {
-    try {
-      const hosted = await matchService.listHostedMatches()
-      setHostedCount(hosted.length)
-    } catch {
-      setHostedCount(0)
-    }
-  }, [])
-
-  useEffect(() => {
-    void refreshHostedCount()
-    const onFocus = () => void refreshHostedCount()
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
-  }, [refreshHostedCount])
 
   const navItems = [
     { href: '/home', icon: Home, label: '홈' },
@@ -40,7 +21,6 @@ export function BottomNav() {
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href === '/host/matches' && pathname.startsWith('/host/matches'))
           const Icon = item.icon
-          const shouldEmphasizeHost = item.href === '/host/matches' && hostedCount > 0
           return (
             <Link
               key={item.href}
@@ -49,14 +29,10 @@ export function BottomNav() {
                 "flex flex-col items-center gap-1 rounded-xl px-4 py-2 transition-all relative",
                 isActive
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground",
-                shouldEmphasizeHost && !isActive && "text-primary/90"
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               <Icon className={cn("h-5 w-5", isActive && "scale-110")} />
-              {shouldEmphasizeHost && (
-                <span className="absolute right-2 top-1 h-2 w-2 rounded-full bg-primary" />
-              )}
               <span className="text-xs font-medium">{item.label}</span>
             </Link>
           )

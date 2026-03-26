@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, CircleCheck, RotateCcw, Users } from 'lucide-react'
+import { BottomNav } from '@/components/layout/bottom-nav'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -251,7 +252,7 @@ export default function HostMatchDetailPage() {
 
   if (isLoading || !match || !hasHostAccess) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-20">
         <main className="mx-auto max-w-lg space-y-4 px-4 py-6">
           <Card className="border-border/50">
             <CardContent className="space-y-3 p-5">
@@ -268,12 +269,13 @@ export default function HostMatchDetailPage() {
             </CardContent>
           </Card>
         </main>
+        <BottomNav />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
           <Button variant="ghost" size="icon" onClick={() => router.push('/host/matches')}>
@@ -480,6 +482,7 @@ export default function HostMatchDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <BottomNav />
     </div>
   )
 }

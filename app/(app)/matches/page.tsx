@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { CalendarDays, MapPin, RefreshCw, Users } from 'lucide-react'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -109,7 +109,7 @@ export default function MatchesPage() {
             className="h-10 w-10 rounded-xl object-contain"
           />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">참가 찾기</h1>
+            <h1 className="text-2xl font-bold tracking-tight">참가하기</h1>
             <p className="text-sm text-muted-foreground">오늘/이번 주 또는 내 신청 내역을 빠르게 확인하세요</p>
           </div>
         </div>
@@ -129,9 +129,16 @@ export default function MatchesPage() {
           <Button variant={mode === 'WEEK' ? 'default' : 'outline'} size="sm" onClick={() => setMode('WEEK')}>
             이번 주
           </Button>
-          <Link href="/host/matches" className="ml-auto">
-            <Button variant="ghost" size="sm">주최</Button>
-          </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+            onClick={() => void loadMatches()}
+            disabled={isLoading}
+          >
+            <RefreshCw className="mr-1 h-3.5 w-3.5" />
+            새로고침
+          </Button>
         </div>
         {mode === 'MY' && (
           <div className="mb-4 flex flex-wrap gap-2">
@@ -174,7 +181,7 @@ export default function MatchesPage() {
         )}
 
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, idx) => (
               <Card key={idx} className="border-border/50">
                 <CardContent className="space-y-3 p-4">
@@ -194,9 +201,6 @@ export default function MatchesPage() {
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-sm text-muted-foreground">참가 목록 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
-                <Button variant="outline" onClick={() => void loadMatches()}>
-                  새로고침
-                </Button>
                 <Link href="/host/matches/create">
                   <Button>호스트 생성 화면</Button>
                 </Link>
@@ -213,14 +217,6 @@ export default function MatchesPage() {
                     : '선택한 상태의 내 신청 내역이 없습니다.'
                   : '조건에 맞는 참가 항목이 없습니다.'}
               </p>
-              <div className="flex justify-center gap-2">
-                <Button variant="outline" onClick={() => void loadMatches()}>
-                  새로고침
-                </Button>
-                <Link href="/host/matches/create">
-                  <Button>호스트 생성 화면</Button>
-                </Link>
-              </div>
             </CardContent>
           </Card>
         ) : (
@@ -229,8 +225,8 @@ export default function MatchesPage() {
               const occupancy = `${match.confirmedCount + match.pendingCount}/${match.capacity}`
               const myApplication = myLatestApplicationByMatch.get(match.id)
               return (
-                <Link key={match.id} href={`/matches/${match.id}`}>
-                  <Card className="cursor-pointer border-border/50 transition-all hover:border-primary/40">
+                <Link key={match.id} href={`/matches/${match.id}`} className="block">
+                  <Card className="cursor-pointer overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
                     <CardContent className="p-4">
                       <div className="mb-2 flex items-start justify-between gap-2">
                         <h3 className="text-base font-semibold text-foreground">{match.title}</h3>

@@ -153,7 +153,7 @@ export default function MyPage() {
               height={40}
               className="h-10 w-10 rounded-xl object-contain"
             />
-            <h1 className="text-2xl font-bold tracking-tight">마이</h1>
+            <h1 className="text-2xl font-bold tracking-tight">마이페이지</h1>
           </div>
         </div>
       </header>

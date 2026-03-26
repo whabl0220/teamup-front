@@ -126,10 +126,6 @@ export default function HomePage() {
             </Card>
           </Link>
         </div>
-
-        <div className="rounded-lg border border-border/50 bg-secondary/10 p-4 text-sm text-muted-foreground">
-          현재는 임시 구현으로 동작합니다. (Clerk/이메일 연동은 추후 적용 예정)
-        </div>
       </main>
 
       <BottomNav />
