@@ -14,8 +14,10 @@ import type { Match } from '@/types/match'
 import { toast } from 'sonner'
 import { getStoredApplications } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
+import type { MatchApplicationStatus } from '@/types/match'
 
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
+type MyStatusFilter = 'ALL' | MatchApplicationStatus
 
 const getMatchStatusLabel = (status: Match['status']) => {
   if (status === 'RECRUITING') return '모집중'
@@ -28,6 +30,13 @@ const getMatchStatusVariant = (status: Match['status']) => {
   if (status === 'RECRUITING') return 'default'
   if (status === 'FULL') return 'secondary'
   return 'outline'
+}
+
+const getMyApplicationStatusLabel = (status: MatchApplicationStatus) => {
+  if (status === 'PENDING_DEPOSIT') return '내 상태: 입금 대기'
+  if (status === 'CONFIRMED') return '내 상태: 참가 확정'
+  if (status === 'CANCELLED') return '내 상태: 신청 취소'
+  return '내 상태: 환불 완료'
 }
 
 const isInThisWeek = (date: Date) => {
@@ -45,6 +54,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [mode, setMode] = useState<MatchListMode>('ALL')
+  const [myStatusFilter, setMyStatusFilter] = useState<MyStatusFilter>('ALL')
 
   useEffect(() => {
     const load = async () => {
@@ -62,6 +72,20 @@ export default function MatchesPage() {
     load()
   }, [])
 
+  const myLatestApplicationByMatch = useMemo(() => {
+    const localUser = getLocalUser()
+    const apps = getStoredApplications().filter((app) => app.userId === localUser.userId)
+
+    const byMatch = new Map<string, { status: MatchApplicationStatus; requestedAt: string }>()
+    apps.forEach((app) => {
+      const existing = byMatch.get(app.matchId)
+      if (!existing || new Date(app.requestedAt).getTime() > new Date(existing.requestedAt).getTime()) {
+        byMatch.set(app.matchId, { status: app.status, requestedAt: app.requestedAt })
+      }
+    })
+    return byMatch
+  }, [])
+
   const filteredMatches = useMemo(() => {
     if (mode === 'ALL') return matches
 
@@ -74,14 +98,10 @@ export default function MatchesPage() {
       return matches.filter((match) => isInThisWeek(new Date(match.startAt)))
     }
 
-    const localUser = getLocalUser()
-    const myAppMatchIds = new Set(
-      getStoredApplications()
-        .filter((app) => app.userId === localUser.userId && app.status !== 'REFUNDED')
-        .map((app) => app.matchId)
-    )
-    return matches.filter((match) => myAppMatchIds.has(match.id))
-  }, [matches, mode])
+    const myMatches = matches.filter((match) => myLatestApplicationByMatch.has(match.id))
+    if (myStatusFilter === 'ALL') return myMatches
+    return myMatches.filter((match) => myLatestApplicationByMatch.get(match.id)?.status === myStatusFilter)
+  }, [matches, mode, myLatestApplicationByMatch, myStatusFilter])
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -119,6 +139,45 @@ export default function MatchesPage() {
             <Button variant="ghost" size="sm">주최자</Button>
           </Link>
         </div>
+        {mode === 'MY' && (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Button
+              variant={myStatusFilter === 'ALL' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setMyStatusFilter('ALL')}
+            >
+              전체
+            </Button>
+            <Button
+              variant={myStatusFilter === 'PENDING_DEPOSIT' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setMyStatusFilter('PENDING_DEPOSIT')}
+            >
+              입금 대기
+            </Button>
+            <Button
+              variant={myStatusFilter === 'CONFIRMED' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setMyStatusFilter('CONFIRMED')}
+            >
+              참가 확정
+            </Button>
+            <Button
+              variant={myStatusFilter === 'CANCELLED' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setMyStatusFilter('CANCELLED')}
+            >
+              신청 취소
+            </Button>
+            <Button
+              variant={myStatusFilter === 'REFUNDED' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setMyStatusFilter('REFUNDED')}
+            >
+              환불 완료
+            </Button>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex min-h-[50vh] items-center justify-center">
@@ -127,7 +186,11 @@ export default function MatchesPage() {
         ) : filteredMatches.length === 0 ? (
           <Card className="border-border/50">
             <CardContent className="p-10 text-center text-sm text-muted-foreground">
-              {mode === 'MY' ? '내 신청 내역이 없습니다.' : '조건에 맞는 매치가 없습니다.'}
+              {mode === 'MY'
+                ? myStatusFilter === 'ALL'
+                  ? '내 신청 내역이 없습니다.'
+                  : '선택한 상태의 내 신청 내역이 없습니다.'
+                : '조건에 맞는 매치가 없습니다.'}
             </CardContent>
           </Card>
         ) : (
@@ -135,6 +198,7 @@ export default function MatchesPage() {
             {filteredMatches.map((match) => {
               const start = new Date(match.startAt)
               const occupancy = `${match.confirmedCount + match.pendingCount}/${match.capacity}`
+              const myApplication = myLatestApplicationByMatch.get(match.id)
               return (
                 <Link key={match.id} href={`/matches/${match.id}`}>
                   <Card className="cursor-pointer border-border/50 transition-all hover:border-primary/40">
@@ -150,7 +214,14 @@ export default function MatchesPage() {
                         <p className="flex items-center gap-2"><Users className="h-4 w-4" />{occupancy}</p>
                       </div>
                       <div className="mt-3 flex items-center justify-between">
-                        <Badge variant="outline">{match.level}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">{match.level}</Badge>
+                          {myApplication && (
+                            <Badge variant="secondary">
+                              {getMyApplicationStatusLabel(myApplication.status)}
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-sm font-semibold text-foreground">{match.fee.toLocaleString()}원</p>
                       </div>
                     </CardContent>
