@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -15,8 +15,9 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { userService } from '@/lib/services'
 import { clearNotifications, getStoredNotifications } from '@/lib/local-notifications'
-import { clearStoredApplications } from '@/lib/match-local-store'
+import { clearStoredApplications, getStoredApplications } from '@/lib/match-local-store'
 import { clearStoredMatches } from '@/lib/match-local-matches-store'
+import { getLocalUser } from '@/lib/services/match'
 import type { User, Position, PlayStyle } from '@/types'
 import { useTheme } from 'next-themes'
 import {
@@ -41,7 +42,23 @@ export default function MyPage() {
   const [notifications, setNotifications] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [activitySummary, setActivitySummary] = useState({
+    applied: 0,
+    confirmed: 0,
+    refunded: 0,
+  })
   const { theme, setTheme } = useTheme()
+
+  const refreshLocalSummary = useCallback(() => {
+    setUnreadCount(getStoredNotifications().filter((item) => !item.read).length)
+    const localUser = getLocalUser()
+    const myApps = getStoredApplications().filter((app) => app.userId === localUser.userId)
+    setActivitySummary({
+      applied: myApps.length,
+      confirmed: myApps.filter((app) => app.status === 'CONFIRMED').length,
+      refunded: myApps.filter((app) => app.status === 'REFUNDED').length,
+    })
+  }, [])
 
   useEffect(() => {
     const load = async () => {
@@ -74,8 +91,12 @@ export default function MyPage() {
 
   useEffect(() => {
     setMounted(true)
-    setUnreadCount(getStoredNotifications().filter((item) => !item.read).length)
-  }, [])
+    refreshLocalSummary()
+
+    const onFocus = () => refreshLocalSummary()
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [refreshLocalSummary])
 
   const handleLogout = () => {
     router.push('/')
@@ -94,12 +115,13 @@ export default function MyPage() {
   const handleResetLocalMatches = () => {
     clearStoredMatches()
     clearStoredApplications()
+    refreshLocalSummary()
     toast.success('로컬 매치/신청 데이터를 초기화했습니다.')
   }
 
   const handleResetLocalNotifications = () => {
     clearNotifications()
-    setUnreadCount(0)
+    refreshLocalSummary()
     toast.success('알림 로그를 비웠습니다.')
   }
 
@@ -155,6 +177,20 @@ export default function MyPage() {
         <Card className="overflow-hidden border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent transition-all hover:border-primary/50">
           <CardContent className="p-5 space-y-3">
             <p className="font-semibold">나의 활동</p>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="rounded-lg border border-border/50 bg-card/70 p-3 text-center">
+                <p className="text-xs text-muted-foreground">신청</p>
+                <p className="text-lg font-bold">{activitySummary.applied}</p>
+              </div>
+              <div className="rounded-lg border border-border/50 bg-card/70 p-3 text-center">
+                <p className="text-xs text-muted-foreground">확정</p>
+                <p className="text-lg font-bold text-primary">{activitySummary.confirmed}</p>
+              </div>
+              <div className="rounded-lg border border-border/50 bg-card/70 p-3 text-center">
+                <p className="text-xs text-muted-foreground">환불</p>
+                <p className="text-lg font-bold text-destructive">{activitySummary.refunded}</p>
+              </div>
+            </div>
             <Link href="/matches">
               <Button variant="secondary" className="w-full justify-start gap-2">
                 <UserIcon className="h-4 w-4" />

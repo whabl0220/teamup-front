@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, CalendarDays, MapPin, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -62,7 +62,9 @@ const getCancelButtonLabel = (
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const matchId = params?.id
+  const fromNotifications = searchParams.get('from') === 'notifications'
 
   const [match, setMatch] = useState<Match | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -177,7 +179,7 @@ export default function MatchDetailPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
-          <Link href="/matches">
+          <Link href={fromNotifications ? '/notifications' : '/matches'}>
             <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
           </Link>
           <h1 className="text-xl font-bold tracking-tight">매치 상세</h1>

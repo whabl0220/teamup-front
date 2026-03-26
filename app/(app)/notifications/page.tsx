@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Bell, CheckCheck, Trash2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Bell, CheckCheck, CircleCheck, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +16,7 @@ import {
 } from '@/lib/local-notifications'
 import type { AppNotification } from '@/types/notification'
 import { toast } from 'sonner'
+import type { NotificationType } from '@/types/notification'
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleString('ko-KR', {
@@ -26,6 +27,30 @@ const formatDate = (iso: string) =>
     minute: '2-digit',
   })
 
+const SCROLL_KEY = 'teamup_notifications_scroll_y'
+
+const getNotificationMeta = (type: NotificationType) => {
+  if (type === 'MATCH_APPLIED') {
+    return {
+      icon: CircleCheck,
+      iconClass: 'text-emerald-600',
+      badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    }
+  }
+  if (type === 'MATCH_CANCELLED') {
+    return {
+      icon: AlertTriangle,
+      iconClass: 'text-rose-600',
+      badgeClass: 'border-rose-200 bg-rose-50 text-rose-700',
+    }
+  }
+  return {
+    icon: RotateCcw,
+    iconClass: 'text-blue-600',
+    badgeClass: 'border-blue-200 bg-blue-50 text-blue-700',
+  }
+}
+
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications())
   const router = useRouter()
@@ -33,6 +58,21 @@ export default function NotificationsPage() {
   const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications])
 
   const reload = () => setNotifications(getStoredNotifications())
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(SCROLL_KEY)
+    if (raw) {
+      const y = Number(raw)
+      if (!Number.isNaN(y)) window.scrollTo({ top: y, behavior: 'auto' })
+    }
+
+    const handleScroll = () => {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleMarkAllRead = () => {
     markAllNotificationsAsRead()
@@ -50,7 +90,8 @@ export default function NotificationsPage() {
     markNotificationAsRead(item.id)
     reload()
     const matchId = item.meta?.matchId
-    if (matchId) router.push(`/matches/${matchId}`)
+    sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))
+    if (matchId) router.push(`/matches/${matchId}?from=notifications`)
   }
 
   return (
@@ -96,13 +137,25 @@ export default function NotificationsPage() {
                     className="w-full rounded-xl border border-border/50 p-3 text-left transition-colors hover:bg-muted/40"
                     onClick={() => handleClickItem(item)}
                   >
+                    {(() => {
+                      const meta = getNotificationMeta(item.type)
+                      const Icon = meta.icon
+                      return (
+                        <div className="mb-2 flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted/60">
+                            <Icon className={`h-4 w-4 ${meta.iconClass}`} />
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={item.read ? '' : meta.badgeClass}
+                          >
+                            {getNotificationTypeLabel(item.type)}
+                          </Badge>
+                          {!item.read && <span className="text-xs font-medium text-primary">NEW</span>}
+                        </div>
+                      )
+                    })()}
                     <div className="mb-1 flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={item.read ? 'outline' : 'default'}>
-                          {getNotificationTypeLabel(item.type)}
-                        </Badge>
-                        {!item.read && <span className="text-xs font-medium text-primary">NEW</span>}
-                      </div>
                       <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
                     </div>
                     <p className="text-sm font-semibold">{item.title}</p>
