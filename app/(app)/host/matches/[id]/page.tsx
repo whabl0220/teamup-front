@@ -7,6 +7,14 @@ import { ArrowLeft, CircleCheck, RotateCcw, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { matchService } from '@/lib/services'
 import { getMockMatchById } from '@/lib/mock-matches'
 import { mockMatchApplications } from '@/lib/mock-match-applications'
@@ -35,6 +43,8 @@ const getApplicationStatusLabel = (status: MatchApplication['status']) => {
   return '신청 취소'
 }
 
+type ApplicationFilter = 'ALL' | MatchApplication['status'] | 'REFUND_NEEDED'
+
 export default function HostMatchDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
@@ -43,6 +53,8 @@ export default function HostMatchDetailPage() {
   const [applications, setApplications] = useState<MatchApplication[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [applicationFilter, setApplicationFilter] = useState<ApplicationFilter>('ALL')
+  const [showRefundAllDialog, setShowRefundAllDialog] = useState(false)
 
   const reloadLocalApplications = (id: string) => {
     const local = getStoredApplicationsByMatchId(id)
@@ -109,10 +121,15 @@ export default function HostMatchDetailPage() {
   )
 
   const displayedApplications = useMemo(() => {
-    if (match?.status !== 'CANCELLED') return applications
-    // 취소 상태에서는 환불 대상이 위로 보이게 정렬
-    return [...applications].sort((a, b) => Number(isRefundNeeded(b)) - Number(isRefundNeeded(a)))
-  }, [applications, match?.status])
+    const base =
+      match?.status !== 'CANCELLED'
+        ? [...applications]
+        : [...applications].sort((a, b) => Number(isRefundNeeded(b)) - Number(isRefundNeeded(a)))
+
+    if (applicationFilter === 'ALL') return base
+    if (applicationFilter === 'REFUND_NEEDED') return base.filter((app) => isRefundNeeded(app))
+    return base.filter((app) => app.status === applicationFilter)
+  }, [applications, match?.status, applicationFilter])
 
   const handleConfirm = async (application: MatchApplication) => {
     if (!matchId) return
@@ -177,6 +194,7 @@ export default function HostMatchDetailPage() {
 
     try {
       setIsSubmitting(true)
+      setShowRefundAllDialog(false)
       let successCount = 0
 
       for (const app of targets) {
@@ -280,32 +298,71 @@ export default function HostMatchDetailPage() {
               <Badge variant="outline">입금 대기 {counts.pending}</Badge>
               <Badge variant="outline">확정 {counts.confirmed}</Badge>
               <Badge variant="outline">환불 {counts.refunded}</Badge>
-                {match.status === 'CANCELLED' && (
-                  <Badge variant="default">환불 필요 {refundNeededCount}</Badge>
-                )}
-            </div>
               {match.status === 'CANCELLED' && (
-                <Card className="mb-4 border-destructive/20 bg-destructive/5">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-destructive">환불 처리 대상</p>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={handleRefundAll}
-                        disabled={isSubmitting || refundNeededCount === 0}
-                      >
-                        일괄 환불 처리
-                      </Button>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      취소된 매치의 환불 처리 대상 신청자를 우선 확인하세요.
-                    </p>
-                  </CardContent>
-                </Card>
+                <Badge variant="default">환불 필요 {refundNeededCount}</Badge>
               )}
+            </div>
+            <div className="mb-4 flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={applicationFilter === 'ALL' ? 'default' : 'outline'}
+                onClick={() => setApplicationFilter('ALL')}
+              >
+                전체
+              </Button>
+              <Button
+                size="sm"
+                variant={applicationFilter === 'PENDING_DEPOSIT' ? 'default' : 'outline'}
+                onClick={() => setApplicationFilter('PENDING_DEPOSIT')}
+              >
+                입금 대기
+              </Button>
+              <Button
+                size="sm"
+                variant={applicationFilter === 'CONFIRMED' ? 'default' : 'outline'}
+                onClick={() => setApplicationFilter('CONFIRMED')}
+              >
+                확정
+              </Button>
+              <Button
+                size="sm"
+                variant={applicationFilter === 'REFUNDED' ? 'default' : 'outline'}
+                onClick={() => setApplicationFilter('REFUNDED')}
+              >
+                환불
+              </Button>
+              {match.status === 'CANCELLED' && (
+                <Button
+                  size="sm"
+                  variant={applicationFilter === 'REFUND_NEEDED' ? 'default' : 'outline'}
+                  onClick={() => setApplicationFilter('REFUND_NEEDED')}
+                >
+                  환불 필요
+                </Button>
+              )}
+            </div>
+            {match.status === 'CANCELLED' && (
+              <Card className="mb-4 border-destructive/20 bg-destructive/5">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-destructive">환불 처리 대상</p>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setShowRefundAllDialog(true)}
+                      disabled={isSubmitting || refundNeededCount === 0}
+                    >
+                      일괄 환불 처리
+                    </Button>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    취소된 매치의 환불 처리 대상 신청자를 우선 확인하세요.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
             <div className="space-y-3">
-              {applications.length === 0 ? (
+              {displayedApplications.length === 0 ? (
                 <p className="text-sm text-muted-foreground">신청자가 없습니다.</p>
               ) : (
                 displayedApplications.map((app) => (
@@ -318,6 +375,13 @@ export default function HostMatchDetailPage() {
                       <p className="mb-3 text-xs text-muted-foreground">
                         신청 시각: {formatDateTimeKorean(app.requestedAt)}
                       </p>
+                      {(app.confirmedAt || app.cancelledAt || app.refundedAt) && (
+                        <div className="mb-3 space-y-1 text-xs text-muted-foreground">
+                          {app.confirmedAt && <p>확정 시각: {formatDateTimeKorean(app.confirmedAt)}</p>}
+                          {app.cancelledAt && <p>취소 시각: {formatDateTimeKorean(app.cancelledAt)}</p>}
+                          {app.refundedAt && <p>환불 시각: {formatDateTimeKorean(app.refundedAt)}</p>}
+                        </div>
+                      )}
                       <div className="flex gap-2">
                         <Button
                           className="flex-1"
@@ -356,6 +420,29 @@ export default function HostMatchDetailPage() {
           <Button variant="outline" className="w-full">참가자 화면으로 이동</Button>
         </Link>
       </main>
+
+      <Dialog open={showRefundAllDialog} onOpenChange={setShowRefundAllDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>일괄 환불 처리</DialogTitle>
+            <DialogDescription>
+              환불 필요 대상 {refundNeededCount}명을 한 번에 환불 처리합니다. 계속 진행할까요?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRefundAllDialog(false)}>
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleRefundAll}
+              disabled={isSubmitting || refundNeededCount === 0}
+            >
+              일괄 환불 진행
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
