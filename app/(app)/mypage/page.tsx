@@ -116,7 +116,7 @@ export default function MyPage() {
     clearStoredMatches()
     clearStoredApplications()
     refreshLocalSummary()
-    toast.success('로컬 매치/신청 데이터를 초기화했습니다.')
+    toast.success('로컬 경기/신청 데이터를 초기화했습니다.')
   }
 
   const handleResetLocalNotifications = () => {
@@ -194,7 +194,7 @@ export default function MyPage() {
             <Link href="/matches">
               <Button variant="secondary" className="w-full justify-start gap-2">
                 <UserIcon className="h-4 w-4" />
-                매치 보기
+                참가 보기
               </Button>
             </Link>
           </CardContent>
@@ -313,7 +313,7 @@ export default function MyPage() {
                 className="w-full justify-start gap-3"
                 onClick={handleResetLocalMatches}
               >
-                로컬 매치/신청 초기화
+                로컬 경기/신청 초기화
               </Button>
               <Button
                 variant="outline"
@@ -324,7 +324,7 @@ export default function MyPage() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-3">
-              기본 프로필과 매치 신청/운영 플로우를 제공합니다.
+              기본 프로필과 참가/주최 플로우를 제공합니다.
             </p>
           </CardContent>
         </Card>

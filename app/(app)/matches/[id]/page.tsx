@@ -30,8 +30,8 @@ const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean
   if (isSubmitting) return '처리 중...'
   if (matchStatus === 'RECRUITING') return '참가 신청'
   if (matchStatus === 'FULL') return '신청 마감'
-  if (matchStatus === 'CANCELLED') return '취소된 매치'
-  return '종료된 매치'
+  if (matchStatus === 'CANCELLED') return '취소된 경기'
+  return '종료된 경기'
 }
 
 const getCancelButtonLabel = (
@@ -78,7 +78,7 @@ export default function MatchDetailPage() {
       } catch {
         const mock = getMockMatchById(matchId)
         if (!mock) {
-          toast.error('매치를 찾을 수 없습니다.')
+          toast.error('경기를 찾을 수 없습니다.')
           router.replace('/matches')
           return
         }
@@ -105,11 +105,11 @@ export default function MatchDetailPage() {
   const handleApply = async () => {
     if (!match) return
     if (match.status !== 'RECRUITING') {
-      toast.error('현재 신청할 수 없는 매치입니다.')
+      toast.error('현재 신청할 수 없는 경기입니다.')
       return
     }
     if (application && (application.status === 'PENDING_DEPOSIT' || application.status === 'CONFIRMED')) {
-      toast.info('이미 신청한 매치입니다.')
+      toast.info('이미 신청한 경기입니다.')
       return
     }
 
@@ -195,7 +195,7 @@ export default function MatchDetailPage() {
           <Link href={fromNotifications ? '/notifications' : '/matches'}>
             <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
           </Link>
-          <h1 className="text-xl font-bold tracking-tight">매치 상세</h1>
+          <h1 className="text-xl font-bold tracking-tight">참가 상세</h1>
         </div>
       </header>
 
@@ -227,7 +227,7 @@ export default function MatchDetailPage() {
           <CardContent className="space-y-3 p-5 text-sm">
             <div>
               <p className="mb-1 font-medium text-foreground">입금 계좌</p>
-              <p className="text-muted-foreground">{match.depositAccount ?? '주최자 계좌 정보 준비 중'}</p>
+              <p className="text-muted-foreground">{match.depositAccount ?? '주최 계좌 정보 준비 중'}</p>
             </div>
             <div>
               <p className="mb-1 font-medium text-foreground">취소 정책</p>
@@ -243,9 +243,9 @@ export default function MatchDetailPage() {
         {match.status === 'CANCELLED' && (
           <Card className="border-destructive/30 bg-destructive/5">
             <CardContent className="p-4">
-              <p className="text-sm font-semibold text-destructive">매치가 취소되었습니다.</p>
+              <p className="text-sm font-semibold text-destructive">경기가 취소되었습니다.</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                운영 정책에 따라 취소된 매치이며, 환불 처리는 운영자 진행으로 처리됩니다.
+                운영 정책에 따라 취소된 경기이며, 환불 처리는 주최 측 진행으로 처리됩니다.
               </p>
             </CardContent>
           </Card>
@@ -269,9 +269,9 @@ export default function MatchDetailPage() {
 
         <Card>
           <CardContent className="p-4 text-sm text-muted-foreground">
-            운영자라면{' '}
+            주최라면{' '}
             <Link href={`/host/matches/${match.id}`} className="font-semibold text-primary underline underline-offset-4">
-              주최자 관리 화면
+              주최 관리 화면
             </Link>
             에서 참가 상태를 관리할 수 있습니다.
           </CardContent>

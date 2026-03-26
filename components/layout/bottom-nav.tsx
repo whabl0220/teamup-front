@@ -29,7 +29,7 @@ export function BottomNav() {
 
   const navItems = [
     { href: '/home', icon: Home, label: '홈' },
-    { href: '/matches', icon: Search, label: '매치' },
+    { href: '/matches', icon: Search, label: '참가' },
     { href: '/host/matches', icon: Settings, label: '주최' },
     { href: '/mypage', icon: User, label: '마이' },
   ]

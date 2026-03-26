@@ -109,7 +109,7 @@ export default function MatchesPage() {
             className="h-10 w-10 rounded-xl object-contain"
           />
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">매치 찾기</h1>
+            <h1 className="text-2xl font-bold tracking-tight">참가 찾기</h1>
             <p className="text-sm text-muted-foreground">오늘/이번 주 또는 내 신청 내역을 빠르게 확인하세요</p>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function MatchesPage() {
             이번 주
           </Button>
           <Link href="/host/matches" className="ml-auto">
-            <Button variant="ghost" size="sm">주최자</Button>
+            <Button variant="ghost" size="sm">주최</Button>
           </Link>
         </div>
         {mode === 'MY' && (
@@ -192,7 +192,7 @@ export default function MatchesPage() {
         ) : hasLoadError ? (
           <Card className="border-border/50">
             <CardContent className="space-y-4 p-8 text-center">
-              <p className="text-sm text-muted-foreground">매치 데이터를 불러오지 못했습니다.</p>
+              <p className="text-sm text-muted-foreground">참가 목록 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => void loadMatches()}>
                   새로고침
@@ -211,7 +211,7 @@ export default function MatchesPage() {
                   ? myStatusFilter === 'ALL'
                     ? '내 신청 내역이 없습니다.'
                     : '선택한 상태의 내 신청 내역이 없습니다.'
-                  : '조건에 맞는 매치가 없습니다.'}
+                  : '조건에 맞는 참가 항목이 없습니다.'}
               </p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => void loadMatches()}>

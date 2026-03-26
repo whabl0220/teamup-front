@@ -49,9 +49,9 @@ export default function HomePage() {
 
       <main className="mx-auto max-w-lg px-4 py-6 space-y-6">
         <div className="space-y-2">
-          <h2 className="text-xl font-bold">오늘/이번 주 매치 찾기</h2>
+          <h2 className="text-xl font-bold">오늘/이번 주 참가 찾기</h2>
           <p className="text-sm text-muted-foreground">
-            입금 후 승인 대기, 확정/환불까지 운영자가 관리해요.
+            입금 후 승인 대기, 확정/환불까지 주최 측이 관리해요.
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default function HomePage() {
                     <CalendarDays className="h-6 w-6 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="mb-1 font-bold text-foreground">매치 찾기</h3>
+                    <h3 className="mb-1 font-bold text-foreground">참가 찾기</h3>
                     <p className="text-xs text-muted-foreground">
                       시간/장소/정원을 확인하고 바로 신청하세요.
                     </p>
@@ -95,8 +95,8 @@ export default function HomePage() {
           <Link
             href="/host/matches"
             onClick={() => {
-              // 주최자 화면은 매치 운영을 위한 공간입니다.
-              toast.info('주최자 화면은 매치 운영(확정/환불)을 위한 공간입니다.')
+              // 주최 화면은 참가 운영을 위한 공간입니다.
+              toast.info('주최 화면은 참가 운영(확정/환불)을 위한 공간입니다.')
             }}
           >
             <Card className={cn(
@@ -110,14 +110,14 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1">
                     <div className="mb-1 flex items-center gap-2">
-                      <h3 className="font-bold text-foreground">주최자 관리</h3>
+                      <h3 className="font-bold text-foreground">주최 관리</h3>
                       {hostedCount > 0 && (
-                        <Badge variant="secondary">내 매치 {hostedCount}</Badge>
+                        <Badge variant="secondary">내 주최 {hostedCount}</Badge>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {hostedCount > 0
-                        ? '내가 주최한 매치가 있어요. 신청자/상태 관리를 진행해보세요.'
+                        ? '내가 주최한 경기가 있어요. 신청자/상태 관리를 진행해보세요.'
                         : '신청자 확인, 참가 확정, 환불을 처리합니다.'}
                     </p>
                   </div>

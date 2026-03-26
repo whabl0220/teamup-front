@@ -45,14 +45,14 @@ export default function HostMatchesPage() {
           <Button variant="ghost" size="icon" onClick={() => router.push('/matches')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold">주최자 매치 관리</h1>
+          <h1 className="text-xl font-bold">주최 참가 관리</h1>
         </div>
       </header>
 
       <main className="mx-auto max-w-lg space-y-3 px-4 py-6">
         <div className="flex gap-2">
           <Link href="/host/matches/create" className="flex-1">
-            <Button className="w-full">매치 생성하기</Button>
+            <Button className="w-full">주최 경기 만들기</Button>
           </Link>
         </div>
         {isLoading ? (
@@ -73,13 +73,13 @@ export default function HostMatchesPage() {
         ) : hasLoadError ? (
           <Card className="border-border/50">
             <CardContent className="space-y-4 p-8 text-center">
-              <p className="text-sm text-muted-foreground">내 주최 매치 데이터를 불러오지 못했습니다.</p>
+              <p className="text-sm text-muted-foreground">내 주최 경기 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => void loadMatches()}>
                   새로고침
                 </Button>
                 <Link href="/host/matches/create">
-                  <Button>매치 생성하기</Button>
+                  <Button>주최 경기 만들기</Button>
                 </Link>
               </div>
             </CardContent>
@@ -87,13 +87,13 @@ export default function HostMatchesPage() {
         ) : matches.length === 0 ? (
           <Card className="border-border/50">
             <CardContent className="space-y-4 p-8 text-center">
-              <p className="text-sm text-muted-foreground">내가 주최한 매치가 없습니다.</p>
+              <p className="text-sm text-muted-foreground">내가 주최한 경기가 없습니다.</p>
               <div className="flex justify-center gap-2">
                 <Button variant="outline" onClick={() => void loadMatches()}>
                   새로고침
                 </Button>
                 <Link href="/host/matches/create">
-                  <Button>매치 생성하기</Button>
+                  <Button>주최 경기 만들기</Button>
                 </Link>
               </div>
             </CardContent>

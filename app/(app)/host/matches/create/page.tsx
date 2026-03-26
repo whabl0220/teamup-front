@@ -106,11 +106,11 @@ export default function HostMatchCreatePage() {
       }
 
       const created = await matchService.createMatch(payload)
-      toast.success('매치가 생성되었습니다.')
+      toast.success('주최 경기가 생성되었습니다.')
       router.push(`/host/matches/${created.id}`)
     } catch (err) {
       const message = err instanceof Error ? err.message : '알 수 없는 오류'
-      toast.error(`매치 생성에 실패했습니다: ${message}`)
+      toast.error(`주최 경기 생성에 실패했습니다: ${message}`)
       console.error(err)
     } finally {
       setIsSubmitting(false)
@@ -124,7 +124,7 @@ export default function HostMatchCreatePage() {
           <Button variant="ghost" size="icon" onClick={() => router.push('/host/matches')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold">매치 생성</h1>
+          <h1 className="text-xl font-bold">주최 경기 생성</h1>
           <Badge variant="secondary" className="ml-auto">로컬 생성</Badge>
         </div>
       </header>
@@ -133,7 +133,7 @@ export default function HostMatchCreatePage() {
         <Card className="border-border/50">
           <CardContent className="p-5 space-y-5">
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">매치 제목</p>
+              <p className="text-sm font-semibold text-foreground">경기 제목</p>
               <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="예: 평일 저녁 픽업" />
             </div>
 
@@ -194,7 +194,7 @@ export default function HostMatchCreatePage() {
             </div>
 
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">매치 레벨</p>
+              <p className="text-sm font-semibold text-foreground">경기 레벨</p>
               <Select value={level} onValueChange={(v) => setLevel(v as MatchLevel)}>
                 <SelectTrigger>
                   <SelectValue placeholder="레벨 선택" />

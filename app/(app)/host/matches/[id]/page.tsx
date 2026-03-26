@@ -77,7 +77,7 @@ export default function HostMatchDetailPage() {
         ])
         if (!ensureHostAccess(matchData)) {
           setHasHostAccess(false)
-          toast.error('내가 주최한 매치만 관리할 수 있습니다.')
+          toast.error('내가 주최한 경기만 관리할 수 있습니다.')
           router.replace('/host/matches')
           return
         }
@@ -86,13 +86,13 @@ export default function HostMatchDetailPage() {
       } catch {
         const mockMatch = getMockMatchById(matchId)
         if (!mockMatch) {
-          toast.error('매치를 찾을 수 없습니다.')
+          toast.error('경기를 찾을 수 없습니다.')
           router.replace('/host/matches')
           return
         }
         if (!ensureHostAccess(mockMatch)) {
           setHasHostAccess(false)
-          toast.error('내가 주최한 매치만 관리할 수 있습니다.')
+          toast.error('내가 주최한 경기만 관리할 수 있습니다.')
           router.replace('/host/matches')
           return
         }
@@ -168,7 +168,7 @@ export default function HostMatchDetailPage() {
     if (!matchId) return
     if (!hasHostAccess) return
     if (!match || match.status !== 'CANCELLED') {
-      toast.info('환불 처리는 매치가 취소된 상태에서만 처리할 수 있습니다.')
+      toast.info('환불 처리는 경기가 취소된 상태에서만 처리할 수 있습니다.')
       return
     }
     if (application.status !== 'CONFIRMED' && application.status !== 'CANCELLED') {
@@ -193,7 +193,7 @@ export default function HostMatchDetailPage() {
     if (!matchId || !match) return
     if (!hasHostAccess) return
     if (match.status !== 'CANCELLED') {
-      toast.info('일괄 환불은 매치가 취소된 상태에서만 처리할 수 있습니다.')
+      toast.info('일괄 환불은 경기가 취소된 상태에서만 처리할 수 있습니다.')
       return
     }
 
@@ -233,17 +233,17 @@ export default function HostMatchDetailPage() {
       return
     }
     if (nextStatus === 'RECRUITING' && match.status === 'ENDED') {
-      toast.error('종료된 매치는 다시 모집중으로 변경할 수 없습니다.')
+      toast.error('종료된 경기는 다시 모집중으로 변경할 수 없습니다.')
       return
     }
     try {
       setIsSubmitting(true)
       const updated = await matchService.updateMatchStatus(matchId, { status: nextStatus })
       setMatch(updated)
-      toast.success(`매치 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
+      toast.success(`경기 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
     } catch {
       setMatch({ ...match, status: nextStatus })
-      toast.success(`매치 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
+      toast.success(`경기 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
     } finally {
       setIsSubmitting(false)
     }
@@ -279,7 +279,7 @@ export default function HostMatchDetailPage() {
           <Button variant="ghost" size="icon" onClick={() => router.push('/host/matches')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold">운영자 매치 상세</h1>
+          <h1 className="text-xl font-bold">주최 경기 상세</h1>
         </div>
       </header>
 
@@ -304,7 +304,7 @@ export default function HostMatchDetailPage() {
 
         <Card>
           <CardContent className="p-5">
-            <p className="mb-3 font-medium">매치 상태 변경</p>
+            <p className="mb-3 font-medium">경기 상태 변경</p>
             <div className="grid grid-cols-2 gap-2">
               {STATUS_OPTIONS.map((status) => (
                 <Button
@@ -388,7 +388,7 @@ export default function HostMatchDetailPage() {
                     </Button>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    취소된 매치의 환불 처리 대상 신청자를 우선 확인하세요.
+                    취소된 경기의 환불 처리 대상 신청자를 우선 확인하세요.
                   </p>
                 </CardContent>
               </Card>
