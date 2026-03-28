@@ -296,7 +296,80 @@ const buildMatchListQuery = (params?: MatchListParams): string => {
   return queryString ? `?${queryString}` : ''
 }
 
+/** 로컬 스토어에만 있는 주최 경기가 API 목록 성공 시 누락되지 않도록 병합에 사용 */
+const listHostedMatchesFromLocal = (): Match[] => {
+  const { userId } = getLocalUser()
+  return listMatchesLocal().filter((m) => m.hostId === userId)
+}
+
+/** 종료 미입력 시 일정 겹침 판단용 기본 진행 시간(픽업 게임 가정) */
+const DEFAULT_HOST_MATCH_DURATION_MS = 2 * 60 * 60 * 1000
+
+const getScheduleRangeMs = (startAt: string, endAt?: string) => {
+  const start = new Date(startAt).getTime()
+  if (Number.isNaN(start)) {
+    throw new Error('INVALID_START_AT')
+  }
+  const end = endAt ? new Date(endAt).getTime() : start + DEFAULT_HOST_MATCH_DURATION_MS
+  if (Number.isNaN(end)) {
+    throw new Error('INVALID_END_AT')
+  }
+  if (end <= start) {
+    throw new Error('INVALID_RANGE')
+  }
+  return { start, end }
+}
+
+const getMatchScheduleRangeMs = (m: Match) => getScheduleRangeMs(m.startAt, m.endAt)
+
+const scheduleRangesOverlap = (
+  a: { start: number; end: number },
+  b: { start: number; end: number }
+) => a.start < b.end && b.start < a.end
+
+/** 취소된 경기는 일정 슬롯으로 보지 않음 */
+const isHostScheduleBlocker = (m: Match) => m.status !== 'CANCELLED'
+
 const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
+
+/** listHostedMatches와 동일 병합(정렬 제외) — 일정 검증용 */
+const fetchHostedMatchesMerged = async (): Promise<Match[]> => {
+  const { userId } = getLocalUser()
+  const localHosted = listHostedMatchesFromLocal()
+  try {
+    const remote = await get<Match[]>(`/api/matches${buildMatchListQuery()}`)
+    const byId = new Map<string, Match>()
+    for (const m of localHosted) {
+      byId.set(m.id, m)
+    }
+    for (const m of remote) {
+      if (m.hostId === userId) {
+        byId.set(m.id, m)
+      }
+    }
+    return Array.from(byId.values())
+  } catch (error) {
+    if (!shouldFallbackToLocal(error)) throw error
+    return localHosted
+  }
+}
+
+const assertHostScheduleNoOverlap = async (
+  startAt: string,
+  endAt: string | undefined,
+  excludeMatchId?: string
+) => {
+  const newRange = getScheduleRangeMs(startAt, endAt)
+  const hosted = await fetchHostedMatchesMerged()
+  for (const m of hosted) {
+    if (excludeMatchId && m.id === excludeMatchId) continue
+    if (!isHostScheduleBlocker(m)) continue
+    const existing = getMatchScheduleRangeMs(m)
+    if (scheduleRangesOverlap(newRange, existing)) {
+      throw new Error('HOST_SCHEDULE_OVERLAP')
+    }
+  }
+}
 
 export const matchService = {
   // 참가자용: 매치 목록 조회
@@ -346,6 +419,7 @@ export const matchService = {
 
   // 주최자용: 매치 생성
   createMatch: async (data: CreateMatchRequest): Promise<Match> => {
+    await assertHostScheduleNoOverlap(data.startAt, data.endAt)
     try {
       return await post<Match>('/api/matches', data)
     } catch (error) {
@@ -354,11 +428,12 @@ export const matchService = {
     }
   },
 
-  // 주최자용: 내 매치 목록 조회
+  // 주최자용: 내 매치 목록 조회 (로컬 전용 주최 + API 주최 병합, 동일 id는 API 우선)
   listHostedMatches: async (): Promise<Match[]> => {
-    const { userId } = getLocalUser()
-    const all = await matchService.listMatches()
-    return all.filter((match) => match.hostId === userId)
+    const merged = await fetchHostedMatchesMerged()
+    return merged.sort(
+      (a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime()
+    )
   },
 
   // 주최자용: 신청자 목록 조회
@@ -405,6 +480,7 @@ export const matchService = {
 
   // 주최자용: 매치 수정
   updateMatch: async (matchId: string, data: UpdateMatchRequest): Promise<Match> => {
+    await assertHostScheduleNoOverlap(data.startAt, data.endAt, matchId)
     try {
       return await put<Match>(`/api/matches/${matchId}`, data)
     } catch (error) {

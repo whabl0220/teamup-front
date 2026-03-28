@@ -110,6 +110,10 @@ export default function HostMatchCreatePage() {
       toast.success('주최 경기가 생성되었습니다.')
       router.push(`/host/matches/${created.id}`)
     } catch (err) {
+      if (err instanceof Error && err.message === 'HOST_SCHEDULE_OVERLAP') {
+        toast.error('이미 주최 중인 경기와 시간이 겹칩니다.')
+        return
+      }
       const message = err instanceof Error ? err.message : '알 수 없는 오류'
       toast.error(`주최 경기 생성에 실패했습니다: ${message}`)
       console.error(err)
@@ -182,7 +186,7 @@ export default function HostMatchCreatePage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">참가비</p>
+                <p className="text-sm font-semibold text-foreground">총 참가비</p>
                 <Input
                   type="number"
                   min={0}

@@ -93,6 +93,14 @@ export default function MatchDetailPage() {
     return `${match.confirmedCount + match.pendingCount}/${match.capacity}`
   }, [match])
 
+  const feeSummary = useMemo(() => {
+    if (!match) return { perPerson: 0, totalAtCapacity: 0 }
+    const cap = Math.max(1, match.capacity)
+    const perPerson = match.fee
+    const totalAtCapacity = perPerson * cap
+    return { perPerson, totalAtCapacity }
+  }, [match])
+
   const isMyHostedMatch = useMemo(() => {
     if (!match) return false
     const localUser = getLocalUser()
@@ -229,9 +237,27 @@ export default function MatchDetailPage() {
               <p className="flex items-center gap-2"><MapPin className="h-4 w-4" />{match.court.name} ({match.court.address})</p>
               <p className="flex items-center gap-2"><Users className="h-4 w-4" />{participantText}</p>
             </div>
-            <div className="mt-4 flex items-center justify-between">
-              <Badge variant="outline">{match.level}</Badge>
-              <p className="font-semibold">{match.fee.toLocaleString()}원</p>
+            <div className="mt-4 space-y-2 border-t border-border/50 pt-4">
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="outline">{match.level}</Badge>
+              </div>
+              <div className="rounded-lg bg-muted/30 px-3 py-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">1인당 참가비</span>
+                  <span className="font-semibold tabular-nums text-foreground">
+                    {feeSummary.perPerson.toLocaleString()}원
+                  </span>
+                </div>
+                <div className="mt-1 flex items-center justify-between gap-2 text-xs">
+                  <span className="text-muted-foreground">정원 {match.capacity}명 기준 총액</span>
+                  <span className="font-medium tabular-nums text-foreground">
+                    {feeSummary.totalAtCapacity.toLocaleString()}원
+                  </span>
+                </div>
+                <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
+                  참가비는 1인 기준이며, 총액은 정원이 모두 찼을 때의 합산 금액입니다.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -279,16 +305,6 @@ export default function MatchDetailPage() {
             </CardContent>
           </Card>
         )}
-
-        <Card>
-          <CardContent className="p-4 text-sm text-muted-foreground">
-            주최라면{' '}
-            <Link href={`/host/matches/${match.id}`} className="font-semibold text-primary underline underline-offset-4">
-              주최 관리 화면
-            </Link>
-            에서 참가 상태를 관리할 수 있습니다.
-          </CardContent>
-        </Card>
       </main>
 
       <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-border/50 bg-background/95 p-4 backdrop-blur-lg">
