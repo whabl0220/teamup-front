@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, CalendarDays, MapPin, Users } from 'lucide-react'
@@ -37,19 +37,6 @@ const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean
 
 const isSelfHostApplyForbiddenError = (err: unknown): boolean =>
   err instanceof Error && err.message.includes('SELF_HOST_APPLY_FORBIDDEN')
-
-const getCancelButtonLabel = (
-  matchStatus: Match['status'],
-  application: LocalApplicationState | null,
-  isSubmitting: boolean
-) => {
-  if (isSubmitting) return '처리 중...'
-  if (!application) return '신청 취소'
-  if (application.status === 'REFUNDED') return '환불 완료'
-  if (application.status === 'CANCELLED') return '취소 완료'
-  if (matchStatus !== 'RECRUITING') return '취소 불가'
-  return '신청 취소'
-}
 
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>()
@@ -111,6 +98,14 @@ export default function MatchDetailPage() {
     const localUser = getLocalUser()
     return match.hostId === localUser.userId
   }, [match])
+
+  const handleHeaderBack = useCallback(() => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back()
+      return
+    }
+    router.push(fromNotifications ? '/notifications' : '/matches')
+  }, [fromNotifications, router])
 
   const handleApply = async () => {
     if (!match) return
@@ -210,14 +205,14 @@ export default function MatchDetailPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-4">
-          <Link href={fromNotifications ? '/notifications' : '/matches'}>
-            <Button variant="ghost" size="icon"><ArrowLeft className="h-5 w-5" /></Button>
-          </Link>
+          <Button variant="ghost" size="icon" onClick={handleHeaderBack} aria-label="뒤로가기">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
           <h1 className="text-xl font-bold tracking-tight">참가 상세</h1>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg space-y-4 px-4 py-6 pb-28">
+      <main className="mx-auto max-w-lg space-y-4 px-4 py-6 pb-36">
         <Card className={highlightMatchCard ? 'ring-2 ring-primary/40 animate-pulse' : ''}>
           <CardContent className="p-5">
             <div className="mb-3 flex items-start justify-between gap-2">
@@ -296,7 +291,7 @@ export default function MatchDetailPage() {
         </Card>
       </main>
 
-      <div className="fixed bottom-0 left-0 right-0 border-t border-border/50 bg-background/95 p-4 backdrop-blur-lg">
+      <div className="fixed bottom-16 left-0 right-0 z-40 border-t border-border/50 bg-background/95 p-4 backdrop-blur-lg">
         <div className="mx-auto flex max-w-lg gap-2">
           <Button
             className="flex-1"
@@ -317,7 +312,7 @@ export default function MatchDetailPage() {
               application.status === 'REFUNDED'
             }
           >
-            {getCancelButtonLabel(match.status, application, isSubmitting)}
+            신청 취소
           </Button>
         </div>
       </div>
