@@ -30,7 +30,7 @@
 
 ## 기술 스택
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **UI Components**: Radix UI
@@ -110,15 +110,15 @@ npm start
 ```
 app/
 ├── (auth)/              # 인증 관련 페이지
-│   ├── login/          # 로그인
-│   └── register/       # 회원가입
+│   ├── login/            # 로그인
+│   └── signup/           # 회원가입
 ├── (app)/              # 메인 앱 페이지
-│   ├── home/           # 홈
-│   ├── team/           # 팀 관리
-│   ├── matching/       # 팀 매칭
-│   ├── coaching/       # AI 코칭
-│   ├── map/            # 지도
-│   └── profile/        # 프로필
+│   ├── home/             # 홈 대시보드
+│   ├── matches/          # 참가자 매치 목록/상세
+│   ├── host/matches/     # 주최자 매치 운영
+│   ├── notifications/    # 알림
+│   ├── mypage/           # 마이페이지
+│   └── profile/          # 프로필 수정
 components/
 ├── features/           # 기능별 컴포넌트
 ├── layout/             # 레이아웃 컴포넌트
@@ -126,9 +126,9 @@ components/
 └── ui/                 # UI 기본 컴포넌트
 lib/
 ├── services/           # API 서비스
-├── constants.ts        # 상수
-├── mock-data.ts        # 목 데이터
-└── storage.ts          # localStorage 유틸
+├── mappers/            # API -> UI 타입 변환
+├── match-*.ts          # 매치 관련 로컬 상태/폼 유틸
+└── local-notifications.ts # 알림 로컬 스토어
 types/
 └── index.ts            # TypeScript 타입 정의
 ```

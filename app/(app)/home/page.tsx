@@ -7,7 +7,6 @@ import { Bell, CalendarDays, CircleCheck, ClipboardList, UserPen, Wallet } from 
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { matchService } from '@/lib/services'
 import { getStoredNotifications } from '@/lib/local-notifications'
@@ -164,13 +163,7 @@ export default function HomePage() {
             </Card>
           </Link>
 
-          <Link
-            href="/host/matches"
-            onClick={() => {
-              // 주최 화면은 참가 운영을 위한 공간입니다.
-              toast.info('주최 화면은 참가 운영(확정/환불)을 위한 공간입니다.')
-            }}
-          >
+          <Link href="/host/matches">
             <Card className={cn(
               "teamup-card-soft cursor-pointer",
               hostedCount > 0 && "teamup-card-soft-highlight"

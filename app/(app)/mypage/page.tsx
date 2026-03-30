@@ -17,7 +17,8 @@ import { clearNotifications } from '@/lib/local-notifications'
 import { clearStoredApplications } from '@/lib/match-local-store'
 import { clearStoredMatches } from '@/lib/match-local-matches-store'
 import { getLocalUser } from '@/lib/services/match'
-import type { User, Position, PlayStyle } from '@/types'
+import type { User } from '@/types'
+import { mapApiUserToUser } from '@/lib/mappers/user'
 import { useTheme } from 'next-themes'
 import {
   Bell,
@@ -63,19 +64,7 @@ export default function MyPage() {
       try {
         setIsLoading(true)
         const userData = await userService.getMe()
-        const converted: User = {
-          id: userData.id,
-          name: userData.nickname,
-          email: userData.email,
-          gender: userData.gender,
-          address: userData.address,
-          height: userData.height,
-          position: userData.mainPosition as Position,
-          subPosition: userData.subPosition as Position | undefined,
-          playStyle: userData.playStyle as PlayStyle | undefined,
-          statusMsg: userData.statusMsg,
-        }
-        setUser(converted)
+        setUser(mapApiUserToUser(userData))
       } catch (err) {
         console.error(err)
         toast.error('데이터를 불러오는데 실패했습니다.')
@@ -117,6 +106,10 @@ export default function MyPage() {
     clearNotifications()
     refreshLocalSummary()
     toast.success('알림 로그를 비웠습니다.')
+  }
+
+  const handleNotReadyFeature = () => {
+    toast.info('준비 중인 페이지입니다.')
   }
 
   if (isLoading) {
@@ -239,7 +232,11 @@ export default function MyPage() {
             <Separator />
             <p className="font-semibold">기타</p>
             <div className="rounded-lg border border-border/50 bg-card/70">
-              <Link href="/terms" className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
+              <button
+                type="button"
+                onClick={handleNotReadyFeature}
+                className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
+              >
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                       <FileText className="h-4 w-4 text-muted-foreground" />
@@ -247,9 +244,13 @@ export default function MyPage() {
                     <span className="text-sm font-medium">이용약관</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
+              </button>
               <Separator />
-              <Link href="/privacy" className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
+              <button
+                type="button"
+                onClick={handleNotReadyFeature}
+                className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
+              >
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                       <Shield className="h-4 w-4 text-muted-foreground" />
@@ -257,9 +258,13 @@ export default function MyPage() {
                     <span className="text-sm font-medium">개인정보 처리방침</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
+              </button>
               <Separator />
-              <Link href="/about" className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
+              <button
+                type="button"
+                onClick={handleNotReadyFeature}
+                className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
+              >
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                       <Info className="h-4 w-4 text-muted-foreground" />
@@ -270,7 +275,7 @@ export default function MyPage() {
                     <span className="text-xs text-muted-foreground">v1.0.0</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-              </Link>
+              </button>
             </div>
             <Separator />
             <p className="font-semibold">계정</p>
