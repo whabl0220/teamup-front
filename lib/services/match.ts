@@ -26,7 +26,12 @@ import {
 } from './match-local'
 export { getLocalUser } from './match-local'
 
-const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
+/**
+ * Fallback 원칙:
+ * - 네트워크 단절/타임아웃만 로컬 fallback 허용
+ * - 서버가 응답한 4xx/5xx(ApiError)는 절대 fallback 금지
+ */
+export const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
 
 /** listHostedMatches와 동일 병합(정렬 제외) — 일정 검증용 */
 const fetchHostedMatchesMerged = async (): Promise<Match[]> => {

@@ -15,25 +15,15 @@ import {
 import { getMatchCourtById } from '@/lib/match-courts'
 import { pushNotification } from '@/lib/local-notifications'
 import { MATCH_ERROR_CODES } from './match-errors'
+import { getAuthIdentityFromToken } from './auth-identity'
 
 const isBrowser = (): boolean => typeof window !== 'undefined'
 
 export const getLocalUser = () => {
   if (!isBrowser()) return { userId: 'local-user', userName: '내 계정' }
-
-  const raw = localStorage.getItem('teamup_app_data')
-  if (!raw) return { userId: 'local-user', userName: '내 계정' }
-
-  try {
-    const parsed = JSON.parse(raw) as {
-      user?: { id?: string; nickname?: string; name?: string }
-    }
-    const id = parsed.user?.id ? String(parsed.user.id) : 'local-user'
-    const name = parsed.user?.nickname || parsed.user?.name || '내 계정'
-    return { userId: id, userName: name }
-  } catch {
-    return { userId: 'local-user', userName: '내 계정' }
-  }
+  const identity = getAuthIdentityFromToken()
+  if (!identity) return { userId: 'local-user', userName: '내 계정' }
+  return identity
 }
 
 const recalcMatchCounts = (match: Match): Match => {

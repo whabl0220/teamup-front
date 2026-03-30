@@ -2,7 +2,7 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 // 토큰 관리 (localStorage)
-const getAccessToken = (): string | null => {
+export const getAccessToken = (): string | null => {
   if (typeof window === 'undefined') return null
   return localStorage.getItem('access_token')
 }
