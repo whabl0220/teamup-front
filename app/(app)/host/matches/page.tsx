@@ -128,9 +128,9 @@ export default function HostMatchesPage() {
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-sm text-muted-foreground">내 주최 경기 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
-                <Link href="/host/matches/create">
-                  <Button>주최 경기 만들기</Button>
-                </Link>
+                <Button asChild>
+                  <Link href="/host/matches/create">주최 경기 만들기</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -143,9 +143,9 @@ export default function HostMatchesPage() {
                   : '조건에 맞는 주최 경기가 없습니다.'}
               </p>
               <div className="flex justify-center gap-2">
-                <Link href="/host/matches/create">
-                  <Button>주최 경기 만들기</Button>
-                </Link>
+                <Button asChild>
+                  <Link href="/host/matches/create">주최 경기 만들기</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -199,9 +199,9 @@ export default function HostMatchesPage() {
                 </p>
                 <p className="text-sm text-muted-foreground">(2시간 이상 차이나는 경기만 추가 주최 가능)</p>
                 <div className="flex justify-center gap-2">
-                  <Link href="/host/matches/create">
-                    <Button>주최 경기 만들기</Button>
-                  </Link>
+                  <Button asChild>
+                    <Link href="/host/matches/create">주최 경기 만들기</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

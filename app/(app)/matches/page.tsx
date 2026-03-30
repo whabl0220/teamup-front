@@ -205,9 +205,9 @@ export default function MatchesPage() {
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-sm text-muted-foreground">참가 목록 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
-                <Link href="/host/matches/create">
-                  <Button>호스트 생성 화면</Button>
-                </Link>
+                <Button asChild>
+                  <Link href="/host/matches/create">호스트 생성 화면</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>

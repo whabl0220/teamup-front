@@ -1,19 +1,21 @@
-const WEEKDAYS_KO = ['일', '월', '화', '수', '목', '금', '토']
-
-const pad = (value: number) => String(value).padStart(2, '0')
-
 export const formatDateTimeKorean = (value: string | Date): string => {
   const date = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
-
-  const yyyy = date.getFullYear()
-  const mm = pad(date.getMonth() + 1)
-  const dd = pad(date.getDate())
-  const weekday = WEEKDAYS_KO[date.getDay()]
-  const hh = pad(date.getHours())
-  const min = pad(date.getMinutes())
-
-  return `${yyyy}.${mm}.${dd} (${weekday}) ${hh}:${min}`
+  const formatter = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+  const parts = formatter.formatToParts(date)
+  const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? ''
+  const weekday = getPart('weekday').replace('요일', '')
+  return `${getPart('year')}.${getPart('month')}.${getPart('day')} (${weekday}) ${getPart('hour')}:${getPart('minute')}`
 }
 
 export const formatCurrencyKRW = (value: number): string => {

@@ -28,12 +28,12 @@ export function HostMatchSummaryCard({ match }: Props) {
         <p className="mt-1 text-sm text-muted-foreground">
           {formatDateTimeKorean(match.startAt)}
         </p>
-        <Link href={`/host/matches/${match.id}/edit`} className="mt-4 block">
-          <Button className="w-full" size="sm">
+        <Button asChild className="mt-4 w-full" size="sm">
+          <Link href={`/host/matches/${match.id}/edit`}>
             <PencilLine className="mr-1 h-4 w-4" />
             경기 정보 수정
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </CardContent>
     </Card>
   )

@@ -290,9 +290,9 @@ export default function HostMatchDetailPage() {
           onRefund={handleRefund}
         />
 
-        <Link href={`/matches/${match.id}`}>
-          <Button variant="outline" className="w-full">참가자 화면으로 이동</Button>
-        </Link>
+        <Button asChild variant="outline" className="w-full">
+          <Link href={`/matches/${match.id}`}>참가자 화면으로 이동</Link>
+        </Button>
       </main>
 
       <RefundAllDialog

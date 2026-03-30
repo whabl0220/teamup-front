@@ -35,32 +35,29 @@ export default function LandingPage() {
 
           {/* 버튼 */}
           <div className="space-y-3">
-            <Link href="/login" className="block w-full">
-              <Button
-                size="lg"
-                className="h-12 w-full bg-primary text-lg font-semibold text-primary-foreground hover:bg-primary/95"
-              >
-                로그인
-              </Button>
-            </Link>
-            <Link href="/signup" className="block w-full">
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 w-full text-lg font-semibold"
-              >
-                회원가입
-              </Button>
-            </Link>
-            <Link href="/home" className="block w-full">
-              <Button
-                size="lg"
-                variant="ghost"
-                className="h-12 w-full text-lg font-semibold"
-              >
-                체험하기
-              </Button>
-            </Link>
+            <Button
+              asChild
+              size="lg"
+              className="h-12 w-full bg-primary text-lg font-semibold text-primary-foreground hover:bg-primary/95"
+            >
+              <Link href="/login">로그인</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="h-12 w-full text-lg font-semibold"
+            >
+              <Link href="/signup">회원가입</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="ghost"
+              className="h-12 w-full text-lg font-semibold"
+            >
+              <Link href="/home">체험하기</Link>
+            </Button>
           </div>
         </div>
       </main>
