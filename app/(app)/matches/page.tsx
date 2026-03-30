@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useUser } from '@clerk/nextjs'
 import { CalendarDays, MapPin, RefreshCw, Users } from 'lucide-react'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Badge } from '@/components/ui/badge'
@@ -42,6 +43,7 @@ const isInThisWeek = (date: Date) => {
 }
 
 export default function MatchesPage() {
+  const { user } = useUser()
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadError, setHasLoadError] = useState(false)
@@ -97,6 +99,7 @@ export default function MatchesPage() {
     if (myStatusFilter === 'ALL') return myMatches
     return myMatches.filter((match) => myLatestApplicationByMatch.get(match.id)?.status === myStatusFilter)
   }, [matches, mode, myLatestApplicationByMatch, myStatusFilter])
+  const displayName = user?.username || user?.firstName || user?.fullName || '플레이어'
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -112,7 +115,7 @@ export default function MatchesPage() {
           />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">참가하기</h1>
-            <p className="text-sm text-muted-foreground">농구 경기를 참가하세요</p>
+            <p className="text-sm text-muted-foreground">{displayName}님, 농구 경기를 참가해보세요</p>
           </div>
           </div>
           <HeaderNotificationButton />

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useUser } from '@clerk/nextjs'
 import { CalendarDays, MapPin, RefreshCw, Users } from 'lucide-react'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ import { MATCH_STATUS_META } from '@/lib/status-meta'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
 
 export default function HostMatchesPage() {
+  const { user } = useUser()
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadError, setHasLoadError] = useState(false)
@@ -60,6 +62,7 @@ export default function HostMatchesPage() {
       return target >= start && target < end
     })
   }, [matches, mode])
+  const displayName = user?.username || user?.firstName || user?.fullName || '플레이어'
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -75,7 +78,7 @@ export default function HostMatchesPage() {
           />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">주최하기</h1>
-            <p className="text-sm text-muted-foreground">농구 경기를 주최해보세요</p>
+            <p className="text-sm text-muted-foreground">{displayName}님, 농구 경기를 주최해보세요</p>
           </div>
           </div>
           <HeaderNotificationButton />
