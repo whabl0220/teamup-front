@@ -1,4 +1,5 @@
 import { ApiError, isNetworkOrTimeoutError } from '@/lib/services/client'
+import { MATCH_ERROR_CODES } from '@/lib/services/match-errors'
 
 export const getErrorMessage = (error: unknown, fallback = '알 수 없는 오류'): string =>
   error instanceof Error ? error.message : fallback
@@ -7,10 +8,10 @@ export const isRecoverableNetworkError = (error: unknown): boolean =>
   isNetworkOrTimeoutError(error)
 
 export const isHostScheduleOverlapError = (error: unknown): boolean =>
-  error instanceof Error && error.message === 'HOST_SCHEDULE_OVERLAP'
+  error instanceof Error && error.message === MATCH_ERROR_CODES.hostScheduleOverlap
 
 export const isSelfHostApplyForbiddenError = (error: unknown): boolean =>
-  error instanceof Error && error.message.includes('SELF_HOST_APPLY_FORBIDDEN')
+  error instanceof Error && error.message.includes(MATCH_ERROR_CODES.selfHostApplyForbidden)
 
 export const toUserErrorMessage = (
   error: unknown,

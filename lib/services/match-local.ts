@@ -14,6 +14,7 @@ import {
 } from '@/lib/match-local-store'
 import { getMatchCourtById } from '@/lib/match-courts'
 import { pushNotification } from '@/lib/local-notifications'
+import { MATCH_ERROR_CODES } from './match-errors'
 
 const isBrowser = (): boolean => typeof window !== 'undefined'
 
@@ -79,7 +80,7 @@ export const getMatchLocal = (matchId: string): Match => {
 
 const assertLocalHostAccess = (match: Match) => {
   const { userId } = getLocalUser()
-  if (match.hostId !== userId) throw new Error('FORBIDDEN_HOST_ACCESS')
+  if (match.hostId !== userId) throw new Error(MATCH_ERROR_CODES.forbiddenHostAccess)
 }
 
 export const applyToMatchLocal = (matchId: string): MatchApplication => {
@@ -87,7 +88,7 @@ export const applyToMatchLocal = (matchId: string): MatchApplication => {
   if (match.status !== 'RECRUITING') throw new Error('Match not recruiting')
 
   const { userId, userName } = getLocalUser()
-  if (match.hostId === userId) throw new Error('SELF_HOST_APPLY_FORBIDDEN')
+  if (match.hostId === userId) throw new Error(MATCH_ERROR_CODES.selfHostApplyForbidden)
 
   const existing = getStoredApplicationsByMatchId(matchId).find(
     (a) => a.userId === userId && (a.status === 'PENDING_DEPOSIT' || a.status === 'CONFIRMED')
@@ -126,7 +127,7 @@ export const cancelApplicationLocal = (matchId: string, applicationId: string): 
   const found = applications.find((a) => a.id === applicationId)
   if (!found) throw new Error('Application not found')
   const { userId } = getLocalUser()
-  if (found.userId !== userId) throw new Error('FORBIDDEN_APPLICATION_CANCEL')
+  if (found.userId !== userId) throw new Error(MATCH_ERROR_CODES.forbiddenApplicationCancel)
 
   updateStoredApplicationStatus(applicationId, 'CANCELLED')
   recalcMatchCounts(getMatchLocal(matchId))
@@ -144,10 +145,10 @@ export const confirmApplicationLocal = (matchId: string, applicationId: string):
   const applications = getStoredApplicationsByMatchId(matchId)
   const target = applications.find((a) => a.id === applicationId)
   if (!target) throw new Error('Application not found')
-  if (match.status === 'CANCELLED' || match.status === 'ENDED') throw new Error('MATCH_NOT_RECRUITING')
-  if (target.status !== 'PENDING_DEPOSIT') throw new Error('INVALID_APPLICATION_STATUS')
+  if (match.status === 'CANCELLED' || match.status === 'ENDED') throw new Error(MATCH_ERROR_CODES.matchNotRecruiting)
+  if (target.status !== 'PENDING_DEPOSIT') throw new Error(MATCH_ERROR_CODES.invalidApplicationStatus)
   const confirmedCount = applications.filter((a) => a.status === 'CONFIRMED').length
-  if (confirmedCount >= match.capacity) throw new Error('MATCH_ALREADY_FULL')
+  if (confirmedCount >= match.capacity) throw new Error(MATCH_ERROR_CODES.matchAlreadyFull)
 
   updateStoredApplicationStatus(applicationId, 'CONFIRMED')
   recalcMatchCounts(match)

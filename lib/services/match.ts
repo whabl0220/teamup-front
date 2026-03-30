@@ -8,6 +8,8 @@ import type {
   UpdateMatchStatusRequest,
 } from '@/types/match'
 import { matchApi } from './match-api'
+import { assertHostScheduleNoOverlapInMatches } from './match-domain'
+import { MATCH_ERROR_CODES } from './match-errors'
 import {
   applyToMatchLocal,
   cancelApplicationLocal,
@@ -23,34 +25,6 @@ import {
   updateMatchStatusLocal,
 } from './match-local'
 export { getLocalUser } from './match-local'
-
-/** 종료 미입력 시 일정 겹침 판단용 기본 진행 시간(픽업 게임 가정) */
-const DEFAULT_HOST_MATCH_DURATION_MS = 2 * 60 * 60 * 1000
-
-const getScheduleRangeMs = (startAt: string, endAt?: string) => {
-  const start = new Date(startAt).getTime()
-  if (Number.isNaN(start)) {
-    throw new Error('INVALID_START_AT')
-  }
-  const end = endAt ? new Date(endAt).getTime() : start + DEFAULT_HOST_MATCH_DURATION_MS
-  if (Number.isNaN(end)) {
-    throw new Error('INVALID_END_AT')
-  }
-  if (end <= start) {
-    throw new Error('INVALID_RANGE')
-  }
-  return { start, end }
-}
-
-const getMatchScheduleRangeMs = (m: Match) => getScheduleRangeMs(m.startAt, m.endAt)
-
-const scheduleRangesOverlap = (
-  a: { start: number; end: number },
-  b: { start: number; end: number }
-) => a.start < b.end && b.start < a.end
-
-/** 취소/종료된 경기는 일정 슬롯으로 보지 않음 */
-const isHostScheduleBlocker = (m: Match) => m.status !== 'CANCELLED' && m.status !== 'ENDED'
 
 const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
 
@@ -81,16 +55,8 @@ const assertHostScheduleNoOverlap = async (
   endAt: string | undefined,
   excludeMatchId?: string
 ) => {
-  const newRange = getScheduleRangeMs(startAt, endAt)
   const hosted = await fetchHostedMatchesMerged()
-  for (const m of hosted) {
-    if (excludeMatchId && m.id === excludeMatchId) continue
-    if (!isHostScheduleBlocker(m)) continue
-    const existing = getMatchScheduleRangeMs(m)
-    if (scheduleRangesOverlap(newRange, existing)) {
-      throw new Error('HOST_SCHEDULE_OVERLAP')
-    }
-  }
+  assertHostScheduleNoOverlapInMatches(hosted, startAt, endAt, excludeMatchId)
 }
 
 export const matchService = {
@@ -120,7 +86,7 @@ export const matchService = {
       const match = await matchService.getMatch(matchId)
       const { userId } = getLocalUser()
       if (match.hostId === userId) {
-        throw new Error('SELF_HOST_APPLY_FORBIDDEN')
+        throw new Error(MATCH_ERROR_CODES.selfHostApplyForbidden)
       }
       return await matchApi.applyToMatch(matchId)
     } catch (error) {
