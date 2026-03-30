@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TeamUp - AI 농구 팀 매칭",
-  description: "AI 기반 농구 팀 매칭 & 코칭 플랫폼",
+  title: "TeamUp - 농구 팀 매칭",
+  description: "농구 팀 매칭 플랫폼",
 };
 
 export default function RootLayout({

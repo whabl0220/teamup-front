@@ -28,9 +28,9 @@ export default function LandingPage() {
 
           {/* 서브타이틀 */}
           <p className="mb-12 text-base leading-relaxed text-muted-foreground">
-            AI 기반 팀 매칭으로
+            TeamUp과 함께
             <br />
-            완벽한 팀을 만나보세요
+            농구 팀 매칭을 시작해보세요
           </p>
 
           {/* 버튼 */}
@@ -68,7 +68,7 @@ export default function LandingPage() {
       {/* 푸터 */}
       <footer className="border-t border-border/50 py-6">
         <div className="mx-auto max-w-lg px-4 text-center text-sm text-muted-foreground">
-          <p>2025 TeamUp. AI Powered Team Matching</p>
+          <p>2025 TeamUp. Basketball Team Matching</p>
         </div>
       </footer>
     </div>

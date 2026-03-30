@@ -19,6 +19,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
 import { getLocalUser } from '@/lib/services/match'
 import type { Match, MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
@@ -252,10 +253,10 @@ export default function HostMatchEditPage() {
                   <SelectValue placeholder="레벨 선택" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">ALL</SelectItem>
-                  <SelectItem value="BEGINNER">BEGINNER</SelectItem>
-                  <SelectItem value="INTERMEDIATE">INTERMEDIATE</SelectItem>
-                  <SelectItem value="ADVANCED">ADVANCED</SelectItem>
+                  <SelectItem value="ALL">{getMatchLevelLabel('ALL')}</SelectItem>
+                  <SelectItem value="BEGINNER">{getMatchLevelLabel('BEGINNER')}</SelectItem>
+                  <SelectItem value="INTERMEDIATE">{getMatchLevelLabel('INTERMEDIATE')}</SelectItem>
+                  <SelectItem value="ADVANCED">{getMatchLevelLabel('ADVANCED')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

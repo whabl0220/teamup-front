@@ -14,6 +14,7 @@ import type { Match } from '@/types/match'
 import { toast } from 'sonner'
 import { formatDateTimeKorean } from '@/lib/date-format'
 import { MATCH_STATUS_META } from '@/lib/status-meta'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
 
 export default function HostMatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -183,7 +184,7 @@ export default function HostMatchesPage() {
                         </p>
                       </div>
                       <div className="mt-3 flex items-center justify-between gap-2">
-                        <Badge variant="outline">{match.level}</Badge>
+                        <Badge variant="outline">{getMatchLevelLabel(match.level)}</Badge>
                         <p className="text-xs font-semibold text-foreground">{match.fee.toLocaleString()}원</p>
                       </div>
                     </CardContent>
@@ -194,8 +195,9 @@ export default function HostMatchesPage() {
             <Card className="border-border/50">
               <CardContent className="space-y-4 p-8 text-center">
                 <p className="text-sm text-muted-foreground">
-                  다른 일정으로 주최 경기를 더 만들 수 있습니다.
+                  다른 일정으로 주최 경기를 더 만들 수 있습니다. 
                 </p>
+                <p className="text-sm text-muted-foreground">(2시간 이상 차이나는 경기만 추가 주최 가능)</p>
                 <div className="flex justify-center gap-2">
                   <Link href="/host/matches/create">
                     <Button>주최 경기 만들기</Button>

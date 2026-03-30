@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { PlusCircle, Wallet, Building2, CalendarDays } from 'lucide-react'
@@ -18,15 +18,9 @@ import {
 } from '@/components/ui/select'
 import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
 import type { MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
-
-const pad2 = (n: number) => String(n).padStart(2, '0')
-
-const toLocalDatetimeValue = (d: Date) => {
-  // datetime-local expects local time format: YYYY-MM-DDTHH:mm
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
-}
 
 const toIsoFromLocalDatetime = (value: string): string => {
   const d = new Date(value)
@@ -39,32 +33,30 @@ const toIsoFromLocalDatetime = (value: string): string => {
 export default function HostMatchCreatePage() {
   const router = useRouter()
 
-  const defaultStartAt = useMemo(() => {
-    const d = new Date()
-    d.setHours(d.getHours() + 2)
-    return toLocalDatetimeValue(d)
-  }, [])
-
-  const [title, setTitle] = useState('오늘 저녁 픽업 게임')
-  const [courtId, setCourtId] = useState(MATCH_COURT_PRESETS[0]?.id ?? '')
-  const [startAt, setStartAt] = useState(defaultStartAt)
+  const [title, setTitle] = useState('')
+  const [courtId, setCourtId] = useState('')
+  const [startAt, setStartAt] = useState('')
   const [endAt, setEndAt] = useState('')
-  const [fee, setFee] = useState<number>(8000)
-  const [capacity, setCapacity] = useState<number>(15)
+  const [fee, setFee] = useState('')
+  const [capacity, setCapacity] = useState('')
   const [level, setLevel] = useState<MatchLevel>('ALL')
-  const [cancellationPolicy, setCancellationPolicy] = useState('경기 시작 12시간 전까지 100% 환불')
-  const [notes, setNotes] = useState('유니폼 자유, 물 개인 지참')
-  const [depositAccount, setDepositAccount] = useState('토스뱅크 1000-0000-0000 TeamUp')
+  const [cancellationPolicy, setCancellationPolicy] = useState('')
+  const [notes, setNotes] = useState('')
+  const [depositAccount, setDepositAccount] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const parsedFee = Number(fee)
+  const parsedCapacity = Number(capacity)
   const canSubmit = Boolean(
     title.trim() &&
       courtId &&
       startAt &&
-      Number.isFinite(fee) &&
-      fee > 0 &&
-      Number.isFinite(capacity) &&
-      capacity > 0 &&
+      fee.trim() &&
+      Number.isFinite(parsedFee) &&
+      parsedFee > 0 &&
+      capacity.trim() &&
+      Number.isFinite(parsedCapacity) &&
+      parsedCapacity > 0 &&
       depositAccount.trim()
   )
 
@@ -98,8 +90,8 @@ export default function HostMatchCreatePage() {
         courtId,
         startAt: toIsoFromLocalDatetime(startAt),
         endAt: endAt.trim() ? toIsoFromLocalDatetime(endAt) : undefined,
-        fee: Math.round(fee),
-        capacity: Math.round(capacity),
+        fee: Math.round(parsedFee),
+        capacity: Math.round(parsedCapacity),
         level,
         cancellationPolicy: cancellationPolicy.trim() || undefined,
         notes: notes.trim() || undefined,
@@ -176,11 +168,21 @@ export default function HostMatchCreatePage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">시작</p>
-                <Input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={startAt}
+                  onChange={(e) => setStartAt(e.target.value)}
+                  placeholder="예: 2026-03-30T19:00"
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">종료 (선택)</p>
-                <Input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={endAt}
+                  onChange={(e) => setEndAt(e.target.value)}
+                  placeholder="예: 2026-03-30T21:00"
+                />
               </div>
             </div>
 
@@ -191,7 +193,8 @@ export default function HostMatchCreatePage() {
                   type="number"
                   min={0}
                   value={fee}
-                  onChange={(e) => setFee(Number(e.target.value))}
+                  onChange={(e) => setFee(e.target.value)}
+                  placeholder="예: 8000"
                 />
               </div>
               <div className="space-y-1">
@@ -200,7 +203,8 @@ export default function HostMatchCreatePage() {
                   type="number"
                   min={1}
                   value={capacity}
-                  onChange={(e) => setCapacity(Number(e.target.value))}
+                  onChange={(e) => setCapacity(e.target.value)}
+                  placeholder="예: 15"
                 />
               </div>
             </div>
@@ -212,10 +216,10 @@ export default function HostMatchCreatePage() {
                   <SelectValue placeholder="레벨 선택" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">ALL</SelectItem>
-                  <SelectItem value="BEGINNER">BEGINNER</SelectItem>
-                  <SelectItem value="INTERMEDIATE">INTERMEDIATE</SelectItem>
-                  <SelectItem value="ADVANCED">ADVANCED</SelectItem>
+                  <SelectItem value="ALL">{getMatchLevelLabel('ALL')}</SelectItem>
+                  <SelectItem value="BEGINNER">{getMatchLevelLabel('BEGINNER')}</SelectItem>
+                  <SelectItem value="INTERMEDIATE">{getMatchLevelLabel('INTERMEDIATE')}</SelectItem>
+                  <SelectItem value="ADVANCED">{getMatchLevelLabel('ADVANCED')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -231,12 +235,20 @@ export default function HostMatchCreatePage() {
               <p className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <CalendarDays className="h-4 w-4" /> 취소 정책
               </p>
-              <Textarea value={cancellationPolicy} onChange={(e) => setCancellationPolicy(e.target.value)} />
+              <Textarea
+                value={cancellationPolicy}
+                onChange={(e) => setCancellationPolicy(e.target.value)}
+                placeholder="예: 경기 시작 12시간 전까지 100% 환불"
+              />
             </div>
 
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">유의사항</p>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="예: 유니폼 자유, 물 개인 지참"
+              />
             </div>
           </CardContent>
         </Card>

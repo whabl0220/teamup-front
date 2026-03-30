@@ -18,6 +18,7 @@ import { getLocalUser } from '@/lib/services/match'
 import type { MatchApplicationStatus } from '@/types/match'
 import { formatDateTimeKorean } from '@/lib/date-format'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
 
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 type MyStatusFilter = 'ALL' | MatchApplicationStatus
@@ -254,7 +255,7 @@ export default function MatchesPage() {
                       </div>
                       <div className="mt-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{match.level}</Badge>
+                          <Badge variant="outline">{getMatchLevelLabel(match.level)}</Badge>
                           {myApplication && (
                             <Badge
                               variant={APPLICATION_STATUS_META[myApplication.status].variant}

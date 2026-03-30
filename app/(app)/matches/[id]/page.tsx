@@ -20,6 +20,7 @@ import {
 import { getLocalUser } from '@/lib/services/match'
 import { formatDateTimeKorean } from '@/lib/date-format'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
 
 type LocalApplicationState = {
   applicationId: string
@@ -239,7 +240,7 @@ export default function MatchDetailPage() {
             </div>
             <div className="mt-4 space-y-2 border-t border-border/50 pt-4">
               <div className="flex items-center justify-between gap-2">
-                <Badge variant="outline">{match.level}</Badge>
+                <Badge variant="outline">{getMatchLevelLabel(match.level)}</Badge>
               </div>
               <div className="rounded-lg bg-muted/30 px-3 py-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
