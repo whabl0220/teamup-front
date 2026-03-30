@@ -19,16 +19,9 @@ import {
 import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
+import { isMatchFormSubmittable, toMatchPayload, validateMatchDateRange } from '@/lib/match-form'
 import type { MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
-
-const toIsoFromLocalDatetime = (value: string): string => {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) {
-    throw new Error('Invalid datetime')
-  }
-  return d.toISOString()
-}
 
 export default function HostMatchCreatePage() {
   const router = useRouter()
@@ -45,20 +38,18 @@ export default function HostMatchCreatePage() {
   const [depositAccount, setDepositAccount] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const parsedFee = Number(fee)
-  const parsedCapacity = Number(capacity)
-  const canSubmit = Boolean(
-    title.trim() &&
-      courtId &&
-      startAt &&
-      fee.trim() &&
-      Number.isFinite(parsedFee) &&
-      parsedFee > 0 &&
-      capacity.trim() &&
-      Number.isFinite(parsedCapacity) &&
-      parsedCapacity > 0 &&
-      depositAccount.trim()
-  )
+  const canSubmit = isMatchFormSubmittable({
+    title,
+    courtId,
+    startAt,
+    endAt,
+    fee,
+    capacity,
+    level,
+    cancellationPolicy,
+    notes,
+    depositAccount,
+  })
 
   const handleCreate = async () => {
     if (!canSubmit) {
@@ -71,32 +62,27 @@ export default function HostMatchCreatePage() {
       return
     }
 
-    const startDate = new Date(startAt)
-    const endDate = endAt ? new Date(endAt) : null
-    if (Number.isNaN(startDate.getTime()) || (endDate && Number.isNaN(endDate.getTime()))) {
-      toast.error('시작/종료 시간을 다시 확인해주세요.')
-      return
-    }
-    if (endDate && endDate.getTime() <= startDate.getTime()) {
-      toast.error('종료 시간은 시작 시간보다 늦어야 합니다.')
+    const dateValidation = validateMatchDateRange(startAt, endAt)
+    if (!dateValidation.ok) {
+      toast.error(dateValidation.message)
       return
     }
 
     try {
       setIsSubmitting(true)
 
-      const payload = {
-        title: title.trim(),
+      const payload = toMatchPayload({
+        title,
         courtId,
-        startAt: toIsoFromLocalDatetime(startAt),
-        endAt: endAt.trim() ? toIsoFromLocalDatetime(endAt) : undefined,
-        fee: Math.round(parsedFee),
-        capacity: Math.round(parsedCapacity),
+        startAt,
+        endAt,
+        fee,
+        capacity,
         level,
-        cancellationPolicy: cancellationPolicy.trim() || undefined,
-        notes: notes.trim() || undefined,
-        depositAccount: depositAccount.trim(),
-      }
+        cancellationPolicy,
+        notes,
+        depositAccount,
+      })
 
       const created = await matchService.createMatch(payload)
       toast.success('주최 경기가 생성되었습니다.')

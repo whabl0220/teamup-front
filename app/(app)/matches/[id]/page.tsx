@@ -21,6 +21,7 @@ import { getLocalUser } from '@/lib/services/match'
 import { formatDateTimeKorean } from '@/lib/date-format'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
+import { isNetworkOrTimeoutError } from '@/lib/services/client'
 
 type LocalApplicationState = {
   applicationId: string
@@ -144,6 +145,10 @@ export default function MatchDetailPage() {
         toast.error('내가 주최한 경기는 참가 신청할 수 없습니다.')
         return
       }
+      if (!isNetworkOrTimeoutError(err)) {
+        toast.error('참가 신청에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
       const localUser = getLocalUser()
       const fallbackId = `local-${Date.now()}`
       upsertStoredApplication({
@@ -157,7 +162,7 @@ export default function MatchDetailPage() {
       setApplication({ applicationId: fallbackId, status: 'PENDING_DEPOSIT' })
       const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
       setMatch(updatedMatch)
-      toast.success('참가 신청이 완료되었습니다. 입금 후 승인을 기다려주세요.')
+      toast.success('네트워크 불안정으로 임시 저장되었습니다. 연결 후 다시 확인해주세요.')
     } finally {
       setIsSubmitting(false)
     }
@@ -174,12 +179,16 @@ export default function MatchDetailPage() {
       const updatedMatch = await matchService.getMatch(match.id)
       setMatch(updatedMatch)
       toast.success('참가 신청 취소가 완료되었습니다.')
-    } catch {
+    } catch (err) {
+      if (!isNetworkOrTimeoutError(err)) {
+        toast.error('참가 신청 취소에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
       updateStoredApplicationStatus(application.applicationId, 'CANCELLED')
       setApplication({ ...application, status: 'CANCELLED' })
       const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
       setMatch(updatedMatch)
-      toast.success('참가 신청 취소가 완료되었습니다.')
+      toast.success('네트워크 불안정으로 임시 반영되었습니다. 연결 후 다시 확인해주세요.')
     } finally {
       setIsSubmitting(false)
     }

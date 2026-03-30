@@ -1,6 +1,12 @@
 import type { MatchApplication, MatchApplicationStatus } from '@/types/match'
 
 const MATCH_APPLICATIONS_KEY = 'teamup_match_applications_v2'
+const MATCH_APPLICATIONS_CHANGED_EVENT = 'teamup:match-applications-changed'
+
+const notifyApplicationsChanged = () => {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new Event(MATCH_APPLICATIONS_CHANGED_EVENT))
+}
 
 export const getStoredApplications = (): MatchApplication[] => {
   if (typeof window === 'undefined') return []
@@ -17,6 +23,7 @@ export const getStoredApplications = (): MatchApplication[] => {
 export const setStoredApplications = (applications: MatchApplication[]) => {
   if (typeof window === 'undefined') return
   localStorage.setItem(MATCH_APPLICATIONS_KEY, JSON.stringify(applications))
+  notifyApplicationsChanged()
 }
 
 export const getStoredApplicationsByMatchId = (matchId: string): MatchApplication[] =>
@@ -51,5 +58,21 @@ export const updateStoredApplicationStatus = (
 export const clearStoredApplications = () => {
   if (typeof window === 'undefined') return
   localStorage.removeItem(MATCH_APPLICATIONS_KEY)
+  notifyApplicationsChanged()
+}
+
+export const subscribeStoredApplications = (onChange: () => void) => {
+  if (typeof window === 'undefined') {
+    return () => {}
+  }
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === MATCH_APPLICATIONS_KEY) onChange()
+  }
+  window.addEventListener('storage', handleStorage)
+  window.addEventListener(MATCH_APPLICATIONS_CHANGED_EVENT, onChange)
+  return () => {
+    window.removeEventListener('storage', handleStorage)
+    window.removeEventListener(MATCH_APPLICATIONS_CHANGED_EVENT, onChange)
+  }
 }
 

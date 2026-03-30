@@ -30,6 +30,7 @@ import { toast } from 'sonner'
 import { formatDateTimeKorean } from '@/lib/date-format'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 import { getLocalUser } from '@/lib/services/match'
+import { isNetworkOrTimeoutError } from '@/lib/services/client'
 
 const STATUS_OPTIONS: Match['status'][] = ['RECRUITING', 'FULL', 'CANCELLED', 'ENDED']
 
@@ -155,10 +156,14 @@ export default function HostMatchDetailPage() {
       await matchService.confirmApplication(matchId, application.id)
       await refreshMatchAndApplications(matchId)
       toast.success(`${application.userName} 참가를 확정했습니다.`)
-    } catch {
+    } catch (err) {
+      if (!isNetworkOrTimeoutError(err)) {
+        toast.error('참가 확정 처리에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
       updateStoredApplicationStatus(application.id, 'CONFIRMED')
       await refreshMatchAndApplications(matchId)
-      toast.success(`${application.userName} 참가를 확정했습니다.`)
+      toast.success(`${application.userName} 참가를 임시 반영했습니다. 연결 후 다시 확인해주세요.`)
     } finally {
       setIsSubmitting(false)
     }
@@ -180,10 +185,14 @@ export default function HostMatchDetailPage() {
       await matchService.refundApplication(matchId, application.id)
       await refreshMatchAndApplications(matchId)
       toast.success(`${application.userName} 환불 처리를 완료했습니다.`)
-    } catch {
+    } catch (err) {
+      if (!isNetworkOrTimeoutError(err)) {
+        toast.error('환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
       updateStoredApplicationStatus(application.id, 'REFUNDED')
       await refreshMatchAndApplications(matchId)
-      toast.success(`${application.userName} 환불 처리를 완료했습니다.`)
+      toast.success(`${application.userName} 환불 처리를 임시 반영했습니다. 연결 후 다시 확인해주세요.`)
     } finally {
       setIsSubmitting(false)
     }
@@ -212,7 +221,10 @@ export default function HostMatchDetailPage() {
         try {
           await matchService.refundApplication(matchId, app.id)
           successCount += 1
-        } catch {
+        } catch (err) {
+          if (!isNetworkOrTimeoutError(err)) {
+            throw err
+          }
           updateStoredApplicationStatus(app.id, 'REFUNDED')
           successCount += 1
         }
@@ -220,6 +232,8 @@ export default function HostMatchDetailPage() {
 
       await refreshMatchAndApplications(matchId)
       toast.success(`환불 ${successCount}건을 일괄 처리했습니다.`)
+    } catch {
+      toast.error('일괄 환불 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
     } finally {
       setIsSubmitting(false)
     }
@@ -241,9 +255,13 @@ export default function HostMatchDetailPage() {
       const updated = await matchService.updateMatchStatus(matchId, { status: nextStatus })
       setMatch(updated)
       toast.success(`경기 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
-    } catch {
+    } catch (err) {
+      if (!isNetworkOrTimeoutError(err)) {
+        toast.error('경기 상태 변경에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
       setMatch({ ...match, status: nextStatus })
-      toast.success(`경기 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
+      toast.success(`네트워크 불안정으로 상태를 임시 반영했습니다. 연결 후 다시 확인해주세요.`)
     } finally {
       setIsSubmitting(false)
     }
