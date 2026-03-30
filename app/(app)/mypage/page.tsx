@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useClerk } from '@clerk/nextjs'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { Button } from '@/components/ui/button'
@@ -38,6 +39,7 @@ import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 
 export default function MyPage() {
   const router = useRouter()
+  const { signOut } = useClerk()
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
@@ -86,8 +88,19 @@ export default function MyPage() {
     refreshLocalSummary()
   }, [refreshLocalSummary])
 
-  const handleLogout = () => {
-    router.push('/')
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      localStorage.removeItem('teamup_identity_v1')
+      toast.success('로그아웃 되었습니다.')
+      router.push('/')
+    } catch (err) {
+      toast.error(
+        toUserErrorMessage(err, {
+          fallback: '로그아웃에 실패했습니다.',
+        })
+      )
+    }
   }
 
   const handleDeleteAccount = () => {

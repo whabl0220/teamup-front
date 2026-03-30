@@ -16,10 +16,10 @@ import { toast } from 'sonner'
 
 export default function SignupPage() {
   const router = useRouter()
-  const { isSignedIn } = useAuth()
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth()
   const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp()
   const { isLoaded: isSignInLoaded, signIn } = useSignIn()
-  const [step, setStep] = useState<'account' | 'profile'>('account')
+  const [step, setStep] = useState<'account' | 'profile' | 'verify'>('account')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -37,10 +37,11 @@ export default function SignupPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
 
   useEffect(() => {
-    if (isSignedIn) router.replace('/home')
-  }, [isSignedIn, router])
+    if (isAuthLoaded && isSignedIn) router.replace('/home')
+  }, [isAuthLoaded, isSignedIn, router])
 
   const getClerkErrorMessage = (err: unknown, fallback: string) => {
     if (
@@ -106,21 +107,60 @@ export default function SignupPage() {
         },
       })
 
-      if (result.status !== 'complete') {
-        throw new Error('회원가입 후 인증 절차가 필요합니다. Clerk 설정을 확인해주세요.')
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        toast.success('회원가입 완료', {
+          description: `환영합니다, ${formData.nickname || '플레이어'}님!`,
+        })
+        router.push('/home')
+        return
       }
 
-      await setActive({ session: result.createdSessionId })
-      toast.success('회원가입 완료', {
-        description: `환영합니다, ${formData.nickname || '플레이어'}님!`,
-      })
-      router.push('/home')
+      if (result.unverifiedFields?.includes('email_address')) {
+        await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+        setStep('verify')
+        toast.info('이메일로 전송된 인증 코드를 입력해주세요.')
+        return
+      }
+
+      throw new Error('회원가입 후 추가 인증 절차가 필요합니다. Clerk 설정을 확인해주세요.')
     } catch (err) {
       const errorMessage = getClerkErrorMessage(err, '회원가입에 실패했습니다.')
       setError(errorMessage)
       toast.error('회원가입 실패', {
         description: errorMessage,
       })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isSignUpLoaded || !signUp) return
+    if (!verificationCode.trim()) {
+      setError('인증 코드를 입력해주세요.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+    try {
+      const result = await signUp.attemptEmailAddressVerification({
+        code: verificationCode.trim(),
+      })
+
+      if (result.status !== 'complete') {
+        throw new Error('이메일 인증을 완료하지 못했습니다. 코드를 다시 확인해주세요.')
+      }
+
+      await setActive({ session: result.createdSessionId })
+      toast.success('이메일 인증 및 회원가입이 완료되었습니다.')
+      router.push('/home')
+    } catch (err) {
+      const message = getClerkErrorMessage(err, '인증 코드 확인에 실패했습니다.')
+      setError(message)
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
@@ -148,7 +188,17 @@ export default function SignupPage() {
         return '이메일과 비밀번호로 계정을 생성하세요'
       case 'profile':
         return '플레이어 카드 정보를 입력하세요'
+      case 'verify':
+        return '이메일로 받은 인증 코드를 입력하세요'
     }
+  }
+
+  if (!isAuthLoaded || isSignedIn) {
+    return (
+      <div className="flex min-h-[320px] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -311,6 +361,44 @@ export default function SignupPage() {
               fields="all"
             />
           </>
+        )}
+
+        {step === 'verify' && (
+          <form onSubmit={handleVerifyEmail} className="space-y-4">
+            <div className="rounded-lg bg-secondary/30 p-3 text-sm text-muted-foreground">
+              <p>
+                <strong className="text-foreground">{email}</strong>로 인증 코드가 전송되었습니다.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="verificationCode">인증 코드</Label>
+              <Input
+                id="verificationCode"
+                type="text"
+                placeholder="이메일 인증 코드 입력"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                disabled={isLoading}
+                className="h-11"
+              />
+            </div>
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+              {isLoading ? '인증 중...' : '인증 완료'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              disabled={isLoading}
+              onClick={() => {
+                setStep('account')
+                setVerificationCode('')
+              }}
+            >
+              이메일/비밀번호 다시 입력
+            </Button>
+          </form>
         )}
 
         {/* 로그인 링크 */}

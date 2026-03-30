@@ -15,7 +15,7 @@ import { toast } from 'sonner'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { isSignedIn } = useAuth()
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth()
   const { isLoaded, signIn, setActive } = useSignIn()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,8 +24,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (isSignedIn) router.replace('/home')
-  }, [isSignedIn, router])
+    if (isAuthLoaded && isSignedIn) router.replace('/home')
+  }, [isAuthLoaded, isSignedIn, router])
 
   const getClerkErrorMessage = (err: unknown, fallback: string) => {
     if (
@@ -98,6 +98,14 @@ export default function LoginPage() {
       setError(message)
       toast.error(message)
     }
+  }
+
+  if (!isAuthLoaded || isSignedIn) {
+    return (
+      <div className="flex min-h-[320px] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (

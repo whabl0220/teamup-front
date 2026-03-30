@@ -1,0 +1,150 @@
+# Clerk 인증 전환 및 운영 설정 가이드
+
+## 목적
+
+이 문서는 TeamUp 프론트엔드에서 Clerk 인증을 사용하는 현재 상태와, 운영 환경에서 필요한 설정 절차를 정리합니다.
+
+- 로그인/회원가입 UI는 기존 화면을 최대한 유지
+- 이메일/비밀번호 + Google + Apple 소셜 로그인 지원
+- 백엔드 완전 연동 전 단계에서 프론트 인증을 안정적으로 운영
+
+---
+
+## 현재 적용 상태 (프론트)
+
+다음 항목이 이미 코드에 반영되어 있습니다.
+
+- `ClerkProvider` 적용 (`app/layout.tsx`)
+- 로그인 페이지 Clerk 전환 (`app/(auth)/login/page.tsx`)
+- 회원가입 페이지 Clerk 전환 + 이메일 코드 인증 분기 (`app/(auth)/signup/page.tsx`)
+- Google/Apple 소셜 버튼 추가 (로그인/회원가입)
+- SSO 콜백 라우트 추가 (`app/sso-callback/[[...sso-callback]]/page.tsx`)
+- 라우트 보호 추가 (`middleware.ts`)
+  - `/home`, `/matches`, `/host`, `/notifications`, `/mypage`, `/profile`, `/terms`, `/privacy`, `/about`
+- Clerk 로그아웃 적용 (`app/(app)/mypage/page.tsx`)
+- Clerk 사용자 식별 동기화 (`components/providers/ClerkIdentitySync.tsx`)
+  - `teamup_identity_v1` 키에 최소 사용자 식별 정보 저장
+
+---
+
+## 환경 변수 설정
+
+`.env.local`에 아래 값을 설정합니다.
+
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxxxxxxxxxxxxxx
+CLERK_SECRET_KEY=sk_test_xxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+설정 후 개발 서버를 재시작합니다.
+
+```bash
+npm run dev
+```
+
+---
+
+## Clerk 대시보드 기본 설정
+
+Clerk Dashboard에서 프로젝트를 선택한 뒤 아래 항목을 확인합니다.
+
+- Sign-in URL: `/login`
+- Sign-up URL: `/signup`
+- After sign-in URL: `/home`
+- After sign-up URL: `/home`
+
+인증 방식:
+
+- Email + Password: Enabled
+- Google: Enabled (아래 연동 절차 참고)
+- Apple: Enabled (아래 연동 절차 참고)
+
+---
+
+## Google 소셜 로그인 설정
+
+### 1) Google Cloud Console
+
+- API 및 서비스 > 사용자 인증 정보
+- OAuth 클라이언트 ID 생성 (애플리케이션 유형: 웹 애플리케이션)
+- Authorized JavaScript origins
+  - `http://localhost:3000`
+  - (배포 도메인 추가 예정 시 함께 등록)
+- Authorized redirect URI
+  - Clerk에서 제공하는 Google Redirect URL을 그대로 등록
+
+### 2) Clerk Dashboard
+
+- User & Authentication > Social Connections > Google
+- Google Client ID / Client Secret 입력
+- 저장 후 활성화
+
+---
+
+## Apple 소셜 로그인 설정
+
+### 1) Apple Developer
+
+- Certificates, IDs & Profiles
+- Services ID 생성 후 Sign in with Apple 활성화
+- Return URL에 Clerk에서 제공하는 Apple Redirect URL 등록
+- Key(`.p8`) 생성 후 아래 값 확보
+  - Key ID
+  - Team ID
+  - Services ID (Client ID)
+  - Private Key 내용
+
+### 2) Clerk Dashboard
+
+- Social Connections > Apple
+- Key ID, Team ID, Services ID, Private Key 입력
+- 저장 후 활성화
+
+---
+
+## 동작 확인 체크리스트
+
+- `/login`
+  - 이메일/비밀번호 로그인 성공
+  - Google 로그인 성공
+  - Apple 로그인 성공
+- `/signup`
+  - 이메일/비밀번호 회원가입 성공
+  - 이메일 인증 코드 입력 분기 정상 동작
+  - Google/Apple 가입 경로 정상 동작
+- 보호 라우트 직접 접근 시 비로그인 상태에서 인증 유도
+- `/mypage` 로그아웃 시 세션 종료 + 홈 이동
+
+---
+
+## 트러블슈팅
+
+### 1) `middleware` deprecate 경고
+
+Next.js 16에서는 `middleware` 컨벤션이 `proxy`로 전환되는 경고가 표시될 수 있습니다.
+현재 동작에는 영향이 없지만, 추후 `proxy.ts`로 마이그레이션을 권장합니다.
+
+### 2) 소셜 로그인 버튼 클릭 후 실패
+
+- Clerk Social Connection 활성화 여부 확인
+- Google/Apple 콘솔의 Redirect URL 오탈자 확인
+- 로컬 도메인(`http://localhost:3000`) 등록 여부 확인
+
+### 3) 회원가입 후 인증 코드 단계에서 실패
+
+- Clerk Email verification 정책 확인 (email_code 사용 가능 여부)
+- 스팸함 확인
+- 코드 만료 시 재시도
+
+---
+
+## 백엔드 연동 전제 참고
+
+현재는 프론트 중심 Clerk 인증 전환 상태입니다.
+백엔드 통합 시에는 다음이 필요합니다.
+
+- 백엔드에서 Clerk JWT 검증
+- `clerk_user_id` 기반 사용자 매핑
+- 프론트 API 요청 시 Clerk 세션 토큰 전달 방식 정리
+
+이 문서는 프론트 운영 설정을 우선으로 관리합니다.
