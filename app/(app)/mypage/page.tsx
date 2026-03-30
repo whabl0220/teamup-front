@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { userService } from '@/lib/services'
 import { clearNotifications } from '@/lib/local-notifications'
-import { clearStoredApplications, getStoredApplications } from '@/lib/match-local-store'
+import { clearStoredApplications } from '@/lib/match-local-store'
 import { clearStoredMatches } from '@/lib/match-local-matches-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { User, Position, PlayStyle } from '@/types'
@@ -32,6 +32,7 @@ import {
   User as UserIcon,
   Moon,
 } from 'lucide-react'
+import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 
 export default function MyPage() {
   const router = useRouter()
@@ -45,17 +46,17 @@ export default function MyPage() {
     confirmed: 0,
     refunded: 0,
   })
+  const localUserId = useMemo(() => getLocalUser().userId, [])
+  const myApps = useMyStoredApplications(localUserId)
   const { theme, setTheme } = useTheme()
 
   const refreshLocalSummary = useCallback(() => {
-    const localUser = getLocalUser()
-    const myApps = getStoredApplications().filter((app) => app.userId === localUser.userId)
     setActivitySummary({
       applied: myApps.length,
       confirmed: myApps.filter((app) => app.status === 'CONFIRMED').length,
       refunded: myApps.filter((app) => app.status === 'REFUNDED').length,
     })
-  }, [])
+  }, [myApps])
 
   useEffect(() => {
     const load = async () => {
@@ -89,10 +90,6 @@ export default function MyPage() {
   useEffect(() => {
     setMounted(true)
     refreshLocalSummary()
-
-    const onFocus = () => refreshLocalSummary()
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
   }, [refreshLocalSummary])
 
   const handleLogout = () => {
@@ -161,12 +158,12 @@ export default function MyPage() {
           <CardContent className="p-5">
             <div className="mb-3 flex items-center justify-between">
               <p className="font-semibold">내 프로필</p>
-              <Link href="/profile/edit">
-                <Button variant="outline" size="sm" className="gap-2">
+              <Button asChild variant="outline" size="sm" className="gap-2">
+                <Link href="/profile/edit">
                   <Edit className="h-4 w-4" />
                   수정
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
             <PlayerCard user={user} currentTeam={null} showExtendedInfo={false} className="mx-auto" />
           </CardContent>
@@ -189,12 +186,12 @@ export default function MyPage() {
                 <p className="text-lg font-bold text-destructive">{activitySummary.refunded}</p>
               </div>
             </div>
-            <Link href="/matches">
-              <Button variant="secondary" className="w-full justify-start gap-2">
+            <Button asChild variant="secondary" className="w-full justify-start gap-2">
+              <Link href="/matches">
                 <UserIcon className="h-4 w-4" />
                 참가 보기
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -202,8 +199,7 @@ export default function MyPage() {
           <CardContent className="p-5 space-y-3">
             <p className="font-semibold">계정 설정</p>
             <div className="rounded-lg border border-border/50 bg-card/70">
-              <Link href="/profile/basic">
-                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
+              <Link href="/profile/basic" className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
                     <div className="teamup-icon-soft flex h-8 w-8 items-center justify-center rounded-lg">
                       <UserIcon className="h-4 w-4 text-primary" />
@@ -211,7 +207,6 @@ export default function MyPage() {
                     <span className="text-sm font-medium">기본 정보 수정</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
               </Link>
               <Separator />
               <div className="flex items-center justify-between p-3">
@@ -244,8 +239,7 @@ export default function MyPage() {
             <Separator />
             <p className="font-semibold">기타</p>
             <div className="rounded-lg border border-border/50 bg-card/70">
-              <Link href="/terms">
-                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
+              <Link href="/terms" className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                       <FileText className="h-4 w-4 text-muted-foreground" />
@@ -253,11 +247,9 @@ export default function MyPage() {
                     <span className="text-sm font-medium">이용약관</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
               </Link>
               <Separator />
-              <Link href="/privacy">
-                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
+              <Link href="/privacy" className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                       <Shield className="h-4 w-4 text-muted-foreground" />
@@ -265,11 +257,9 @@ export default function MyPage() {
                     <span className="text-sm font-medium">개인정보 처리방침</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
               </Link>
               <Separator />
-              <Link href="/about">
-                <button className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
+              <Link href="/about" className="flex w-full items-center justify-between p-3 transition-colors hover:bg-muted/40">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
                       <Info className="h-4 w-4 text-muted-foreground" />
@@ -280,7 +270,6 @@ export default function MyPage() {
                     <span className="text-xs text-muted-foreground">v1.0.0</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                </button>
               </Link>
             </div>
             <Separator />

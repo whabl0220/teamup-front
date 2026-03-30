@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ClipboardList, RefreshCw } from 'lucide-react'
+import { CalendarDays, MapPin, RefreshCw, Users } from 'lucide-react'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,8 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
 import type { Match } from '@/types/match'
 import { toast } from 'sonner'
-import { formatDateTimeKorean } from '@/lib/date-format'
+import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { MATCH_STATUS_META } from '@/lib/status-meta'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
 
 export default function HostMatchesPage() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -82,7 +83,7 @@ export default function HostMatchesPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           <Button variant={mode === 'ALL' ? 'default' : 'outline'} size="sm" onClick={() => setMode('ALL')}>
             전체
           </Button>
@@ -107,15 +108,16 @@ export default function HostMatchesPage() {
           </Button>
         </div>
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, idx) => (
               <Card key={idx} className="border-border/50">
                 <CardContent className="space-y-3 p-4">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-5 w-40" />
+                  <div className="flex items-center justify-between gap-3">
+                    <Skeleton className="h-5 w-44" />
                     <Skeleton className="h-5 w-20" />
                   </div>
-                  <Skeleton className="h-4 w-44" />
+                  <Skeleton className="h-4 w-56" />
+                  <Skeleton className="h-4 w-40" />
                   <Skeleton className="h-4 w-36" />
                 </CardContent>
               </Card>
@@ -126,9 +128,9 @@ export default function HostMatchesPage() {
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-sm text-muted-foreground">내 주최 경기 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
-                <Link href="/host/matches/create">
-                  <Button>주최 경기 만들기</Button>
-                </Link>
+                <Button asChild>
+                  <Link href="/host/matches/create">주최 경기 만들기</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -141,37 +143,68 @@ export default function HostMatchesPage() {
                   : '조건에 맞는 주최 경기가 없습니다.'}
               </p>
               <div className="flex justify-center gap-2">
-                <Link href="/host/matches/create">
-                  <Button>주최 경기 만들기</Button>
-                </Link>
+                <Button asChild>
+                  <Link href="/host/matches/create">주최 경기 만들기</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {filteredMatches.map((match) => (
-              <Link key={match.id} href={`/host/matches/${match.id}`} className="block">
-                <Card className="teamup-card-soft cursor-pointer">
-                  <CardContent className="p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-base font-semibold">{match.title}</p>
-                      <Badge
-                        variant={MATCH_STATUS_META[match.status].variant}
-                        className={MATCH_STATUS_META[match.status].className}
-                      >
-                        {MATCH_STATUS_META[match.status].label}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{match.court.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatDateTimeKorean(match.startAt)}</p>
-                    <div className="mt-2 flex items-center gap-2 text-xs text-primary">
-                      <ClipboardList className="h-4 w-4" />
-                      <span>신청자/상태 관리</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+          <div className="space-y-3">
+            {filteredMatches.map((match) => {
+              const occupancy = `${match.confirmedCount + match.pendingCount}/${match.capacity}`
+              return (
+                <Link key={match.id} href={`/host/matches/${match.id}`} className="block">
+                  <Card className="teamup-card-soft cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="mb-2 flex items-start justify-between gap-2">
+                        <h3 className="text-base font-semibold text-foreground">{match.title}</h3>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Badge
+                            variant={MATCH_STATUS_META[match.status].variant}
+                            className={MATCH_STATUS_META[match.status].className}
+                          >
+                            {MATCH_STATUS_META[match.status].label}
+                          </Badge>
+                          <Badge variant="outline">내 주최</Badge>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5 text-sm text-muted-foreground">
+                        <p className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4 shrink-0" />
+                          {formatDateTimeKorean(match.startAt)}
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 shrink-0" />
+                          {match.court.name}
+                        </p>
+                        <p className="flex items-center gap-2">
+                          <Users className="h-4 w-4 shrink-0" />
+                          {occupancy}
+                        </p>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <Badge variant="outline">{getMatchLevelLabel(match.level)}</Badge>
+                        <p className="text-xs font-semibold text-foreground">{formatCurrencyKRW(match.fee)}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )
+            })}
+            <Card className="border-border/50">
+              <CardContent className="space-y-4 p-8 text-center">
+                <p className="text-sm text-muted-foreground">
+                  다른 일정으로 주최 경기를 더 만들 수 있습니다. 
+                </p>
+                <p className="text-sm text-muted-foreground">(2시간 이상 차이나는 경기만 추가 주최 가능)</p>
+                <div className="flex justify-center gap-2">
+                  <Button asChild>
+                    <Link href="/host/matches/create">주최 경기 만들기</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </main>

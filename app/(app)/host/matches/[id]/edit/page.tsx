@@ -19,6 +19,9 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
+import { isMatchFormSubmittable, toMatchPayload, validateMatchDateRange } from '@/lib/match-form'
+import { getErrorMessage, isHostScheduleOverlapError } from '@/lib/error-utils'
 import { getLocalUser } from '@/lib/services/match'
 import type { Match, MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
@@ -27,12 +30,6 @@ const pad2 = (n: number) => String(n).padStart(2, '0')
 
 const toLocalDatetimeValue = (d: Date) =>
   `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
-
-const toIsoFromLocalDatetime = (value: string): string => {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) throw new Error('Invalid datetime')
-  return d.toISOString()
-}
 
 export default function HostMatchEditPage() {
   const params = useParams<{ id: string }>()
@@ -47,8 +44,8 @@ export default function HostMatchEditPage() {
   const [courtId, setCourtId] = useState('')
   const [startAt, setStartAt] = useState('')
   const [endAt, setEndAt] = useState('')
-  const [fee, setFee] = useState<number>(0)
-  const [capacity, setCapacity] = useState<number>(0)
+  const [fee, setFee] = useState('')
+  const [capacity, setCapacity] = useState('')
   const [level, setLevel] = useState<MatchLevel>('ALL')
   const [cancellationPolicy, setCancellationPolicy] = useState('')
   const [notes, setNotes] = useState('')
@@ -72,8 +69,8 @@ export default function HostMatchEditPage() {
         setCourtId(data.court.id)
         setStartAt(toLocalDatetimeValue(new Date(data.startAt)))
         setEndAt(data.endAt ? toLocalDatetimeValue(new Date(data.endAt)) : '')
-        setFee(data.fee)
-        setCapacity(data.capacity)
+        setFee(String(data.fee))
+        setCapacity(String(data.capacity))
         setLevel(data.level)
         setCancellationPolicy(data.cancellationPolicy ?? '')
         setNotes(data.notes ?? '')
@@ -90,17 +87,19 @@ export default function HostMatchEditPage() {
 
   const canSubmit = useMemo(
     () =>
-      Boolean(
-        title.trim() &&
-          courtId &&
-          startAt &&
-          Number.isFinite(fee) &&
-          fee > 0 &&
-          Number.isFinite(capacity) &&
-          capacity > 0 &&
-          depositAccount.trim()
-      ),
-    [title, courtId, startAt, fee, capacity, depositAccount]
+      isMatchFormSubmittable({
+        title,
+        courtId,
+        startAt,
+        endAt,
+        fee,
+        capacity,
+        level,
+        cancellationPolicy,
+        notes,
+        depositAccount,
+      }),
+    [title, courtId, startAt, endAt, fee, capacity, level, cancellationPolicy, notes, depositAccount]
   )
 
   const handleSave = async () => {
@@ -114,35 +113,37 @@ export default function HostMatchEditPage() {
       return
     }
 
-    const startDate = new Date(startAt)
-    const endDate = endAt ? new Date(endAt) : null
-    if (Number.isNaN(startDate.getTime()) || (endDate && Number.isNaN(endDate.getTime()))) {
-      toast.error('시작/종료 시간을 다시 확인해주세요.')
-      return
-    }
-    if (endDate && endDate.getTime() <= startDate.getTime()) {
-      toast.error('종료 시간은 시작 시간보다 늦어야 합니다.')
+    const dateValidation = validateMatchDateRange(startAt, endAt)
+    if (!dateValidation.ok) {
+      toast.error(dateValidation.message)
       return
     }
 
     try {
       setIsSubmitting(true)
-      await matchService.updateMatch(matchId, {
-        title: title.trim(),
-        courtId,
-        startAt: toIsoFromLocalDatetime(startAt),
-        endAt: endAt.trim() ? toIsoFromLocalDatetime(endAt) : undefined,
-        fee: Math.round(fee),
-        capacity: Math.round(capacity),
-        level,
-        cancellationPolicy: cancellationPolicy.trim() || undefined,
-        notes: notes.trim() || undefined,
-        depositAccount: depositAccount.trim(),
-      })
+      await matchService.updateMatch(
+        matchId,
+        toMatchPayload({
+          title,
+          courtId,
+          startAt,
+          endAt,
+          fee,
+          capacity,
+          level,
+          cancellationPolicy,
+          notes,
+          depositAccount,
+        })
+      )
       toast.success('주최 경기 정보를 수정했습니다.')
       router.push(`/host/matches/${matchId}`)
     } catch (err) {
-      const message = err instanceof Error ? err.message : '알 수 없는 오류'
+      if (isHostScheduleOverlapError(err)) {
+        toast.error('이미 주최 중인 다른 경기와 시간이 겹칩니다.')
+        return
+      }
+      const message = getErrorMessage(err)
       toast.error(`수정에 실패했습니다: ${message}`)
     } finally {
       setIsSubmitting(false)
@@ -194,7 +195,7 @@ export default function HostMatchEditPage() {
           <CardContent className="space-y-5 p-5">
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">경기 제목</p>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="예: 평일 저녁 픽업" />
             </div>
 
             <div className="space-y-1">
@@ -222,22 +223,45 @@ export default function HostMatchEditPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">시작</p>
-                <Input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={startAt}
+                  onChange={(e) => setStartAt(e.target.value)}
+                  placeholder="예: 2026-03-30T19:00"
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">종료 (선택)</p>
-                <Input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={endAt}
+                  onChange={(e) => setEndAt(e.target.value)}
+                  placeholder="예: 2026-03-30T21:00"
+                />
               </div>
             </div>
+            <p className="-mt-2 text-xs text-muted-foreground">종료 시간을 비우면 기본 2시간 경기로 처리됩니다.</p>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">참가비</p>
-                <Input type="number" min={0} value={fee} onChange={(e) => setFee(Number(e.target.value))} />
+                <p className="text-sm font-semibold text-foreground">총 참가비</p>
+                <Input
+                  type="number"
+                  min={1}
+                  value={fee}
+                  onChange={(e) => setFee(e.target.value)}
+                  placeholder="예: 8000"
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">정원</p>
-                <Input type="number" min={1} value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />
+                <Input
+                  type="number"
+                  min={1}
+                  value={capacity}
+                  onChange={(e) => setCapacity(e.target.value)}
+                  placeholder="예: 15"
+                />
               </div>
             </div>
 
@@ -248,10 +272,10 @@ export default function HostMatchEditPage() {
                   <SelectValue placeholder="레벨 선택" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">ALL</SelectItem>
-                  <SelectItem value="BEGINNER">BEGINNER</SelectItem>
-                  <SelectItem value="INTERMEDIATE">INTERMEDIATE</SelectItem>
-                  <SelectItem value="ADVANCED">ADVANCED</SelectItem>
+                  <SelectItem value="ALL">{getMatchLevelLabel('ALL')}</SelectItem>
+                  <SelectItem value="BEGINNER">{getMatchLevelLabel('BEGINNER')}</SelectItem>
+                  <SelectItem value="INTERMEDIATE">{getMatchLevelLabel('INTERMEDIATE')}</SelectItem>
+                  <SelectItem value="ADVANCED">{getMatchLevelLabel('ADVANCED')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -260,19 +284,31 @@ export default function HostMatchEditPage() {
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Wallet className="h-4 w-4" /> 입금 계좌
               </p>
-              <Input value={depositAccount} onChange={(e) => setDepositAccount(e.target.value)} />
+              <Input
+                value={depositAccount}
+                onChange={(e) => setDepositAccount(e.target.value)}
+                placeholder="예: 토스뱅크 1000-0000-0000 TeamUp"
+              />
             </div>
 
             <div className="space-y-1">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <CalendarDays className="h-4 w-4" /> 취소 정책
               </p>
-              <Textarea value={cancellationPolicy} onChange={(e) => setCancellationPolicy(e.target.value)} />
+              <Textarea
+                value={cancellationPolicy}
+                onChange={(e) => setCancellationPolicy(e.target.value)}
+                placeholder="예: 경기 시작 12시간 전까지 100% 환불"
+              />
             </div>
 
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">유의사항</p>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="예: 유니폼 자유, 물 개인 지참"
+              />
             </div>
           </CardContent>
         </Card>

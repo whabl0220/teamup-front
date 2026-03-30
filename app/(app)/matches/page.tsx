@@ -13,11 +13,12 @@ import { matchService } from '@/lib/services'
 import { mockMatches } from '@/lib/mock-matches'
 import type { Match } from '@/types/match'
 import { toast } from 'sonner'
-import { getStoredApplications } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { MatchApplicationStatus } from '@/types/match'
-import { formatDateTimeKorean } from '@/lib/date-format'
+import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
+import { getMatchLevelLabel } from '@/lib/match-level-meta'
+import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 type MyStatusFilter = 'ALL' | MatchApplicationStatus
@@ -67,19 +68,18 @@ export default function MatchesPage() {
     void loadMatches()
   }, [])
 
-  const myLatestApplicationByMatch = useMemo(() => {
-    const localUser = getLocalUser()
-    const apps = getStoredApplications().filter((app) => app.userId === localUser.userId)
+  const storedApplications = useMyStoredApplications(localUserId)
 
+  const myLatestApplicationByMatch = useMemo(() => {
     const byMatch = new Map<string, { status: MatchApplicationStatus; requestedAt: string }>()
-    apps.forEach((app) => {
+    storedApplications.forEach((app) => {
       const existing = byMatch.get(app.matchId)
       if (!existing || new Date(app.requestedAt).getTime() > new Date(existing.requestedAt).getTime()) {
         byMatch.set(app.matchId, { status: app.status, requestedAt: app.requestedAt })
       }
     })
     return byMatch
-  }, [])
+  }, [storedApplications])
 
   const filteredMatches = useMemo(() => {
     if (mode === 'ALL') return matches
@@ -205,9 +205,9 @@ export default function MatchesPage() {
             <CardContent className="space-y-4 p-8 text-center">
               <p className="text-sm text-muted-foreground">참가 목록 데이터를 불러오지 못했습니다.</p>
               <div className="flex justify-center gap-2">
-                <Link href="/host/matches/create">
-                  <Button>호스트 생성 화면</Button>
-                </Link>
+                <Button asChild>
+                  <Link href="/host/matches/create">호스트 생성 화면</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -254,7 +254,7 @@ export default function MatchesPage() {
                       </div>
                       <div className="mt-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge variant="outline">{match.level}</Badge>
+                          <Badge variant="outline">{getMatchLevelLabel(match.level)}</Badge>
                           {myApplication && (
                             <Badge
                               variant={APPLICATION_STATUS_META[myApplication.status].variant}
@@ -264,7 +264,7 @@ export default function MatchesPage() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs font-semibold text-foreground">{match.fee.toLocaleString()}원</p>
+                        <p className="text-xs font-semibold text-foreground">{formatCurrencyKRW(match.fee)}</p>
                       </div>
                     </CardContent>
                   </Card>

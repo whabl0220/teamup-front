@@ -28,39 +28,36 @@ export default function LandingPage() {
 
           {/* 서브타이틀 */}
           <p className="mb-12 text-base leading-relaxed text-muted-foreground">
-            AI 기반 팀 매칭으로
+            TeamUp과 함께
             <br />
-            완벽한 팀을 만나보세요
+            농구 팀 매칭을 시작해보세요
           </p>
 
           {/* 버튼 */}
           <div className="space-y-3">
-            <Link href="/login" className="block w-full">
-              <Button
-                size="lg"
-                className="h-12 w-full bg-primary text-lg font-semibold text-primary-foreground hover:bg-primary/95"
-              >
-                로그인
-              </Button>
-            </Link>
-            <Link href="/signup" className="block w-full">
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 w-full text-lg font-semibold"
-              >
-                회원가입
-              </Button>
-            </Link>
-            <Link href="/home" className="block w-full">
-              <Button
-                size="lg"
-                variant="ghost"
-                className="h-12 w-full text-lg font-semibold"
-              >
-                체험하기
-              </Button>
-            </Link>
+            <Button
+              asChild
+              size="lg"
+              className="h-12 w-full bg-primary text-lg font-semibold text-primary-foreground hover:bg-primary/95"
+            >
+              <Link href="/login">로그인</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="h-12 w-full text-lg font-semibold"
+            >
+              <Link href="/signup">회원가입</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="ghost"
+              className="h-12 w-full text-lg font-semibold"
+            >
+              <Link href="/home">체험하기</Link>
+            </Button>
           </div>
         </div>
       </main>
@@ -68,7 +65,7 @@ export default function LandingPage() {
       {/* 푸터 */}
       <footer className="border-t border-border/50 py-6">
         <div className="mx-auto max-w-lg px-4 text-center text-sm text-muted-foreground">
-          <p>2025 TeamUp. AI Powered Team Matching</p>
+          <p>2025 TeamUp. Basketball Team Matching</p>
         </div>
       </footer>
     </div>
