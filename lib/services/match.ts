@@ -1,5 +1,4 @@
-import { del, get, isNetworkOrTimeoutError, post, put } from './client'
-import { ensureMatchesSeeded, patchStoredMatch, upsertStoredMatch } from '@/lib/match-local-matches-store'
+import { isNetworkOrTimeoutError } from './client'
 import type {
   CreateMatchRequest,
   Match,
@@ -8,336 +7,38 @@ import type {
   UpdateMatchRequest,
   UpdateMatchStatusRequest,
 } from '@/types/match'
+import { matchApi } from './match-api'
+import { assertHostScheduleNoOverlapInMatches } from './match-domain'
+import { MATCH_ERROR_CODES } from './match-errors'
 import {
-  getStoredApplicationsByMatchId,
-  updateStoredApplicationStatus,
-  upsertStoredApplication,
-} from '@/lib/match-local-store'
-import { getMatchCourtById } from '@/lib/match-courts'
-import { pushNotification } from '@/lib/local-notifications'
+  applyToMatchLocal,
+  cancelApplicationLocal,
+  confirmApplicationLocal,
+  createMatchLocal,
+  getLocalUser,
+  getMatchLocal,
+  listApplicationsLocal,
+  listHostedMatchesFromLocal,
+  listMatchesLocal,
+  refundApplicationLocal,
+  updateMatchLocal,
+  updateMatchStatusLocal,
+} from './match-local'
+export { getLocalUser } from './match-local'
 
-const isBrowser = (): boolean => typeof window !== 'undefined'
-
-export const getLocalUser = () => {
-  if (!isBrowser()) return { userId: 'local-user', userName: '내 계정' }
-
-  // 기존 appData 구조가 남아있는 경우 활용
-  const raw = localStorage.getItem('teamup_app_data')
-  if (!raw) return { userId: 'local-user', userName: '내 계정' }
-
-  try {
-    const parsed = JSON.parse(raw) as {
-      user?: { id?: string; nickname?: string; name?: string }
-    }
-    const id = parsed.user?.id ? String(parsed.user.id) : 'local-user'
-    const name = parsed.user?.nickname || parsed.user?.name || '내 계정'
-    return { userId: id, userName: name }
-  } catch {
-    return { userId: 'local-user', userName: '내 계정' }
-  }
-}
-
-const recalcMatchCounts = (match: Match): Match => {
-  const apps = getStoredApplicationsByMatchId(match.id)
-  const pendingCount = apps.filter((a) => a.status === 'PENDING_DEPOSIT').length
-  const confirmedCount = apps.filter((a) => a.status === 'CONFIRMED').length
-
-  const nextStatus: Match['status'] =
-    match.status === 'CANCELLED' || match.status === 'ENDED'
-      ? match.status
-      : confirmedCount >= match.capacity
-        ? 'FULL'
-        : 'RECRUITING'
-
-  return patchStoredMatch(match.id, {
-    pendingCount,
-    confirmedCount,
-    status: nextStatus,
-  })
-}
-
-const listMatchesLocal = (params?: MatchListParams): Match[] => {
-  const matches = ensureMatchesSeeded()
-  if (!params) return matches
-
-  return matches.filter((m) => {
-    if (params.status && m.status !== params.status) return false
-    if (params.level && params.level !== m.level) return false
-    // from/to는 아직 프론트 필터 로직이 있으므로 일단 무시
-    return true
-  })
-}
-
-const getMatchLocal = (matchId: string): Match => {
-  const matches = ensureMatchesSeeded()
-  const found = matches.find((m) => m.id === matchId)
-  if (!found) throw new Error(`Match not found: ${matchId}`)
-  return found
-}
-
-const getApplicationsLocal = (matchId: string): MatchApplication[] => {
-  return getStoredApplicationsByMatchId(matchId)
-}
-
-const assertLocalHostAccess = (match: Match) => {
-  const { userId } = getLocalUser()
-  if (match.hostId !== userId) {
-    throw new Error('FORBIDDEN_HOST_ACCESS')
-  }
-}
-
-const applyToMatchLocal = (matchId: string): MatchApplication => {
-  const match = getMatchLocal(matchId)
-  if (match.status !== 'RECRUITING') {
-    throw new Error('Match not recruiting')
-  }
-
-  const { userId, userName } = getLocalUser()
-  if (match.hostId === userId) {
-    throw new Error('SELF_HOST_APPLY_FORBIDDEN')
-  }
-
-  // 이미 신청한 경우: 중복 신청 방지
-  const existing = getStoredApplicationsByMatchId(matchId).find(
-    (a) => a.userId === userId && (a.status === 'PENDING_DEPOSIT' || a.status === 'CONFIRMED')
-  )
-  if (existing) {
-    return existing
-  }
-
-  const application: MatchApplication = {
-    id: `app-${Date.now()}`,
-    matchId,
-    userId,
-    userName,
-    status: 'PENDING_DEPOSIT',
-    requestedAt: new Date().toISOString(),
-  }
-
-  upsertStoredApplication(application)
-  const updatedMatch = recalcMatchCounts(match)
-  void updatedMatch
-  pushNotification({
-    type: 'MATCH_APPLIED',
-    actor: 'USER',
-    title: '참가 신청 완료',
-    message: `${match.title} 매치 신청이 접수되었습니다. 입금 후 승인 대기 상태입니다.`,
-    meta: {
-      matchId: match.id,
-      matchTitle: match.title,
-      applicationId: application.id,
-      userId,
-      userName,
-    },
-  })
-  return application
-}
-
-const cancelApplicationLocal = (matchId: string, applicationId: string): void => {
-  const applications = getStoredApplicationsByMatchId(matchId)
-  const found = applications.find((a) => a.id === applicationId)
-  if (!found) throw new Error('Application not found')
-  const { userId } = getLocalUser()
-  if (found.userId !== userId) {
-    throw new Error('FORBIDDEN_APPLICATION_CANCEL')
-  }
-
-  updateStoredApplicationStatus(applicationId, 'CANCELLED')
-
-  const match = getMatchLocal(matchId)
-  recalcMatchCounts(match)
-}
-
-const listApplicationsLocal = (matchId: string): MatchApplication[] => {
-  const match = getMatchLocal(matchId)
-  assertLocalHostAccess(match)
-  return getApplicationsLocal(matchId)
-}
-
-const confirmApplicationLocal = (matchId: string, applicationId: string): MatchApplication => {
-  const match = getMatchLocal(matchId)
-  assertLocalHostAccess(match)
-  const applications = getStoredApplicationsByMatchId(matchId)
-  const target = applications.find((a) => a.id === applicationId)
-  if (!target) throw new Error('Application not found')
-  if (match.status === 'CANCELLED' || match.status === 'ENDED') {
-    throw new Error('MATCH_NOT_RECRUITING')
-  }
-  if (target.status !== 'PENDING_DEPOSIT') {
-    throw new Error('INVALID_APPLICATION_STATUS')
-  }
-  const confirmedCount = applications.filter((a) => a.status === 'CONFIRMED').length
-  if (confirmedCount >= match.capacity) {
-    throw new Error('MATCH_ALREADY_FULL')
-  }
-
-  updateStoredApplicationStatus(applicationId, 'CONFIRMED')
-  recalcMatchCounts(match)
-
-  const updated = getStoredApplicationsByMatchId(matchId).find((a) => a.id === applicationId)
-  if (!updated) throw new Error('Application not found after confirm')
-  return updated
-}
-
-const refundApplicationLocal = (matchId: string, applicationId: string): MatchApplication => {
-  const match = getMatchLocal(matchId)
-  assertLocalHostAccess(match)
-  const applications = getStoredApplicationsByMatchId(matchId)
-  const target = applications.find((a) => a.id === applicationId)
-  if (!target) throw new Error('Application not found')
-  updateStoredApplicationStatus(applicationId, 'REFUNDED')
-  recalcMatchCounts(match)
-
-  const apps = getStoredApplicationsByMatchId(matchId)
-  const updated = apps.find((a) => a.id === applicationId)
-  if (!updated) throw new Error('Application not found after refund')
-
-  pushNotification({
-    type: 'REFUND_COMPLETED',
-    actor: 'HOST',
-    title: '환불 처리 완료',
-    message: `${match.title} 매치 환불 처리가 완료되었습니다.`,
-    meta: {
-      matchId: match.id,
-      matchTitle: match.title,
-      applicationId: updated.id,
-      userId: target?.userId,
-      userName: target?.userName,
-    },
-  })
-  return updated
-}
-
-const createMatchLocal = (data: CreateMatchRequest): Match => {
-  const court = getMatchCourtById(data.courtId)
-  if (!court) {
-    throw new Error(`Court not found: ${data.courtId}`)
-  }
-
-  const { userId, userName } = getLocalUser()
-  const now = new Date().toISOString()
-  const match: Match = {
-    id: `match-${Date.now()}`,
-    title: data.title,
-    startAt: data.startAt,
-    endAt: data.endAt,
-    court,
-    fee: data.fee,
-    capacity: data.capacity,
-    confirmedCount: 0,
-    pendingCount: 0,
-    level: data.level,
-    status: 'RECRUITING',
-    cancellationPolicy: data.cancellationPolicy,
-    notes: data.notes,
-    hostId: userId,
-    hostName: userName,
-    depositAccount: data.depositAccount,
-    createdAt: now,
-    updatedAt: now,
-  }
-
-  upsertStoredMatch(match)
-  return match
-}
-
-const updateMatchStatusLocal = (matchId: string, data: UpdateMatchStatusRequest): Match => {
-  const match = getMatchLocal(matchId)
-  assertLocalHostAccess(match)
-  const updated = patchStoredMatch(match.id, { status: data.status })
-  if (data.status === 'CANCELLED') {
-    pushNotification({
-      type: 'MATCH_CANCELLED',
-      actor: 'HOST',
-      title: '매치가 취소되었습니다',
-      message: `${updated.title} 매치가 운영 정책에 따라 취소되었습니다.`,
-      meta: {
-        matchId: updated.id,
-        matchTitle: updated.title,
-      },
-    })
-  }
-  return updated
-}
-
-const updateMatchLocal = (matchId: string, data: UpdateMatchRequest): Match => {
-  const match = getMatchLocal(matchId)
-  assertLocalHostAccess(match)
-  const court = getMatchCourtById(data.courtId)
-  if (!court) {
-    throw new Error(`Court not found: ${data.courtId}`)
-  }
-
-  const updated = patchStoredMatch(matchId, {
-    title: data.title,
-    startAt: data.startAt,
-    endAt: data.endAt,
-    court,
-    fee: data.fee,
-    capacity: data.capacity,
-    level: data.level,
-    cancellationPolicy: data.cancellationPolicy,
-    notes: data.notes,
-    depositAccount: data.depositAccount,
-  })
-  return recalcMatchCounts(updated)
-}
-
-const buildMatchListQuery = (params?: MatchListParams): string => {
-  if (!params) return ''
-
-  const query = new URLSearchParams()
-  if (params.from) query.set('from', params.from)
-  if (params.to) query.set('to', params.to)
-  if (params.status) query.set('status', params.status)
-  if (params.level) query.set('level', params.level)
-
-  const queryString = query.toString()
-  return queryString ? `?${queryString}` : ''
-}
-
-/** 로컬 스토어에만 있는 주최 경기가 API 목록 성공 시 누락되지 않도록 병합에 사용 */
-const listHostedMatchesFromLocal = (): Match[] => {
-  const { userId } = getLocalUser()
-  return listMatchesLocal().filter((m) => m.hostId === userId)
-}
-
-/** 종료 미입력 시 일정 겹침 판단용 기본 진행 시간(픽업 게임 가정) */
-const DEFAULT_HOST_MATCH_DURATION_MS = 2 * 60 * 60 * 1000
-
-const getScheduleRangeMs = (startAt: string, endAt?: string) => {
-  const start = new Date(startAt).getTime()
-  if (Number.isNaN(start)) {
-    throw new Error('INVALID_START_AT')
-  }
-  const end = endAt ? new Date(endAt).getTime() : start + DEFAULT_HOST_MATCH_DURATION_MS
-  if (Number.isNaN(end)) {
-    throw new Error('INVALID_END_AT')
-  }
-  if (end <= start) {
-    throw new Error('INVALID_RANGE')
-  }
-  return { start, end }
-}
-
-const getMatchScheduleRangeMs = (m: Match) => getScheduleRangeMs(m.startAt, m.endAt)
-
-const scheduleRangesOverlap = (
-  a: { start: number; end: number },
-  b: { start: number; end: number }
-) => a.start < b.end && b.start < a.end
-
-/** 취소/종료된 경기는 일정 슬롯으로 보지 않음 */
-const isHostScheduleBlocker = (m: Match) => m.status !== 'CANCELLED' && m.status !== 'ENDED'
-
-const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
+/**
+ * Fallback 원칙:
+ * - 네트워크 단절/타임아웃만 로컬 fallback 허용
+ * - 서버가 응답한 4xx/5xx(ApiError)는 절대 fallback 금지
+ */
+export const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
 
 /** listHostedMatches와 동일 병합(정렬 제외) — 일정 검증용 */
 const fetchHostedMatchesMerged = async (): Promise<Match[]> => {
   const { userId } = getLocalUser()
   const localHosted = listHostedMatchesFromLocal()
   try {
-    const remote = await get<Match[]>(`/api/matches${buildMatchListQuery()}`)
+    const remote = await matchApi.listMatches()
     const byId = new Map<string, Match>()
     for (const m of localHosted) {
       byId.set(m.id, m)
@@ -359,23 +60,15 @@ const assertHostScheduleNoOverlap = async (
   endAt: string | undefined,
   excludeMatchId?: string
 ) => {
-  const newRange = getScheduleRangeMs(startAt, endAt)
   const hosted = await fetchHostedMatchesMerged()
-  for (const m of hosted) {
-    if (excludeMatchId && m.id === excludeMatchId) continue
-    if (!isHostScheduleBlocker(m)) continue
-    const existing = getMatchScheduleRangeMs(m)
-    if (scheduleRangesOverlap(newRange, existing)) {
-      throw new Error('HOST_SCHEDULE_OVERLAP')
-    }
-  }
+  assertHostScheduleNoOverlapInMatches(hosted, startAt, endAt, excludeMatchId)
 }
 
 export const matchService = {
   // 참가자용: 매치 목록 조회
   listMatches: async (params?: MatchListParams): Promise<Match[]> => {
     try {
-      return await get<Match[]>(`/api/matches${buildMatchListQuery(params)}`)
+      return await matchApi.listMatches(params)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return listMatchesLocal(params)
@@ -385,7 +78,7 @@ export const matchService = {
   // 참가자용: 매치 상세 조회
   getMatch: async (matchId: string): Promise<Match> => {
     try {
-      return await get<Match>(`/api/matches/${matchId}`)
+      return await matchApi.getMatch(matchId)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return getMatchLocal(matchId)
@@ -398,9 +91,9 @@ export const matchService = {
       const match = await matchService.getMatch(matchId)
       const { userId } = getLocalUser()
       if (match.hostId === userId) {
-        throw new Error('SELF_HOST_APPLY_FORBIDDEN')
+        throw new Error(MATCH_ERROR_CODES.selfHostApplyForbidden)
       }
-      return await post<MatchApplication>(`/api/matches/${matchId}/applications`)
+      return await matchApi.applyToMatch(matchId)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return applyToMatchLocal(matchId)
@@ -410,7 +103,7 @@ export const matchService = {
   // 참가자용: 신청 취소
   cancelApplication: async (matchId: string, applicationId: string): Promise<void> => {
     try {
-      return await del<void>(`/api/matches/${matchId}/applications/${applicationId}`)
+      return await matchApi.cancelApplication(matchId, applicationId)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return cancelApplicationLocal(matchId, applicationId)
@@ -421,7 +114,7 @@ export const matchService = {
   createMatch: async (data: CreateMatchRequest): Promise<Match> => {
     await assertHostScheduleNoOverlap(data.startAt, data.endAt)
     try {
-      return await post<Match>('/api/matches', data)
+      return await matchApi.createMatch(data)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return createMatchLocal(data)
@@ -439,7 +132,7 @@ export const matchService = {
   // 주최자용: 신청자 목록 조회
   listApplications: async (matchId: string): Promise<MatchApplication[]> => {
     try {
-      return await get<MatchApplication[]>(`/api/matches/${matchId}/applications`)
+      return await matchApi.listApplications(matchId)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return listApplicationsLocal(matchId)
@@ -449,9 +142,7 @@ export const matchService = {
   // 주최자용: 입금 확인 후 참가 확정
   confirmApplication: async (matchId: string, applicationId: string): Promise<MatchApplication> => {
     try {
-      return await put<MatchApplication>(
-        `/api/matches/${matchId}/applications/${applicationId}/confirm`
-      )
+      return await matchApi.confirmApplication(matchId, applicationId)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return confirmApplicationLocal(matchId, applicationId)
@@ -461,7 +152,7 @@ export const matchService = {
   // 주최자용: 환불 처리 완료
   refundApplication: async (matchId: string, applicationId: string): Promise<MatchApplication> => {
     try {
-      return await put<MatchApplication>(`/api/matches/${matchId}/applications/${applicationId}/refund`)
+      return await matchApi.refundApplication(matchId, applicationId)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return refundApplicationLocal(matchId, applicationId)
@@ -471,7 +162,7 @@ export const matchService = {
   // 주최자용: 상태 변경(마감/취소/종료)
   updateMatchStatus: async (matchId: string, data: UpdateMatchStatusRequest): Promise<Match> => {
     try {
-      return await put<Match>(`/api/matches/${matchId}/status`, data)
+      return await matchApi.updateMatchStatus(matchId, data)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return updateMatchStatusLocal(matchId, data)
@@ -482,7 +173,7 @@ export const matchService = {
   updateMatch: async (matchId: string, data: UpdateMatchRequest): Promise<Match> => {
     await assertHostScheduleNoOverlap(data.startAt, data.endAt, matchId)
     try {
-      return await put<Match>(`/api/matches/${matchId}`, data)
+      return await matchApi.updateMatch(matchId, data)
     } catch (error) {
       if (!shouldFallbackToLocal(error)) throw error
       return updateMatchLocal(matchId, data)

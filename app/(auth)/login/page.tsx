@@ -1,28 +1,49 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useAuth, useSignIn } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, AlertCircle, Eye, EyeOff, Apple } from 'lucide-react'
 import { toast } from 'sonner'
-import { authService, userService } from '@/lib/services'
-import { mapUserTeamResponseToTeam } from '@/lib/mappers/user'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth()
+  const { isLoaded, signIn, setActive } = useSignIn()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    if (isAuthLoaded && isSignedIn) router.replace('/home')
+  }, [isAuthLoaded, isSignedIn, router])
+
+  const getClerkErrorMessage = (err: unknown, fallback: string) => {
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'errors' in err &&
+      Array.isArray((err as { errors?: unknown[] }).errors)
+    ) {
+      const first = (err as { errors: Array<{ longMessage?: string; message?: string }> }).errors[0]
+      if (first?.longMessage) return first.longMessage
+      if (first?.message) return first.message
+    }
+    return fallback
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isLoaded || !signIn) return
     setIsLoading(true)
     setError('')
 
@@ -41,32 +62,50 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await authService.login({ email, password })
-
-      // 사용자의 팀 목록 조회
-      let userTeams = []
-      try {
-        const teamsResponse = await userService.getUserTeams(response.id)
-        userTeams = teamsResponse.map(mapUserTeamResponseToTeam)
-      } catch (teamErr) {
-        console.error('팀 목록 조회 실패:', teamErr)
-        // 팀 목록 조회 실패해도 로그인은 성공으로 처리
+      const signInAttempt = await signIn.create({
+        identifier: email,
+        password,
+      })
+      if (signInAttempt.status !== 'complete') {
+        throw new Error('로그인을 완료할 수 없습니다. 잠시 후 다시 시도해주세요.')
       }
-
-      // 로그인 성공 - 사용자 정보는 API로 조회하므로 localStorage에 저장 불필요
-      // 인증 토큰은 이미 client.ts에서 localStorage에 저장됨
+      await setActive({ session: signInAttempt.createdSessionId })
 
       toast.success('로그인 성공!', {
-        description: `환영합니다, ${response.nickname}님!`,
+        description: '환영합니다! TeamUp을 시작해볼까요?',
       })
 
       router.push('/home')
     } catch (err) {
-      console.error('로그인 실패:', err)
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      const message = getClerkErrorMessage(err, '이메일 또는 비밀번호가 올바르지 않습니다.')
+      setError(message)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSocialLogin = async (strategy: 'oauth_google' | 'oauth_apple') => {
+    if (!isLoaded || !signIn) return
+    setError('')
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: '/home',
+      })
+    } catch (err) {
+      const message = getClerkErrorMessage(err, '소셜 로그인에 실패했습니다.')
+      setError(message)
+      toast.error(message)
+    }
+  }
+
+  if (!isAuthLoaded || isSignedIn) {
+    return (
+      <div className="flex min-h-[320px] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -159,6 +198,34 @@ export default function LoginPage() {
             )}
           </Button>
         </form>
+        <div className="my-4">
+          <div className="flex items-center gap-3">
+            <Separator className="flex-1" />
+            <span className="text-xs text-muted-foreground">또는</span>
+            <Separator className="flex-1" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full"
+            onClick={() => void handleSocialLogin('oauth_google')}
+            disabled={isLoading}
+          >
+            Google로 계속하기
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 w-full gap-2"
+            onClick={() => void handleSocialLogin('oauth_apple')}
+            disabled={isLoading}
+          >
+            <Apple className="h-4 w-4" />
+            Apple로 계속하기
+          </Button>
+        </div>
 
         {/* 회원가입 링크 */}
         <div className="mt-6 text-center text-sm">

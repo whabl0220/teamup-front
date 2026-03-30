@@ -1,21 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useAuth, useSignIn, useSignUp } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Apple } from 'lucide-react'
 import { UserInfoForm, UserInfoFormData } from '@/components/features/profile/UserInfoForm'
 import { toast } from 'sonner'
-import { authService, type RegisterRequest } from '@/lib/services'
 
 export default function SignupPage() {
   const router = useRouter()
-  const [step, setStep] = useState<'account' | 'profile'>('account')
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth()
+  const { isLoaded: isSignUpLoaded, signUp, setActive } = useSignUp()
+  const { isLoaded: isSignInLoaded, signIn } = useSignIn()
+  const [step, setStep] = useState<'account' | 'profile' | 'verify'>('account')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
@@ -33,6 +37,25 @@ export default function SignupPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+
+  useEffect(() => {
+    if (isAuthLoaded && isSignedIn) router.replace('/home')
+  }, [isAuthLoaded, isSignedIn, router])
+
+  const getClerkErrorMessage = (err: unknown, fallback: string) => {
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'errors' in err &&
+      Array.isArray((err as { errors?: unknown[] }).errors)
+    ) {
+      const first = (err as { errors: Array<{ longMessage?: string; message?: string }> }).errors[0]
+      if (first?.longMessage) return first.longMessage
+      if (first?.message) return first.message
+    }
+    return fallback
+  }
 
   // Step 1: 이메일/비밀번호 검증 및 다음 단계
   const handleAccountSubmit = (e: React.FormEvent) => {
@@ -63,33 +86,45 @@ export default function SignupPage() {
   // Step 2: 회원가입 완료
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!isSignUpLoaded || !signUp) return
     setIsLoading(true)
     setError('')
 
     try {
-      const registerBody: RegisterRequest = {
-        email,
+      const result = await signUp.create({
+        emailAddress: email,
         password,
-        nickname: formData.nickname,
-        gender: formData.gender,
-        address: formData.address,
-        height: parseInt(formData.height),
-        position: formData.mainPosition,
-        subPosition: formData.subPosition || undefined,
-        playStyle: formData.playStyle,
-        statusMsg: formData.statusMsg,
-      }
-
-      const response = await authService.signup(registerBody)
-
-      toast.success('회원가입 완료', {
-        description: `환영합니다, ${response.nickname}님!`,
+        unsafeMetadata: {
+          nickname: formData.nickname,
+          gender: formData.gender,
+          address: formData.address,
+          height: formData.height ? Number(formData.height) : undefined,
+          mainPosition: formData.mainPosition,
+          subPosition: formData.subPosition || undefined,
+          playStyle: formData.playStyle || undefined,
+          statusMsg: formData.statusMsg || undefined,
+        },
       })
 
-      // 로그인 페이지로 이동
-      router.push('/login')
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+        toast.success('회원가입 완료', {
+          description: `환영합니다, ${formData.nickname || '플레이어'}님!`,
+        })
+        router.push('/home')
+        return
+      }
+
+      if (result.unverifiedFields?.includes('email_address')) {
+        await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+        setStep('verify')
+        toast.info('이메일로 전송된 인증 코드를 입력해주세요.')
+        return
+      }
+
+      throw new Error('회원가입 후 추가 인증 절차가 필요합니다. Clerk 설정을 확인해주세요.')
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '회원가입에 실패했습니다.'
+      const errorMessage = getClerkErrorMessage(err, '회원가입에 실패했습니다.')
       setError(errorMessage)
       toast.error('회원가입 실패', {
         description: errorMessage,
@@ -99,13 +134,70 @@ export default function SignupPage() {
     }
   }
 
+  const handleVerifyEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isSignUpLoaded || !signUp) return
+    if (!verificationCode.trim()) {
+      setError('인증 코드를 입력해주세요.')
+      return
+    }
+
+    setIsLoading(true)
+    setError('')
+    try {
+      const result = await signUp.attemptEmailAddressVerification({
+        code: verificationCode.trim(),
+      })
+
+      if (result.status !== 'complete') {
+        throw new Error('이메일 인증을 완료하지 못했습니다. 코드를 다시 확인해주세요.')
+      }
+
+      await setActive({ session: result.createdSessionId })
+      toast.success('이메일 인증 및 회원가입이 완료되었습니다.')
+      router.push('/home')
+    } catch (err) {
+      const message = getClerkErrorMessage(err, '인증 코드 확인에 실패했습니다.')
+      setError(message)
+      toast.error(message)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSocialSignup = async (strategy: 'oauth_google' | 'oauth_apple') => {
+    if (!isSignInLoaded || !signIn) return
+    setError('')
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy,
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: '/home',
+      })
+    } catch (err) {
+      const message = getClerkErrorMessage(err, '소셜 로그인에 실패했습니다.')
+      setError(message)
+      toast.error(message)
+    }
+  }
+
   const getStepDescription = () => {
     switch (step) {
       case 'account':
         return '이메일과 비밀번호로 계정을 생성하세요'
       case 'profile':
         return '플레이어 카드 정보를 입력하세요'
+      case 'verify':
+        return '이메일로 받은 인증 코드를 입력하세요'
     }
+  }
+
+  if (!isAuthLoaded || isSignedIn) {
+    return (
+      <div className="flex min-h-[320px] items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -124,91 +216,121 @@ export default function SignupPage() {
       <CardContent>
         {/* Step 1: 이메일/비밀번호 입력 */}
         {step === 'account' && (
-          <form onSubmit={handleAccountSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">이메일</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="h-11 pl-10"
-                />
+          <>
+            <form onSubmit={handleAccountSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">이메일</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-11 pl-10"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">비밀번호</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="최소 8자 이상"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-11 pl-10 pr-10"
+                    minLength={8}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="passwordConfirm">비밀번호 확인</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="passwordConfirm"
+                    type={showPasswordConfirm ? "text" : "password"}
+                    placeholder="비밀번호를 다시 입력하세요"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="h-11 pl-10 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showPasswordConfirm ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/95"
+                disabled={isLoading}
+              >
+                다음
+              </Button>
+            </form>
+            <div className="my-4">
+              <div className="flex items-center gap-3">
+                <Separator className="flex-1" />
+                <span className="text-xs text-muted-foreground">또는</span>
+                <Separator className="flex-1" />
               </div>
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="password">비밀번호</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="최소 8자 이상"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="h-11 pl-10 pr-10"
-                  minLength={8}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-full"
+                onClick={() => void handleSocialSignup('oauth_google')}
+                disabled={isLoading}
+              >
+                Google로 계속하기
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 w-full gap-2"
+                onClick={() => void handleSocialSignup('oauth_apple')}
+                disabled={isLoading}
+              >
+                <Apple className="h-4 w-4" />
+                Apple로 계속하기
+              </Button>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="passwordConfirm">비밀번호 확인</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                <Input
-                  id="passwordConfirm"
-                  type={showPasswordConfirm ? "text" : "password"}
-                  placeholder="비밀번호를 다시 입력하세요"
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className="h-11 pl-10 pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                  disabled={isLoading}
-                >
-                  {showPasswordConfirm ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              className="h-11 w-full bg-primary text-primary-foreground hover:bg-primary/95"
-              disabled={isLoading}
-            >
-              다음
-            </Button>
-          </form>
+          </>
         )}
 
         {/* Step 2: 프로필 정보 입력 */}
@@ -238,6 +360,44 @@ export default function SignupPage() {
               fields="all"
             />
           </>
+        )}
+
+        {step === 'verify' && (
+          <form onSubmit={handleVerifyEmail} className="space-y-4">
+            <div className="rounded-lg bg-secondary/30 p-3 text-sm text-muted-foreground">
+              <p>
+                <strong className="text-foreground">{email}</strong>로 인증 코드가 전송되었습니다.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="verificationCode">인증 코드</Label>
+              <Input
+                id="verificationCode"
+                type="text"
+                placeholder="이메일 인증 코드 입력"
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                disabled={isLoading}
+                className="h-11"
+              />
+            </div>
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+              {isLoading ? '인증 중...' : '인증 완료'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              disabled={isLoading}
+              onClick={() => {
+                setStep('account')
+                setVerificationCode('')
+              }}
+            >
+              이메일/비밀번호 다시 입력
+            </Button>
+          </form>
         )}
 
         {/* 로그인 링크 */}

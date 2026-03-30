@@ -1,22 +1,19 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect } from 'react'
 import { AlertTriangle, ArrowLeft, Bell, CheckCheck, CircleCheck, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
 import {
-  clearNotifications,
   getNotificationTypeLabel,
-  getStoredNotifications,
-  markAllNotificationsAsRead,
-  markNotificationAsRead,
 } from '@/lib/local-notifications'
 import type { AppNotification } from '@/types/notification'
 import { toast } from 'sonner'
 import type { NotificationType } from '@/types/notification'
 import { formatDateTimeKorean } from '@/lib/formatters'
+import { useNotifications } from '@/hooks/useNotifications'
 
 const SCROLL_KEY = 'teamup_notifications_scroll_y'
 
@@ -43,12 +40,14 @@ const getNotificationMeta = (type: NotificationType) => {
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications())
   const router = useRouter()
-
-  const unreadCount = useMemo(() => notifications.filter((item) => !item.read).length, [notifications])
-
-  const reload = () => setNotifications(getStoredNotifications())
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    clearAll,
+  } = useNotifications()
 
   useEffect(() => {
     const raw = sessionStorage.getItem(SCROLL_KEY)
@@ -66,20 +65,17 @@ export default function NotificationsPage() {
   }, [])
 
   const handleMarkAllRead = () => {
-    markAllNotificationsAsRead()
-    reload()
+    markAllAsRead()
     toast.success('모든 알림을 읽음 처리했습니다.')
   }
 
   const handleClear = () => {
-    clearNotifications()
-    reload()
+    clearAll()
     toast.success('알림 로그를 비웠습니다.')
   }
 
   const handleClickItem = (item: AppNotification) => {
-    markNotificationAsRead(item.id)
-    reload()
+    markAsRead(item.id)
     const matchId = item.meta?.matchId
     sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))
     if (matchId) router.push(`/matches/${matchId}?from=notifications`)

@@ -20,7 +20,7 @@ import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
 import { isMatchFormSubmittable, toMatchPayload, validateMatchDateRange } from '@/lib/match-form'
-import { getErrorMessage, isHostScheduleOverlapError } from '@/lib/error-utils'
+import { isHostScheduleOverlapError, toUserErrorMessage } from '@/lib/error-utils'
 import type { MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
 
@@ -93,7 +93,9 @@ export default function HostMatchCreatePage() {
         toast.error('이미 주최 중인 경기와 시간이 겹칩니다.')
         return
       }
-      const message = getErrorMessage(err)
+      const message = toUserErrorMessage(err, {
+        fallback: '주최 경기 생성 중 오류가 발생했습니다.',
+      })
       toast.error(`주최 경기 생성에 실패했습니다: ${message}`)
       console.error(err)
     } finally {

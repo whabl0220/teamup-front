@@ -2,6 +2,10 @@ import type { AppNotification, NotificationActor, NotificationType } from '@/typ
 
 const STORAGE_KEY = 'teamup_notifications_v1'
 export const NOTIFICATIONS_UPDATED_EVENT = 'teamup:notifications-updated'
+const EMPTY_NOTIFICATIONS: AppNotification[] = []
+
+let cachedRawNotifications: string | null | undefined
+let cachedParsedNotifications: AppNotification[] = EMPTY_NOTIFICATIONS
 
 const isBrowser = () => typeof window !== 'undefined'
 
@@ -11,22 +15,49 @@ const emitNotificationsUpdated = () => {
 }
 
 export const getStoredNotifications = (): AppNotification[] => {
-  if (!isBrowser()) return []
+  if (!isBrowser()) return EMPTY_NOTIFICATIONS
   const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) return []
+  if (raw === cachedRawNotifications) return cachedParsedNotifications
+
+  cachedRawNotifications = raw
+  if (!raw) {
+    cachedParsedNotifications = EMPTY_NOTIFICATIONS
+    return cachedParsedNotifications
+  }
 
   try {
     const parsed = JSON.parse(raw) as AppNotification[]
-    if (!Array.isArray(parsed)) return []
-    return parsed
+    cachedParsedNotifications = Array.isArray(parsed) ? parsed : EMPTY_NOTIFICATIONS
+    return cachedParsedNotifications
   } catch {
-    return []
+    cachedParsedNotifications = EMPTY_NOTIFICATIONS
+    return cachedParsedNotifications
+  }
+}
+
+export const getStoredNotificationsSnapshot = (): AppNotification[] => getStoredNotifications()
+
+export const subscribeStoredNotifications = (callback: () => void) => {
+  if (!isBrowser()) {
+    return () => {}
+  }
+
+  const handler = () => callback()
+  window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handler)
+  window.addEventListener('focus', handler)
+
+  return () => {
+    window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handler)
+    window.removeEventListener('focus', handler)
   }
 }
 
 export const setStoredNotifications = (notifications: AppNotification[]) => {
   if (!isBrowser()) return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications))
+  const raw = JSON.stringify(notifications)
+  localStorage.setItem(STORAGE_KEY, raw)
+  cachedRawNotifications = raw
+  cachedParsedNotifications = notifications
   emitNotificationsUpdated()
 }
 
@@ -69,6 +100,9 @@ export const markAllNotificationsAsRead = () => {
 export const clearNotifications = () => {
   setStoredNotifications([])
 }
+
+export const getUnreadNotificationsCount = () =>
+  getStoredNotifications().filter((item) => !item.read).length
 
 export const getNotificationTypeLabel = (type: NotificationType) => {
   if (type === 'MATCH_APPLIED') return '신청 완료'

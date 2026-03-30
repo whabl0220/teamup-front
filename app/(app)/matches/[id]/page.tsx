@@ -13,7 +13,11 @@ import {
   updateStoredApplicationStatus,
 } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
-import { isRecoverableNetworkError, isSelfHostApplyForbiddenError } from '@/lib/error-utils'
+import {
+  isRecoverableNetworkError,
+  isSelfHostApplyForbiddenError,
+  toUserErrorMessage,
+} from '@/lib/error-utils'
 import { useStoredApplicationsByMatchId } from '@/hooks/useStoredApplications'
 import { MatchDetailLoading } from './_components/match-detail-loading'
 import { MatchOverviewCard } from './_components/match-overview-card'
@@ -138,7 +142,11 @@ export default function MatchDetailPage() {
         return
       }
       if (!isRecoverableNetworkError(err)) {
-        toast.error('참가 신청에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '참가 신청에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          })
+        )
         return
       }
       const localUser = getLocalUser()
@@ -171,7 +179,11 @@ export default function MatchDetailPage() {
       toast.success('참가 신청 취소가 완료되었습니다.')
     } catch (err) {
       if (!isRecoverableNetworkError(err)) {
-        toast.error('참가 신청 취소에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '참가 신청 취소에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          })
+        )
         return
       }
       updateStoredApplicationStatus(application.applicationId, 'CANCELLED')

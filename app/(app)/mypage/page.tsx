@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { useClerk, useUser } from '@clerk/nextjs'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import { clearStoredMatches } from '@/lib/match-local-matches-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { User } from '@/types'
 import { mapApiUserToUser } from '@/lib/mappers/user'
+import { toUserErrorMessage } from '@/lib/error-utils'
 import { useTheme } from 'next-themes'
 import {
   Bell,
@@ -37,7 +39,10 @@ import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 
 export default function MyPage() {
   const router = useRouter()
+  const { signOut } = useClerk()
+  const { user: clerkUser } = useUser()
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
   const [notifications, setNotifications] = useState(true)
@@ -63,26 +68,59 @@ export default function MyPage() {
     const load = async () => {
       try {
         setIsLoading(true)
+        setLoadError(null)
         const userData = await userService.getMe()
         setUser(mapApiUserToUser(userData))
       } catch (err) {
-        console.error(err)
-        toast.error('데이터를 불러오는데 실패했습니다.')
+        if (clerkUser) {
+          setUser({
+            id: clerkUser.id,
+            name: clerkUser.username || clerkUser.firstName || clerkUser.fullName || '플레이어',
+            email: clerkUser.primaryEmailAddress?.emailAddress || '',
+            gender: '',
+            address: '',
+            height: undefined,
+            position: undefined,
+            subPosition: undefined,
+            playStyle: undefined,
+            statusMsg: '',
+          })
+          setLoadError(null)
+        } else {
+          console.error(err)
+          const message = toUserErrorMessage(err, {
+            fallback: '사용자 정보를 불러오는데 실패했습니다.',
+          })
+          setLoadError(message)
+          toast.error(message)
+        }
       } finally {
         setIsLoading(false)
       }
     }
 
     load()
-  }, [])
+  }, [clerkUser])
 
   useEffect(() => {
     setMounted(true)
     refreshLocalSummary()
   }, [refreshLocalSummary])
 
-  const handleLogout = () => {
-    router.push('/')
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      localStorage.removeItem('teamup_identity_v1')
+      clearNotifications()
+      toast.success('로그아웃 되었습니다.')
+      router.push('/')
+    } catch (err) {
+      toast.error(
+        toUserErrorMessage(err, {
+          fallback: '로그아웃에 실패했습니다.',
+        })
+      )
+    }
   }
 
   const handleDeleteAccount = () => {
@@ -108,10 +146,6 @@ export default function MyPage() {
     toast.success('알림 로그를 비웠습니다.')
   }
 
-  const handleNotReadyFeature = () => {
-    toast.info('준비 중인 페이지입니다.')
-  }
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background pb-20">
@@ -123,7 +157,9 @@ export default function MyPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background pb-20">
-        <p className="text-muted-foreground">로그인이 필요합니다.</p>
+        <p className="text-muted-foreground">
+          {loadError ?? '로그인이 필요합니다.'}
+        </p>
       </div>
     )
   }
@@ -158,6 +194,11 @@ export default function MyPage() {
                 </Link>
               </Button>
             </div>
+            {clerkUser?.primaryEmailAddress?.emailAddress && (
+              <p className="mb-3 text-xs text-muted-foreground">
+                {clerkUser.primaryEmailAddress.emailAddress}
+              </p>
+            )}
             <PlayerCard user={user} currentTeam={null} showExtendedInfo={false} className="mx-auto" />
           </CardContent>
         </Card>
@@ -232,9 +273,8 @@ export default function MyPage() {
             <Separator />
             <p className="font-semibold">기타</p>
             <div className="rounded-lg border border-border/50 bg-card/70">
-              <button
-                type="button"
-                onClick={handleNotReadyFeature}
+              <Link
+                href="/terms"
                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
               >
                   <div className="flex items-center gap-2">
@@ -244,11 +284,10 @@ export default function MyPage() {
                     <span className="text-sm font-medium">이용약관</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </Link>
               <Separator />
-              <button
-                type="button"
-                onClick={handleNotReadyFeature}
+              <Link
+                href="/privacy"
                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
               >
                   <div className="flex items-center gap-2">
@@ -258,11 +297,10 @@ export default function MyPage() {
                     <span className="text-sm font-medium">개인정보 처리방침</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </Link>
               <Separator />
-              <button
-                type="button"
-                onClick={handleNotReadyFeature}
+              <Link
+                href="/about"
                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
               >
                   <div className="flex items-center gap-2">
@@ -275,7 +313,7 @@ export default function MyPage() {
                     <span className="text-xs text-muted-foreground">v1.0.0</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-              </button>
+              </Link>
             </div>
             <Separator />
             <p className="font-semibold">계정</p>
