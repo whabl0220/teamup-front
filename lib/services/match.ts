@@ -327,8 +327,8 @@ const scheduleRangesOverlap = (
   b: { start: number; end: number }
 ) => a.start < b.end && b.start < a.end
 
-/** 취소된 경기는 일정 슬롯으로 보지 않음 */
-const isHostScheduleBlocker = (m: Match) => m.status !== 'CANCELLED'
+/** 취소/종료된 경기는 일정 슬롯으로 보지 않음 */
+const isHostScheduleBlocker = (m: Match) => m.status !== 'CANCELLED' && m.status !== 'ENDED'
 
 const shouldFallbackToLocal = (error: unknown) => isNetworkOrTimeoutError(error)
 

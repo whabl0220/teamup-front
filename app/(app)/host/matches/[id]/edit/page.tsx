@@ -247,7 +247,7 @@ export default function HostMatchEditPage() {
                 <p className="text-sm font-semibold text-foreground">총 참가비</p>
                 <Input
                   type="number"
-                  min={0}
+                  min={1}
                   value={fee}
                   onChange={(e) => setFee(e.target.value)}
                   placeholder="예: 8000"
