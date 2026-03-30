@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
 import type { Match } from '@/types/match'
 import { toast } from 'sonner'
-import { formatDateTimeKorean } from '@/lib/date-format'
+import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { MATCH_STATUS_META } from '@/lib/status-meta'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
 
@@ -185,7 +185,7 @@ export default function HostMatchesPage() {
                       </div>
                       <div className="mt-3 flex items-center justify-between gap-2">
                         <Badge variant="outline">{getMatchLevelLabel(match.level)}</Badge>
-                        <p className="text-xs font-semibold text-foreground">{match.fee.toLocaleString()}원</p>
+                        <p className="text-xs font-semibold text-foreground">{formatCurrencyKRW(match.fee)}</p>
                       </div>
                     </CardContent>
                   </Card>

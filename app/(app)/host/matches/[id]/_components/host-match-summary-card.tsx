@@ -3,7 +3,7 @@ import { PencilLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { formatDateTimeKorean } from '@/lib/date-format'
+import { formatDateTimeKorean } from '@/lib/formatters'
 import { MATCH_STATUS_META } from '@/lib/status-meta'
 import type { Match } from '@/types/match'
 

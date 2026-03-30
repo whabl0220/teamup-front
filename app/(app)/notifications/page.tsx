@@ -16,15 +16,7 @@ import {
 import type { AppNotification } from '@/types/notification'
 import { toast } from 'sonner'
 import type { NotificationType } from '@/types/notification'
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+import { formatDateTimeKorean } from '@/lib/formatters'
 
 const SCROLL_KEY = 'teamup_notifications_scroll_y'
 
@@ -161,7 +153,7 @@ export default function NotificationsPage() {
                       )
                     })()}
                     <div className="mb-1 flex items-start justify-between gap-2">
-                      <span className="text-xs text-muted-foreground">{formatDate(item.createdAt)}</span>
+                      <span className="text-xs text-muted-foreground">{formatDateTimeKorean(item.createdAt)}</span>
                     </div>
                     <p className="text-sm font-semibold">{item.title}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{item.message}</p>

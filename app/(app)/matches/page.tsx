@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import { getStoredApplications, subscribeStoredApplications } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { MatchApplicationStatus } from '@/types/match'
-import { formatDateTimeKorean } from '@/lib/date-format'
+import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
 
@@ -271,7 +271,7 @@ export default function MatchesPage() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs font-semibold text-foreground">{match.fee.toLocaleString()}원</p>
+                        <p className="text-xs font-semibold text-foreground">{formatCurrencyKRW(match.fee)}</p>
                       </div>
                     </CardContent>
                   </Card>

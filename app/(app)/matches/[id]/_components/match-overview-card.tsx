@@ -1,7 +1,7 @@
 import { CalendarDays, MapPin, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { formatDateTimeKorean } from '@/lib/date-format'
+import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
 import { MATCH_STATUS_META } from '@/lib/status-meta'
 import type { Match } from '@/types/match'
@@ -44,13 +44,13 @@ export function MatchOverviewCard({ match, participantText, feeSummary, highligh
             <div className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">1인당 참가비</span>
               <span className="font-semibold tabular-nums text-foreground">
-                {feeSummary.perPerson.toLocaleString()}원
+                {formatCurrencyKRW(feeSummary.perPerson)}
               </span>
             </div>
             <div className="mt-1 flex items-center justify-between gap-2 text-xs">
               <span className="text-muted-foreground">정원 {match.capacity}명 기준 총액</span>
               <span className="font-medium tabular-nums text-foreground">
-                {feeSummary.totalAtCapacity.toLocaleString()}원
+                {formatCurrencyKRW(feeSummary.totalAtCapacity)}
               </span>
             </div>
             <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
