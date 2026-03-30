@@ -21,6 +21,7 @@ import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
 import { isMatchFormSubmittable, toMatchPayload, validateMatchDateRange } from '@/lib/match-form'
+import { getErrorMessage, isHostScheduleOverlapError } from '@/lib/error-utils'
 import { getLocalUser } from '@/lib/services/match'
 import type { Match, MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
@@ -138,11 +139,11 @@ export default function HostMatchEditPage() {
       toast.success('주최 경기 정보를 수정했습니다.')
       router.push(`/host/matches/${matchId}`)
     } catch (err) {
-      if (err instanceof Error && err.message === 'HOST_SCHEDULE_OVERLAP') {
+      if (isHostScheduleOverlapError(err)) {
         toast.error('이미 주최 중인 다른 경기와 시간이 겹칩니다.')
         return
       }
-      const message = err instanceof Error ? err.message : '알 수 없는 오류'
+      const message = getErrorMessage(err)
       toast.error(`수정에 실패했습니다: ${message}`)
     } finally {
       setIsSubmitting(false)

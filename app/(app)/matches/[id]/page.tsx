@@ -14,7 +14,7 @@ import {
   updateStoredApplicationStatus,
 } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
-import { isNetworkOrTimeoutError } from '@/lib/services/client'
+import { isRecoverableNetworkError, isSelfHostApplyForbiddenError } from '@/lib/error-utils'
 import { MatchDetailLoading } from './_components/match-detail-loading'
 import { MatchOverviewCard } from './_components/match-overview-card'
 import { MatchInfoCard } from './_components/match-info-card'
@@ -34,9 +34,6 @@ const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean
   if (matchStatus === 'CANCELLED') return '취소된 경기'
   return '종료된 경기'
 }
-
-const isSelfHostApplyForbiddenError = (err: unknown): boolean =>
-  err instanceof Error && err.message.includes('SELF_HOST_APPLY_FORBIDDEN')
 
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>()
@@ -143,7 +140,7 @@ export default function MatchDetailPage() {
         toast.error('내가 주최한 경기는 참가 신청할 수 없습니다.')
         return
       }
-      if (!isNetworkOrTimeoutError(err)) {
+      if (!isRecoverableNetworkError(err)) {
         toast.error('참가 신청에 실패했습니다. 잠시 후 다시 시도해주세요.')
         return
       }
@@ -178,7 +175,7 @@ export default function MatchDetailPage() {
       setMatch(updatedMatch)
       toast.success('참가 신청 취소가 완료되었습니다.')
     } catch (err) {
-      if (!isNetworkOrTimeoutError(err)) {
+      if (!isRecoverableNetworkError(err)) {
         toast.error('참가 신청 취소에 실패했습니다. 잠시 후 다시 시도해주세요.')
         return
       }
