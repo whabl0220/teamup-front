@@ -18,9 +18,25 @@ import { MATCH_ERROR_CODES } from './match-errors'
 import { getAuthIdentityFromToken } from './auth-identity'
 
 const isBrowser = (): boolean => typeof window !== 'undefined'
+const IDENTITY_KEY = 'teamup_identity_v1'
 
 export const getLocalUser = () => {
   if (!isBrowser()) return { userId: 'local-user', userName: '내 계정' }
+  try {
+    const rawIdentity = localStorage.getItem(IDENTITY_KEY)
+    if (rawIdentity) {
+      const parsed = JSON.parse(rawIdentity) as { userId?: string; userName?: string }
+      if (parsed.userId) {
+        return {
+          userId: parsed.userId,
+          userName: parsed.userName || '내 계정',
+        }
+      }
+    }
+  } catch {
+    // identity parse 실패 시 아래 fallback 로직으로 진행
+  }
+
   const identity = getAuthIdentityFromToken()
   if (!identity) return { userId: 'local-user', userName: '내 계정' }
   return identity
