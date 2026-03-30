@@ -171,6 +171,7 @@ export default function HostMatchCreatePage() {
                 />
               </div>
             </div>
+            <p className="-mt-2 text-xs text-muted-foreground">종료 시간을 비우면 기본 2시간 경기로 처리됩니다.</p>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">

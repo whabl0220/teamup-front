@@ -194,7 +194,7 @@ export default function HostMatchEditPage() {
           <CardContent className="space-y-5 p-5">
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">경기 제목</p>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="예: 평일 저녁 픽업" />
             </div>
 
             <div className="space-y-1">
@@ -222,22 +222,45 @@ export default function HostMatchEditPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">시작</p>
-                <Input type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={startAt}
+                  onChange={(e) => setStartAt(e.target.value)}
+                  placeholder="예: 2026-03-30T19:00"
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">종료 (선택)</p>
-                <Input type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
+                <Input
+                  type="datetime-local"
+                  value={endAt}
+                  onChange={(e) => setEndAt(e.target.value)}
+                  placeholder="예: 2026-03-30T21:00"
+                />
               </div>
             </div>
+            <p className="-mt-2 text-xs text-muted-foreground">종료 시간을 비우면 기본 2시간 경기로 처리됩니다.</p>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">참가비</p>
-                <Input type="number" min={0} value={fee} onChange={(e) => setFee(e.target.value)} />
+                <p className="text-sm font-semibold text-foreground">총 참가비</p>
+                <Input
+                  type="number"
+                  min={0}
+                  value={fee}
+                  onChange={(e) => setFee(e.target.value)}
+                  placeholder="예: 8000"
+                />
               </div>
               <div className="space-y-1">
                 <p className="text-sm font-semibold text-foreground">정원</p>
-                <Input type="number" min={1} value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+                <Input
+                  type="number"
+                  min={1}
+                  value={capacity}
+                  onChange={(e) => setCapacity(e.target.value)}
+                  placeholder="예: 15"
+                />
               </div>
             </div>
 
@@ -260,19 +283,31 @@ export default function HostMatchEditPage() {
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Wallet className="h-4 w-4" /> 입금 계좌
               </p>
-              <Input value={depositAccount} onChange={(e) => setDepositAccount(e.target.value)} />
+              <Input
+                value={depositAccount}
+                onChange={(e) => setDepositAccount(e.target.value)}
+                placeholder="예: 토스뱅크 1000-0000-0000 TeamUp"
+              />
             </div>
 
             <div className="space-y-1">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
                 <CalendarDays className="h-4 w-4" /> 취소 정책
               </p>
-              <Textarea value={cancellationPolicy} onChange={(e) => setCancellationPolicy(e.target.value)} />
+              <Textarea
+                value={cancellationPolicy}
+                onChange={(e) => setCancellationPolicy(e.target.value)}
+                placeholder="예: 경기 시작 12시간 전까지 100% 환불"
+              />
             </div>
 
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">유의사항</p>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="예: 유니폼 자유, 물 개인 지참"
+              />
             </div>
           </CardContent>
         </Card>
