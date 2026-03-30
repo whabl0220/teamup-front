@@ -10,22 +10,22 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { matchService } from '@/lib/services'
-import { getStoredApplications } from '@/lib/match-local-store'
 import { getStoredNotifications } from '@/lib/local-notifications'
 import { getLocalUser } from '@/lib/services/match'
 import type { Match } from '@/types/match'
+import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 
 export default function HomePage() {
   const [hostedCount, setHostedCount] = useState(0)
   const [todayMatchCount, setTodayMatchCount] = useState(0)
   const [pendingDepositCount, setPendingDepositCount] = useState(0)
   const [unreadCount, setUnreadCount] = useState(0)
+  const localUserId = useMemo(() => getLocalUser().userId, [])
+  const myApps = useMyStoredApplications(localUserId)
 
   const refreshDashboard = useCallback(async () => {
     try {
       const [hosted, allMatches] = await Promise.all([matchService.listHostedMatches(), matchService.listMatches()])
-      const localUserId = getLocalUser().userId
-      const myApps = getStoredApplications().filter((app) => app.userId === localUserId)
       const today = new Date().toDateString()
 
       const myMatchIdSet = new Set(myApps.map((app) => app.matchId))
@@ -44,7 +44,7 @@ export default function HomePage() {
       setPendingDepositCount(0)
       setUnreadCount(0)
     }
-  }, [])
+  }, [myApps])
 
   useEffect(() => {
     void refreshDashboard()

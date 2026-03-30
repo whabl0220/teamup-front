@@ -9,12 +9,12 @@ import { getMockMatchById } from '@/lib/mock-matches'
 import type { Match, MatchApplicationStatus } from '@/types/match'
 import { toast } from 'sonner'
 import {
-  getStoredApplicationsByMatchId,
   upsertStoredApplication,
   updateStoredApplicationStatus,
 } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
 import { isRecoverableNetworkError, isSelfHostApplyForbiddenError } from '@/lib/error-utils'
+import { useStoredApplicationsByMatchId } from '@/hooks/useStoredApplications'
 import { MatchDetailLoading } from './_components/match-detail-loading'
 import { MatchOverviewCard } from './_components/match-overview-card'
 import { MatchInfoCard } from './_components/match-info-card'
@@ -45,16 +45,14 @@ export default function MatchDetailPage() {
   const [match, setMatch] = useState<Match | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [application, setApplication] = useState<LocalApplicationState | null>(null)
   const [highlightMatchCard, setHighlightMatchCard] = useState(false)
-
-  useEffect(() => {
-    if (!matchId) return
-    const localUser = getLocalUser()
-    const applications = getStoredApplicationsByMatchId(matchId)
-    const mine = applications.find((app) => app.userId === localUser.userId)
-    if (mine) setApplication({ applicationId: mine.id, status: mine.status })
-  }, [matchId])
+  const applicationsByMatch = useStoredApplicationsByMatchId(matchId)
+  const application = useMemo<LocalApplicationState | null>(() => {
+    if (!matchId) return null
+    const localUserId = getLocalUser().userId
+    const mine = applicationsByMatch.find((app) => app.userId === localUserId)
+    return mine ? { applicationId: mine.id, status: mine.status } : null
+  }, [applicationsByMatch, matchId])
 
   useEffect(() => {
     if (!matchId) return
@@ -131,7 +129,6 @@ export default function MatchDetailPage() {
       setIsSubmitting(true)
       const result = await matchService.applyToMatch(match.id)
       upsertStoredApplication(result)
-      setApplication({ applicationId: result.id, status: result.status })
       const updatedMatch = await matchService.getMatch(match.id)
       setMatch(updatedMatch)
       toast.success('참가 신청이 완료되었습니다. 입금 후 승인을 기다려주세요.')
@@ -154,7 +151,6 @@ export default function MatchDetailPage() {
         status: 'PENDING_DEPOSIT',
         requestedAt: new Date().toISOString(),
       })
-      setApplication({ applicationId: fallbackId, status: 'PENDING_DEPOSIT' })
       const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
       setMatch(updatedMatch)
       toast.success('네트워크 불안정으로 임시 저장되었습니다. 연결 후 다시 확인해주세요.')
@@ -170,7 +166,6 @@ export default function MatchDetailPage() {
       setIsSubmitting(true)
       await matchService.cancelApplication(match.id, application.applicationId)
       updateStoredApplicationStatus(application.applicationId, 'CANCELLED')
-      setApplication({ ...application, status: 'CANCELLED' })
       const updatedMatch = await matchService.getMatch(match.id)
       setMatch(updatedMatch)
       toast.success('참가 신청 취소가 완료되었습니다.')
@@ -180,7 +175,6 @@ export default function MatchDetailPage() {
         return
       }
       updateStoredApplicationStatus(application.applicationId, 'CANCELLED')
-      setApplication({ ...application, status: 'CANCELLED' })
       const updatedMatch = await matchService.getMatch(match.id).catch(() => match)
       setMatch(updatedMatch)
       toast.success('네트워크 불안정으로 임시 반영되었습니다. 연결 후 다시 확인해주세요.')

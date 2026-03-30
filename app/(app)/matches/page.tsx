@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { CalendarDays, MapPin, RefreshCw, Users } from 'lucide-react'
@@ -13,12 +13,12 @@ import { matchService } from '@/lib/services'
 import { mockMatches } from '@/lib/mock-matches'
 import type { Match } from '@/types/match'
 import { toast } from 'sonner'
-import { getStoredApplications, subscribeStoredApplications } from '@/lib/match-local-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { MatchApplicationStatus } from '@/types/match'
 import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
+import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 type MyStatusFilter = 'ALL' | MatchApplicationStatus
@@ -68,18 +68,11 @@ export default function MatchesPage() {
     void loadMatches()
   }, [])
 
-  const storedApplications = useSyncExternalStore(
-    subscribeStoredApplications,
-    getStoredApplications,
-    () => []
-  )
+  const storedApplications = useMyStoredApplications(localUserId)
 
   const myLatestApplicationByMatch = useMemo(() => {
-    const localUser = getLocalUser()
-    const apps = storedApplications.filter((app) => app.userId === localUser.userId)
-
     const byMatch = new Map<string, { status: MatchApplicationStatus; requestedAt: string }>()
-    apps.forEach((app) => {
+    storedApplications.forEach((app) => {
       const existing = byMatch.get(app.matchId)
       if (!existing || new Date(app.requestedAt).getTime() > new Date(existing.requestedAt).getTime()) {
         byMatch.set(app.matchId, { status: app.status, requestedAt: app.requestedAt })

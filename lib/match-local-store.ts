@@ -37,6 +37,14 @@ export const upsertStoredApplication = (application: MatchApplication) => {
   setStoredApplications(next)
 }
 
+export const mergeStoredApplications = (applications: MatchApplication[]) => {
+  if (applications.length === 0) return
+  const current = getStoredApplications()
+  const byId = new Map(current.map((app) => [app.id, app]))
+  applications.forEach((app) => byId.set(app.id, app))
+  setStoredApplications(Array.from(byId.values()))
+}
+
 export const updateStoredApplicationStatus = (
   applicationId: string,
   status: MatchApplicationStatus

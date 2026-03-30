@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import { userService } from '@/lib/services'
 import { clearNotifications } from '@/lib/local-notifications'
-import { clearStoredApplications, getStoredApplications } from '@/lib/match-local-store'
+import { clearStoredApplications } from '@/lib/match-local-store'
 import { clearStoredMatches } from '@/lib/match-local-matches-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { User, Position, PlayStyle } from '@/types'
@@ -32,6 +32,7 @@ import {
   User as UserIcon,
   Moon,
 } from 'lucide-react'
+import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 
 export default function MyPage() {
   const router = useRouter()
@@ -45,17 +46,17 @@ export default function MyPage() {
     confirmed: 0,
     refunded: 0,
   })
+  const localUserId = useMemo(() => getLocalUser().userId, [])
+  const myApps = useMyStoredApplications(localUserId)
   const { theme, setTheme } = useTheme()
 
   const refreshLocalSummary = useCallback(() => {
-    const localUser = getLocalUser()
-    const myApps = getStoredApplications().filter((app) => app.userId === localUser.userId)
     setActivitySummary({
       applied: myApps.length,
       confirmed: myApps.filter((app) => app.status === 'CONFIRMED').length,
       refunded: myApps.filter((app) => app.status === 'REFUNDED').length,
     })
-  }, [])
+  }, [myApps])
 
   useEffect(() => {
     const load = async () => {
@@ -89,10 +90,6 @@ export default function MyPage() {
   useEffect(() => {
     setMounted(true)
     refreshLocalSummary()
-
-    const onFocus = () => refreshLocalSummary()
-    window.addEventListener('focus', onFocus)
-    return () => window.removeEventListener('focus', onFocus)
   }, [refreshLocalSummary])
 
   const handleLogout = () => {

@@ -11,9 +11,8 @@ import { mockMatchApplications } from '@/lib/mock-match-applications'
 import type { Match, MatchApplication } from '@/types/match'
 import {
   getStoredApplicationsByMatchId,
-  setStoredApplications,
+  mergeStoredApplications,
   updateStoredApplicationStatus,
-  getStoredApplications,
 } from '@/lib/match-local-store'
 import { toast } from 'sonner'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
@@ -94,7 +93,7 @@ export default function HostMatchDetailPage() {
         if (existing.length === 0) {
           const seeded = mockMatchApplications.filter((app) => app.matchId === matchId)
           if (seeded.length > 0) {
-            setStoredApplications([...getStoredApplications(), ...seeded])
+            mergeStoredApplications(seeded)
           }
         }
         reloadLocalApplications(matchId)
