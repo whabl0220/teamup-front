@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useClerk } from '@clerk/nextjs'
+import { useClerk, useUser } from '@clerk/nextjs'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { Button } from '@/components/ui/button'
@@ -40,6 +40,7 @@ import { useMyStoredApplications } from '@/hooks/useStoredApplications'
 export default function MyPage() {
   const router = useRouter()
   const { signOut } = useClerk()
+  const { user: clerkUser } = useUser()
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
@@ -69,19 +70,34 @@ export default function MyPage() {
         const userData = await userService.getMe()
         setUser(mapApiUserToUser(userData))
       } catch (err) {
-        console.error(err)
-        toast.error(
-          toUserErrorMessage(err, {
-            fallback: '데이터를 불러오는데 실패했습니다.',
+        if (clerkUser) {
+          setUser({
+            id: clerkUser.id,
+            name: clerkUser.username || clerkUser.firstName || clerkUser.fullName || '플레이어',
+            email: clerkUser.primaryEmailAddress?.emailAddress || '',
+            gender: '',
+            address: '',
+            height: undefined,
+            position: undefined,
+            subPosition: undefined,
+            playStyle: undefined,
+            statusMsg: '',
           })
-        )
+        } else {
+          console.error(err)
+          toast.error(
+            toUserErrorMessage(err, {
+              fallback: '데이터를 불러오는데 실패했습니다.',
+            })
+          )
+        }
       } finally {
         setIsLoading(false)
       }
     }
 
     load()
-  }, [])
+  }, [clerkUser])
 
   useEffect(() => {
     setMounted(true)
@@ -172,6 +188,11 @@ export default function MyPage() {
                 </Link>
               </Button>
             </div>
+            {clerkUser?.primaryEmailAddress?.emailAddress && (
+              <p className="mb-3 text-xs text-muted-foreground">
+                {clerkUser.primaryEmailAddress.emailAddress}
+              </p>
+            )}
             <PlayerCard user={user} currentTeam={null} showExtendedInfo={false} className="mx-auto" />
           </CardContent>
         </Card>

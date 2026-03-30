@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useUser } from '@clerk/nextjs'
 import { Bell, CalendarDays, CircleCheck, ClipboardList, UserPen, Wallet } from 'lucide-react'
 import { HeaderNotificationButton } from '@/components/layout/header-notification-button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -18,9 +19,11 @@ export default function HomePage() {
   const [hostedCount, setHostedCount] = useState(0)
   const [todayMatchCount, setTodayMatchCount] = useState(0)
   const [pendingDepositCount, setPendingDepositCount] = useState(0)
+  const { user } = useUser()
   const localUserId = useMemo(() => getLocalUser().userId, [])
   const myApps = useMyStoredApplications(localUserId)
   const { unreadCount } = useNotifications()
+  const displayName = user?.username || user?.firstName || user?.fullName || '플레이어'
 
   const refreshDashboard = useCallback(async () => {
     try {
@@ -97,7 +100,10 @@ export default function HomePage() {
               height={40}
               className="h-10 w-10 rounded-xl object-contain"
             />
-            <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">TeamUp</h1>
+              <p className="text-xs text-muted-foreground">{displayName}님, 반가워요</p>
+            </div>
           </div>
           <HeaderNotificationButton />
         </div>
