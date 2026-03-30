@@ -24,6 +24,23 @@ export const getStoredNotifications = (): AppNotification[] => {
   }
 }
 
+export const getStoredNotificationsSnapshot = (): AppNotification[] => getStoredNotifications()
+
+export const subscribeStoredNotifications = (callback: () => void) => {
+  if (!isBrowser()) {
+    return () => {}
+  }
+
+  const handler = () => callback()
+  window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handler)
+  window.addEventListener('focus', handler)
+
+  return () => {
+    window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handler)
+    window.removeEventListener('focus', handler)
+  }
+}
+
 export const setStoredNotifications = (notifications: AppNotification[]) => {
   if (!isBrowser()) return
   localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications))
@@ -69,6 +86,9 @@ export const markAllNotificationsAsRead = () => {
 export const clearNotifications = () => {
   setStoredNotifications([])
 }
+
+export const getUnreadNotificationsCount = () =>
+  getStoredNotifications().filter((item) => !item.read).length
 
 export const getNotificationTypeLabel = (type: NotificationType) => {
   if (type === 'MATCH_APPLIED') return '신청 완료'

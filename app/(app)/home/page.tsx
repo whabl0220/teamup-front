@@ -9,18 +9,18 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { matchService } from '@/lib/services'
-import { getStoredNotifications } from '@/lib/local-notifications'
 import { getLocalUser } from '@/lib/services/match'
 import type { Match } from '@/types/match'
 import { useMyStoredApplications } from '@/hooks/useStoredApplications'
+import { useNotifications } from '@/hooks/useNotifications'
 
 export default function HomePage() {
   const [hostedCount, setHostedCount] = useState(0)
   const [todayMatchCount, setTodayMatchCount] = useState(0)
   const [pendingDepositCount, setPendingDepositCount] = useState(0)
-  const [unreadCount, setUnreadCount] = useState(0)
   const localUserId = useMemo(() => getLocalUser().userId, [])
   const myApps = useMyStoredApplications(localUserId)
+  const { unreadCount } = useNotifications()
 
   const refreshDashboard = useCallback(async () => {
     try {
@@ -36,12 +36,10 @@ export default function HomePage() {
       setHostedCount(hosted.length)
       setTodayMatchCount(myTodayMatches.length)
       setPendingDepositCount(myApps.filter((app) => app.status === 'PENDING_DEPOSIT').length)
-      setUnreadCount(getStoredNotifications().filter((item) => !item.read).length)
     } catch {
       setHostedCount(0)
       setTodayMatchCount(0)
       setPendingDepositCount(0)
-      setUnreadCount(0)
     }
   }, [myApps])
 

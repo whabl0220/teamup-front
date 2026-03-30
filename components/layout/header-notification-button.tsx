@@ -1,30 +1,13 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { getStoredNotifications, NOTIFICATIONS_UPDATED_EVENT } from '@/lib/local-notifications'
+import { useNotifications } from '@/hooks/useNotifications'
 
 export function HeaderNotificationButton() {
-  const [unreadCount, setUnreadCount] = useState(0)
-
-  const refreshUnread = useCallback(() => {
-    const unread = getStoredNotifications().filter((item) => !item.read).length
-    setUnreadCount(unread)
-  }, [])
-
-  useEffect(() => {
-    refreshUnread()
-    const onFocus = () => refreshUnread()
-    const onUpdated = () => refreshUnread()
-    window.addEventListener('focus', onFocus)
-    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated)
-    return () => {
-      window.removeEventListener('focus', onFocus)
-      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated)
-    }
-  }, [refreshUnread])
+  const { unreadCount } = useNotifications()
 
   const badgeText = useMemo(() => (unreadCount > 99 ? '99+' : String(unreadCount)), [unreadCount])
 

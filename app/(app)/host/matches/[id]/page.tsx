@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 import { getLocalUser } from '@/lib/services/match'
-import { isRecoverableNetworkError } from '@/lib/error-utils'
+import { isRecoverableNetworkError, toUserErrorMessage } from '@/lib/error-utils'
 import { HostMatchDetailLoading } from './_components/host-match-detail-loading'
 import { HostMatchSummaryCard } from './_components/host-match-summary-card'
 import { HostMatchStatusCard } from './_components/host-match-status-card'
@@ -148,7 +148,11 @@ export default function HostMatchDetailPage() {
       toast.success(`${application.userName} 참가를 확정했습니다.`)
     } catch (err) {
       if (!isRecoverableNetworkError(err)) {
-        toast.error('참가 확정 처리에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '참가 확정 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          })
+        )
         return
       }
       updateStoredApplicationStatus(application.id, 'CONFIRMED')
@@ -177,7 +181,11 @@ export default function HostMatchDetailPage() {
       toast.success(`${application.userName} 환불 처리를 완료했습니다.`)
     } catch (err) {
       if (!isRecoverableNetworkError(err)) {
-        toast.error('환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '환불 처리에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          })
+        )
         return
       }
       updateStoredApplicationStatus(application.id, 'REFUNDED')
@@ -222,8 +230,12 @@ export default function HostMatchDetailPage() {
 
       await refreshMatchAndApplications(matchId)
       toast.success(`환불 ${successCount}건을 일괄 처리했습니다.`)
-    } catch {
-      toast.error('일괄 환불 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+    } catch (err) {
+      toast.error(
+        toUserErrorMessage(err, {
+          fallback: '일괄 환불 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        })
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -247,7 +259,11 @@ export default function HostMatchDetailPage() {
       toast.success(`경기 상태를 ${MATCH_STATUS_META[nextStatus].label}로 변경했습니다.`)
     } catch (err) {
       if (!isRecoverableNetworkError(err)) {
-        toast.error('경기 상태 변경에 실패했습니다. 잠시 후 다시 시도해주세요.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '경기 상태 변경에 실패했습니다. 잠시 후 다시 시도해주세요.',
+          })
+        )
         return
       }
       setMatch({ ...match, status: nextStatus })

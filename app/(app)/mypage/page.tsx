@@ -19,6 +19,7 @@ import { clearStoredMatches } from '@/lib/match-local-matches-store'
 import { getLocalUser } from '@/lib/services/match'
 import type { User } from '@/types'
 import { mapApiUserToUser } from '@/lib/mappers/user'
+import { toUserErrorMessage } from '@/lib/error-utils'
 import { useTheme } from 'next-themes'
 import {
   Bell,
@@ -67,7 +68,11 @@ export default function MyPage() {
         setUser(mapApiUserToUser(userData))
       } catch (err) {
         console.error(err)
-        toast.error('데이터를 불러오는데 실패했습니다.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '데이터를 불러오는데 실패했습니다.',
+          })
+        )
       } finally {
         setIsLoading(false)
       }

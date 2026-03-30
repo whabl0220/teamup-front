@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react'
 import { userService } from '@/lib/services'
 import { User } from '@/types'
 import { mapApiUserToUser } from '@/lib/mappers/user'
+import { toUserErrorMessage } from '@/lib/error-utils'
 import { UserInfoForm, UserInfoFormData } from '@/components/features/profile/UserInfoForm'
 import { toast } from 'sonner'
 
@@ -50,7 +51,11 @@ export default function BasicInfoEditPage() {
         }
       } catch (err) {
         console.error('사용자 정보 로드 실패:', err)
-        toast.error('사용자 정보를 불러오는데 실패했습니다.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '사용자 정보를 불러오는데 실패했습니다.',
+          })
+        )
       } finally {
         setIsLoading(false)
       }
@@ -81,8 +86,11 @@ export default function BasicInfoEditPage() {
       router.push('/mypage')
     } catch (err) {
       console.error('기본 정보 수정 실패:', err)
-      setError('기본 정보 수정에 실패했습니다.')
-      toast.error('기본 정보 수정에 실패했습니다.')
+      const message = toUserErrorMessage(err, {
+        fallback: '기본 정보 수정에 실패했습니다.',
+      })
+      setError(message)
+      toast.error(message)
     } finally {
       setIsSaving(false)
     }

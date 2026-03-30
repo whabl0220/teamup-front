@@ -11,6 +11,7 @@ import { ArrowLeft, Save } from 'lucide-react'
 import { userService } from '@/lib/services'
 import { Position, PlayStyle, User } from '@/types'
 import { mapApiUserToUser } from '@/lib/mappers/user'
+import { toUserErrorMessage } from '@/lib/error-utils'
 import { PlayerCard } from '@/components/shared/PlayerCard'
 import { toast } from 'sonner'
 
@@ -47,7 +48,11 @@ export default function ProfileEditPage() {
         }
       } catch (err) {
         console.error('사용자 정보 로드 실패:', err)
-        toast.error('사용자 정보를 불러오는데 실패했습니다.')
+        toast.error(
+          toUserErrorMessage(err, {
+            fallback: '사용자 정보를 불러오는데 실패했습니다.',
+          })
+        )
       } finally {
         setIsLoading(false)
       }
@@ -83,7 +88,11 @@ export default function ProfileEditPage() {
       router.push('/mypage')
     } catch (error) {
       console.error('프로필 저장 실패:', error)
-      toast.error('프로필 저장에 실패했습니다.')
+      toast.error(
+        toUserErrorMessage(error, {
+          fallback: '프로필 저장에 실패했습니다.',
+        })
+      )
     } finally {
       setIsSaving(false)
     }
