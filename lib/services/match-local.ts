@@ -91,7 +91,7 @@ const assertLocalHostAccess = (match: Match) => {
 
 export const applyToMatchLocal = (matchId: string): MatchApplication => {
   const match = getMatchLocal(matchId)
-  if (match.status !== 'RECRUITING') throw new Error('Match not recruiting')
+  if (match.status !== 'RECRUITING') throw new Error(MATCH_ERROR_CODES.matchNotRecruiting)
 
   const { userId, userName } = getLocalUser()
   if (match.hostId === userId) throw new Error(MATCH_ERROR_CODES.selfHostApplyForbidden)

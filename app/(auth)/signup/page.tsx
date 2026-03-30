@@ -94,7 +94,6 @@ export default function SignupPage() {
       const result = await signUp.create({
         emailAddress: email,
         password,
-        username: formData.nickname || undefined,
         unsafeMetadata: {
           nickname: formData.nickname,
           gender: formData.gender,

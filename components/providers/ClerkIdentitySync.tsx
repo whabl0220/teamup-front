@@ -8,10 +8,11 @@ const IDENTITY_KEY = 'teamup_identity_v1'
 const PROFILE_SEEDED_KEY = 'teamup_profile_seeded_v1'
 
 export function ClerkIdentitySync() {
-  const { isSignedIn, user } = useUser()
+  const { isLoaded, isSignedIn, user } = useUser()
 
   useEffect(() => {
     if (typeof window === 'undefined') return
+    if (!isLoaded) return
 
     if (!isSignedIn || !user) {
       localStorage.removeItem(IDENTITY_KEY)
@@ -20,7 +21,7 @@ export function ClerkIdentitySync() {
 
     const identity = {
       userId: user.id,
-      userName: user.username || user.firstName || user.fullName || user.primaryEmailAddress?.emailAddress || '내 계정',
+      userName: user.username || user.firstName || user.fullName || '내 계정',
     }
 
     localStorage.setItem(IDENTITY_KEY, JSON.stringify(identity))
@@ -35,7 +36,7 @@ export function ClerkIdentitySync() {
       })
       localStorage.setItem(PROFILE_SEEDED_KEY, 'true')
     }
-  }, [isSignedIn, user])
+  }, [isLoaded, isSignedIn, user])
 
   return null
 }

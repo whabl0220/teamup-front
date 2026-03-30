@@ -42,6 +42,7 @@ export default function MyPage() {
   const { signOut } = useClerk()
   const { user: clerkUser } = useUser()
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
   const [notifications, setNotifications] = useState(true)
@@ -67,6 +68,7 @@ export default function MyPage() {
     const load = async () => {
       try {
         setIsLoading(true)
+        setLoadError(null)
         const userData = await userService.getMe()
         setUser(mapApiUserToUser(userData))
       } catch (err) {
@@ -83,13 +85,14 @@ export default function MyPage() {
             playStyle: undefined,
             statusMsg: '',
           })
+          setLoadError(null)
         } else {
           console.error(err)
-          toast.error(
-            toUserErrorMessage(err, {
-              fallback: '데이터를 불러오는데 실패했습니다.',
-            })
-          )
+          const message = toUserErrorMessage(err, {
+            fallback: '사용자 정보를 불러오는데 실패했습니다.',
+          })
+          setLoadError(message)
+          toast.error(message)
         }
       } finally {
         setIsLoading(false)
@@ -108,6 +111,7 @@ export default function MyPage() {
     try {
       await signOut()
       localStorage.removeItem('teamup_identity_v1')
+      clearNotifications()
       toast.success('로그아웃 되었습니다.')
       router.push('/')
     } catch (err) {
@@ -153,7 +157,9 @@ export default function MyPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background pb-20">
-        <p className="text-muted-foreground">로그인이 필요합니다.</p>
+        <p className="text-muted-foreground">
+          {loadError ?? '로그인이 필요합니다.'}
+        </p>
       </div>
     )
   }

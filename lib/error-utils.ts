@@ -25,7 +25,24 @@ export const toUserErrorMessage = (
     options?.networkMessage ?? '네트워크 연결이 불안정합니다. 잠시 후 다시 시도해주세요.'
 
   if (isNetworkOrTimeoutError(error)) return networkMessage
-  if (error instanceof ApiError && error.message.trim().length > 0) return error.message
-  if (error instanceof Error && error.message.trim().length > 0) return error.message
+  if (error instanceof ApiError) return fallback
+  if (error instanceof Error && isSafeUserFacingMessage(error.message)) return error.message.trim()
   return fallback
+}
+
+const isSafeUserFacingMessage = (message: string): boolean => {
+  const trimmed = message.trim()
+  if (!trimmed) return false
+
+  // JSON/HTML/스택 트레이스/원시 코드성 메시지는 사용자에게 직접 노출하지 않는다.
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return false
+  if (trimmed.includes('<!DOCTYPE') || trimmed.includes('<html')) return false
+  if (trimmed.includes('\n')) return false
+  if (/^\w+_[\w_]+$/.test(trimmed)) return false
+  if (/([A-Z]{2,}_){1,}[A-Z]{2,}/.test(trimmed)) return false
+  if (/(Exception|Stack|Trace|ECONN|SQLSTATE|SyntaxError|ReferenceError|TypeError)/i.test(trimmed)) {
+    return false
+  }
+
+  return true
 }
