@@ -113,10 +113,6 @@ export default function MyPage() {
     toast.success('알림 로그를 비웠습니다.')
   }
 
-  const handleNotReadyFeature = () => {
-    toast.info('준비 중인 페이지입니다.')
-  }
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background pb-20">
@@ -237,9 +233,8 @@ export default function MyPage() {
             <Separator />
             <p className="font-semibold">기타</p>
             <div className="rounded-lg border border-border/50 bg-card/70">
-              <button
-                type="button"
-                onClick={handleNotReadyFeature}
+              <Link
+                href="/terms"
                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
               >
                   <div className="flex items-center gap-2">
@@ -249,11 +244,10 @@ export default function MyPage() {
                     <span className="text-sm font-medium">이용약관</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </Link>
               <Separator />
-              <button
-                type="button"
-                onClick={handleNotReadyFeature}
+              <Link
+                href="/privacy"
                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
               >
                   <div className="flex items-center gap-2">
@@ -263,11 +257,10 @@ export default function MyPage() {
                     <span className="text-sm font-medium">개인정보 처리방침</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </Link>
               <Separator />
-              <button
-                type="button"
-                onClick={handleNotReadyFeature}
+              <Link
+                href="/about"
                 className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-muted/40"
               >
                   <div className="flex items-center gap-2">
@@ -280,7 +273,7 @@ export default function MyPage() {
                     <span className="text-xs text-muted-foreground">v1.0.0</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-              </button>
+              </Link>
             </div>
             <Separator />
             <p className="font-semibold">계정</p>
