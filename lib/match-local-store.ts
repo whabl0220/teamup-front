@@ -2,6 +2,10 @@ import type { MatchApplication, MatchApplicationStatus } from '@/types/match'
 
 const MATCH_APPLICATIONS_KEY = 'teamup_match_applications_v2'
 const MATCH_APPLICATIONS_CHANGED_EVENT = 'teamup:match-applications-changed'
+const EMPTY_APPLICATIONS: MatchApplication[] = []
+
+let cachedRawApplications: string | null | undefined
+let cachedParsedApplications: MatchApplication[] = EMPTY_APPLICATIONS
 
 const notifyApplicationsChanged = () => {
   if (typeof window === 'undefined') return
@@ -20,9 +24,34 @@ export const getStoredApplications = (): MatchApplication[] => {
   }
 }
 
+export const getStoredApplicationsSnapshot = (): MatchApplication[] => {
+  if (typeof window === 'undefined') return EMPTY_APPLICATIONS
+  const raw = localStorage.getItem(MATCH_APPLICATIONS_KEY)
+  if (raw === cachedRawApplications) {
+    return cachedParsedApplications
+  }
+
+  cachedRawApplications = raw
+  if (!raw) {
+    cachedParsedApplications = EMPTY_APPLICATIONS
+    return cachedParsedApplications
+  }
+
+  try {
+    const parsed = JSON.parse(raw)
+    cachedParsedApplications = Array.isArray(parsed) ? (parsed as MatchApplication[]) : EMPTY_APPLICATIONS
+  } catch {
+    cachedParsedApplications = EMPTY_APPLICATIONS
+  }
+  return cachedParsedApplications
+}
+
 export const setStoredApplications = (applications: MatchApplication[]) => {
   if (typeof window === 'undefined') return
-  localStorage.setItem(MATCH_APPLICATIONS_KEY, JSON.stringify(applications))
+  const raw = JSON.stringify(applications)
+  localStorage.setItem(MATCH_APPLICATIONS_KEY, raw)
+  cachedRawApplications = raw
+  cachedParsedApplications = applications
   notifyApplicationsChanged()
 }
 
@@ -66,6 +95,8 @@ export const updateStoredApplicationStatus = (
 export const clearStoredApplications = () => {
   if (typeof window === 'undefined') return
   localStorage.removeItem(MATCH_APPLICATIONS_KEY)
+  cachedRawApplications = null
+  cachedParsedApplications = EMPTY_APPLICATIONS
   notifyApplicationsChanged()
 }
 
