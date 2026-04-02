@@ -11,6 +11,7 @@ import { mapApiUserToUser } from '@/lib/mappers/user'
 import { toUserErrorMessage } from '@/lib/error-utils'
 import { UserInfoForm, UserInfoFormData } from '@/components/features/profile/UserInfoForm'
 import { toast } from 'sonner'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function BasicInfoEditPage() {
   const router = useRouter()
@@ -125,8 +126,19 @@ export default function BasicInfoEditPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-background pb-20">
+        <header className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-6 w-56" />
+          </div>
+        </header>
+
+        <div className="mx-auto max-w-lg space-y-6 p-4">
+          <Skeleton className="h-5 w-56" />
+          <Skeleton className="h-56 w-full rounded-xl" />
+          <Skeleton className="h-11 w-full rounded-xl" />
+        </div>
       </div>
     )
   }

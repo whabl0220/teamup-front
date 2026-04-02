@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { AlertTriangle, ArrowLeft, Bell, CheckCheck, CircleCheck, RotateCcw, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useRouter } from 'next/navigation'
 import {
   getNotificationTypeLabel,
@@ -49,6 +50,8 @@ export default function NotificationsPage() {
     clearAll,
   } = useNotifications()
 
+  const [isLoading, setIsLoading] = useState(true)
+
   useEffect(() => {
     const raw = sessionStorage.getItem(SCROLL_KEY)
     if (raw) {
@@ -61,7 +64,11 @@ export default function NotificationsPage() {
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    const t = window.setTimeout(() => setIsLoading(false), 150)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.clearTimeout(t)
+    }
   }, [])
 
   const handleMarkAllRead = () => {
@@ -117,7 +124,26 @@ export default function NotificationsPage() {
 
         <Card>
           <CardContent className="p-4">
-            {notifications.length === 0 ? (
+            {isLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div
+                    // eslint-disable-next-line react/no-array-index-key
+                    key={idx}
+                    className="w-full rounded-xl border border-border/50 p-3"
+                  >
+                    <div className="mb-2 flex items-center gap-2">
+                      <Skeleton className="h-7 w-7 rounded-md" />
+                      <Skeleton className="h-5 w-28 rounded-md" />
+                      <Skeleton className="ml-auto h-4 w-14 rounded-md" />
+                    </div>
+                    <Skeleton className="h-4 w-full rounded-md" />
+                    <Skeleton className="mt-2 h-4 w-2/3 rounded-md" />
+                    <Skeleton className="mt-1 h-3 w-full rounded-md" />
+                  </div>
+                ))}
+              </div>
+            ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <Bell className="mb-2 h-6 w-6 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">아직 기록된 알림이 없습니다.</p>
