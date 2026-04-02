@@ -68,8 +68,8 @@ export function UserInfoForm({
             </div>
           </div>
 
-          {/* 성별 & 키 */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* 성별 */}
+          <div className="grid grid-cols-1 gap-3">
             <div className="space-y-2">
               <Label htmlFor="gender">성별 *</Label>
               <Select
@@ -87,33 +87,6 @@ export function UserInfoForm({
                 </SelectContent>
               </Select>
             </div>
-
-            {showCardFields && (
-              <div className="space-y-2">
-                <Label htmlFor="height">키 (cm) *</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  min="150"
-                  max="250"
-                  placeholder="180"
-                  value={formData.height}
-                  onChange={(e) => {
-                    const value = e.target.value.slice(0, 3)
-                    onChange({ ...formData, height: value })
-                  }}
-                  onKeyDown={(e) => {
-                    // e, E, +, -, . 입력 방지
-                    if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                      e.preventDefault()
-                    }
-                  }}
-                  required
-                  disabled={isLoading}
-                  className="h-11"
-                />
-              </div>
-            )}
           </div>
 
           {/* 활동 지역 */}
@@ -145,11 +118,10 @@ export function UserInfoForm({
           {/* 주 포지션 & 부 포지션 */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="mainPosition">주 포지션 *</Label>
+              <Label htmlFor="mainPosition">주 포지션</Label>
               <Select
                 value={formData.mainPosition}
                 onValueChange={(value) => onChange({ ...formData, mainPosition: value })}
-                required
                 disabled={isLoading}
               >
                 <SelectTrigger className="h-11">
@@ -184,11 +156,10 @@ export function UserInfoForm({
 
           {/* 플레이 스타일 */}
           <div className="space-y-2">
-            <Label htmlFor="playStyle">플레이 스타일 *</Label>
+            <Label htmlFor="playStyle">플레이 스타일</Label>
             <Select
               value={formData.playStyle}
               onValueChange={(value) => onChange({ ...formData, playStyle: value })}
-              required
               disabled={isLoading}
             >
               <SelectTrigger className="h-11">
@@ -205,14 +176,13 @@ export function UserInfoForm({
 
           {/* 한 줄 소개 */}
           <div className="space-y-2">
-            <Label htmlFor="statusMsg">한 줄 소개 *</Label>
+            <Label htmlFor="statusMsg">한 줄 소개</Label>
             <Input
               id="statusMsg"
               type="text"
               placeholder="예: 코트 위의 전사"
               value={formData.statusMsg}
               onChange={(e) => onChange({ ...formData, statusMsg: e.target.value.slice(0, 20) })}
-              required
               disabled={isLoading}
               className="h-11"
               maxLength={20}

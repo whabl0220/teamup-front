@@ -73,6 +73,7 @@ npm run dev
 ### 사용자 관련
 - ✅ `GET /api/users/{userId}/teams` - 사용자의 팀 목록 조회
 - ✅ `GET /api/users/me` - 현재 사용자 정보
+- ✅ `PATCH /api/users/profile` - 프로필 수정
 - ✅ `GET /api/users/{userId}` - 사용자 조회
 
 ### 팀 관련

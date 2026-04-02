@@ -111,6 +111,17 @@ export async function put<T = unknown>(
   })
 }
 
+// PATCH 요청
+export async function patch<T = unknown>(
+  endpoint: string,
+  data?: unknown
+): Promise<T> {
+  return fetchAPI<T>(endpoint, {
+    method: 'PATCH',
+    body: data ? JSON.stringify(data) : undefined,
+  })
+}
+
 // DELETE 요청
 export async function del<T = unknown>(endpoint: string, data?: unknown): Promise<T> {
   return fetchAPI<T>(endpoint, {

@@ -8,8 +8,12 @@ export const mapApiUserToUser = (userData: ApiUser): User => ({
   gender: userData.gender,
   address: userData.address,
   height: userData.height,
-  position: userData.mainPosition as Position,
-  subPosition: userData.subPosition as Position | undefined,
+  position: userData.mainPosition
+    ? (userData.mainPosition as Position)
+    : undefined,
+  subPosition: userData.subPosition
+    ? (userData.subPosition as Position)
+    : undefined,
   playStyle: userData.playStyle as PlayStyle | undefined,
   statusMsg: userData.statusMsg,
 })

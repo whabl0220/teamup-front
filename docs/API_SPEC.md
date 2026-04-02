@@ -1,499 +1,60 @@
-# TeamUp API 명세서
-
-백엔드 및 AI 팀과 연동을 위한 API 명세입니다.
-
-## 🔧 환경 변수 설정
-
-```env
-# .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_AI_API_URL=http://localhost:8001
-```
-
----
-
-## 📋 백엔드 API
-
-### 1. 사용자 (User)
-
-#### GET `/api/users/me`
-현재 로그인한 사용자 정보 조회
-
-**Response:**
-```json
-{
-  "id": "user1",
-  "name": "홍길동",
-  "email": "hong@example.com",
-  "kakaoId": "kakao123",
-  "teams": ["team1", "team2"]
-}
-```
-
----
-
-### 2. 팀 (Team)
-
-#### GET `/api/teams/my`
-내가 속한 모든 팀 조회
-
-**Response:**
-```json
-[
-  {
-    "id": "team1",
-    "name": "세종 born",
-    "shortName": "SB",
-    "level": "A",
-    "region": "광진구 능동",
-    "memberCount": 5,
-    "maxMembers": 5,
-    "totalGames": 18,
-    "aiReports": 14,
-    "isOfficial": true,
-    "captainId": "user1"
-  }
-]
-```
-
-#### GET `/api/teams/search?q={query}&region={region}&level={level}`
-팀 검색
-
-**Query Parameters:**
-- `q`: 검색어 (팀 이름)
-- `region`: 지역 필터 (선택)
-- `level`: 레벨 필터 (선택)
-
-**Response:**
-```json
-[
-  {
-    "id": "team2",
-    "name": "세종 Warriors",
-    "shortName": "SW",
-    "level": "A",
-    "region": "광진구 능동",
-    "memberCount": 5,
-    "maxMembers": 5,
-    "description": "주말 오후에 활동하는 친목 위주 팀",
-    "matchScore": 95  // AI가 계산한 매칭 점수
-  }
-]
-```
-
-#### POST `/api/teams`
-팀 생성
-
-**Request Body:**
-```json
-{
-  "name": "세종 Warriors",
-  "region": "광진구 능동",
-  "level": "A",
-  "maxMembers": 5,
-  "description": "주말 오후에 활동하는 친목 위주 팀",
-
-  // AI 매칭용 선택 데이터
-  "preferredTime": "weekend_afternoon",
-  "playStyle": "fast_attack",
-  "gameFrequency": "week_2_3",
-  "teamMood": "friendly",
-  "travelDistance": "nearby_5km"
-}
-```
-
-**Response:**
-```json
-{
-  "id": "team3",
-  "name": "세종 Warriors",
-  "shortName": "SW",
-  "createdAt": "2025-01-20T10:30:00Z"
-}
-```
-
----
-
-### 3. 팀 상세 및 참여
-
-#### GET `/api/teams/:teamId/detail`
-팀 상세 정보 조회
-
-**Response:**
-```json
-{
-  "id": "team2",
-  "name": "세종 Warriors",
-  "shortName": "SW",
-  "level": "A",
-  "region": "광진구 능동",
-  "memberCount": 5,
-  "maxMembers": 5,
-  "totalGames": 18,
-  "aiReports": 14,
-  "isOfficial": true,
-  "description": "주말 오후에 활동하는 친목 위주 팀",
-  "preferredTime": "주말 오후 (14:00 - 18:00)",
-  "playStyle": "빠른 공격",
-  "gameFrequency": "주 2-3회"
-}
-```
-
-#### GET `/api/teams/:teamId/members`
-팀원 목록 조회
-
-**Response:**
-```json
-[
-  {
-    "id": "user1",
-    "name": "김철수",
-    "position": "포워드",
-    "isLeader": true,
-    "joinedAt": "2025-01-01T00:00:00Z"
-  },
-  {
-    "id": "user2",
-    "name": "이영희",
-    "position": "가드",
-    "isLeader": false,
-    "joinedAt": "2025-01-05T00:00:00Z"
-  }
-]
-```
-
-#### GET `/api/teams/:teamId/is-member`
-현재 유저가 팀 멤버인지 확인
-
-**Response:**
-```json
-{
-  "isMember": true
-}
-```
-
-#### POST `/api/teams/:teamId/join`
-팀 참여 요청
-
-**Request Body:**
-```json
-{
-  "userId": "user3",
-  "message": "참여하고 싶습니다!" // 선택
-}
-```
-
-**Response:**
-```json
-{
-  "status": "pending",  // pending | approved | rejected
-  "requestId": "req123"
-}
-```
-
-#### GET `/api/teams/:teamId/contact`
-팀장 연락처 (참여 승인 후에만)
-
-**Response:**
-```json
-{
-  "kakaoId": "kakao_captain123"
-}
-```
-**Error (403):** 팀 멤버가 아닌 경우
-```json
-{
-  "error": "Not a team member"
-}
-```
-
-#### POST `/api/teams/:teamId/leave`
-팀 탈퇴
-
----
-
-### 4. 매칭 요청 (Match Request)
-
-#### GET `/api/match-requests/received`
-받은 매칭 요청 목록
-
-**Response:**
-```json
-[
-  {
-    "id": "req1",
-    "fromTeam": {
-      "id": "team3",
-      "name": "송파 Dunk",
-      "level": "A",
-      "region": "송파구 잠실"
-    },
-    "toTeam": {
-      "id": "team1",
-      "name": "세종 born"
-    },
-    "message": "이번 주말 경기 어떠신가요?",
-    "status": "pending",
-    "createdAt": "2025-01-20T10:00:00Z"
-  }
-]
-```
-
-#### GET `/api/match-requests/sent`
-보낸 매칭 요청 목록
-
-#### POST `/api/match-requests`
-매칭 요청 보내기
-
-**Request Body:**
-```json
-{
-  "fromTeamId": "team1",
-  "toTeamId": "team2",
-  "message": "경기 한 번 하시죠!"
-}
-```
-
-#### PUT `/api/match-requests/:requestId/accept`
-매칭 요청 수락
-
-**Response:**
-```json
-{
-  "status": "accepted",
-  "captainKakaoId": "kakao_captain456"  // 상대 팀장 카카오톡 ID
-}
-```
-
-#### PUT `/api/match-requests/:requestId/reject`
-매칭 요청 거절
-
----
-
-### 5. 알림 (Notification)
-
-#### GET `/api/notifications`
-알림 목록
-
-**Response:**
-```json
-[
-  {
-    "id": "noti1",
-    "type": "match_request",  // match_request | join_request | game_result
-    "title": "새로운 매칭 요청",
-    "message": "송파 Dunk 팀이 매칭을 요청했습니다",
-    "isRead": false,
-    "createdAt": "2025-01-20T10:00:00Z",
-    "relatedId": "req1"  // 관련 요청/경기 ID
-  }
-]
-```
-
-#### PUT `/api/notifications/:id/read`
-알림 읽음 처리
-
-#### PUT `/api/notifications/read-all`
-모든 알림 읽음 처리
-
----
-
-## 🤖 AI API
-
-### 1. 매칭 점수 계산
-
-#### POST `/api/ai/match-score`
-유저와 팀 간의 매칭 적합도 분석
-
-**Request Body:**
-```json
-{
-  "userId": "user1",
-  "teamId": "team2"
-}
-```
-
-**Response:**
-```json
-{
-  "matchScore": 95,  // 0-100 점수
-  "reasons": [
-    "실력 레벨이 유사합니다 (A ↔ A)",
-    "활동 지역이 가깝습니다 (광진구)",
-    "플레이 스타일이 일치합니다 (빠른 공격)"
-  ],
-  "recommendation": "매우 적합한 팀입니다!"
-}
-```
-
-**AI 계산 로직 (참고용):**
-- 실력 레벨 유사도: 30%
-- 지역 거리: 25%
-- 플레이 스타일 일치: 20%
-- 선호 시간대 일치: 15%
-- 팀 분위기 일치: 10%
-
----
-
-### 2. 팀 추천
-
-#### GET `/api/ai/recommend-teams?userId={userId}`
-AI 기반 팀 추천
-
-**Response:**
-```json
-[
-  {
-    "teamId": "team2",
-    "name": "세종 Warriors",
-    "matchScore": 95,
-    "reason": "실력 레벨과 플레이 스타일이 잘 맞습니다"
-  },
-  {
-    "teamId": "team3",
-    "name": "강남 Thunder",
-    "matchScore": 92,
-    "reason": "활동 지역이 가깝고 선호 시간대가 일치합니다"
-  }
-]
-```
-
----
-
-### 3. AI 코칭 리포트
-
-#### POST `/api/ai/coaching-report`
-경기 영상 분석 후 AI 코칭 리포트 생성
-
-**Request Body:**
-```json
-{
-  "gameId": "game123",
-  "videoUrl": "https://example.com/game-video.mp4"  // 선택
-}
-```
-
-**Response:**
-```json
-{
-  "reportId": "report456",
-  "gameId": "game123",
-  "summary": "이번 경기는 수비에서 강점을 보였습니다",
-  "strengths": [
-    "빠른 전환 공격",
-    "효과적인 리바운드"
-  ],
-  "improvements": [
-    "3점슛 성공률 개선 필요",
-    "턴오버 감소 필요"
-  ],
-  "stats": {
-    "fieldGoalPercentage": 45.2,
-    "threePointPercentage": 32.1,
-    "rebounds": 38,
-    "assists": 22,
-    "turnovers": 15
-  },
-  "createdAt": "2025-01-20T15:00:00Z"
-}
-```
-
----
-
-## 📊 데이터 모델
-
-### Team (팀)
-```typescript
-interface Team {
-  id: string
-  name: string
-  shortName: string          // 2-3자 약칭 (예: "SW")
-  level: string              // A+, A, B+, B, C+, C, D
-  region: string             // "광진구 능동"
-  memberCount: number
-  maxMembers: number
-  totalGames: number
-  aiReports: number
-  activeDays: number
-  isOfficial: boolean        // 정식 팀 여부
-  captainId: string
-  description?: string
-
-  // AI 매칭용 데이터 (선택)
-  preferredTime?: string     // "weekend_afternoon"
-  playStyle?: string         // "fast_attack"
-  gameFrequency?: string     // "week_2_3"
-  teamMood?: string          // "friendly"
-  travelDistance?: string    // "nearby_5km"
-
-  matchScore?: number        // AI 계산 매칭 점수 (0-100)
-}
-```
-
-### User (사용자)
-```typescript
-interface User {
-  id: string
-  name: string
-  email: string
-  kakaoId: string
-  teams: string[]            // 속한 팀 ID 배열
-  position?: string          // "포워드", "가드", "센터"
-  skillLevel?: string        // "A", "B", "C"
-}
-```
-
-### MatchRequest (매칭 요청)
-```typescript
-interface MatchRequest {
-  id: string
-  fromTeamId: string
-  toTeamId: string
-  message: string
-  status: 'pending' | 'accepted' | 'rejected'
-  createdAt: string
-}
-```
-
----
-
-## 🔐 인증
-
-모든 API 요청은 헤더에 인증 토큰이 필요합니다:
-
-```
-Authorization: Bearer {token}
-```
-
----
-
-## 🚀 프론트엔드 사용 예시
-
-```typescript
-// lib/api.ts 사용
-import { api } from '@/lib/api'
-
-// 팀 상세 정보 조회
-const teamDetail = await api.getTeamDetail('team2')
-
-// 팀 참여 요청
-await api.joinTeam('team2', { message: '참여하고 싶습니다!' })
-
-// AI 매칭 점수 조회
-const score = await api.getMatchScore('user1', 'team2')
-console.log(score.matchScore) // 95
-```
-
----
-
-## 📝 Mock 데이터 → 실제 API 전환
-
-현재 프론트엔드는 Mock 데이터로 개발되어 있습니다.
-백엔드 API가 준비되면 다음 파일들의 주석을 해제하고 연결하세요:
-
-1. `app/(app)/home/page.tsx` - 홈 화면
-2. `app/(app)/matching/page.tsx` - 매칭 페이지
-3. `app/team/[id]/page.tsx` - 팀 상세 페이지
-4. `app/team/create/page.tsx` - 팀 생성
-
-각 파일에 `// TODO: 백엔드 API 호출` 주석으로 표시되어 있습니다.
+### 1. 👤 회원 및 프로필 (Users)
+
+Clerk을 통해 기본 인증을 마치고, 우리 서비스만의 농구 데이터를 쌓는 영역이야.
+
+- **`POST /api/users/sync`**: Clerk 회원가입 성공 시 호출되는 웹훅(Webhook) 엔드포인트. 우리 PostgreSQL DB에 기본 유저 튜플을 생성해.
+- **`PATCH /api/users/profile`**: 초기 가입 직후, 유저가 자신의 주 포지션, 자체 평가 실력, 선호 지역 등을 입력하고 수정하는 API.
+- **`GET /api/users/me`**: 마이페이지용 API. 내 기본 정보, 보유 포인트(차액 환불받은 금액), 누적 매너/실력 태그, 참가/주최 예정인 매치 목록을 한 번에 내려줘.
+
+### 2. 🏟 구장 (Courts)
+
+매치 생성 시 주최자가 검색하고, 참가자가 고화질 사진을 볼 수 있도록 미리 구축해 둔 구장 데이터야.
+
+- **`GET /api/courts`**: 매치 생성 시 주최자가 특정 지역(예: 광진구)의 구장을 검색할 때 사용하는 API. (초기엔 야외 무료 코트 위주로 세팅)
+- **`GET /api/courts/{courtId}`**: 특정 구장의 상세 정보(위경도 좌표, 시설 옵션, S3에 저장된 사진 URL 리스트)를 불러와.
+
+### 3. 🏀 매치 (Matches) - ✨ 트래픽 핵심
+
+플랩풋볼처럼 날짜별 리스트를 보여주는 홈 화면과 주최자의 매치 관리를 담당해.
+
+- **`GET /api/matches`**: **[홈 화면용]** 클라이언트가 선택한 `date`와 `regionId`를 쿼리 파라미터로 받아 해당 날짜의 매치 리스트를 시간순으로 반환해. (조회 속도가 생명이니 DB 인덱싱 필수)
+- **`GET /api/matches/{matchId}`**: 매치 상세 페이지. 구장 정보, 현재 참여 인원(예: 8/10), 최소 진행 인원, 1인당 현재 예상 참가비(보증금), 실력 조건 등을 조인해서 내려줘.
+- **`POST /api/matches`**: 주최자가 새로운 매치를 생성하는 API. `courtId`, 경기 시간, 최소/최대 인원, 1인당 최대 참가비(보증금 기준)를 페이로드로 받아.
+- **`PATCH /api/matches/{matchId}/status`**: 모집 중, 마감 임박, 모집 완료, 경기 취소 등 매치 상태를 변경해. (주로 백엔드 스케줄러가 호출하거나 어드민이 제어)
+
+### 5. 🤝 평가 및 페널티 (Evaluations)
+
+경기가 끝난 후 터치 태그를 남기고, 물을 흐리는 유저를 솎아내는 기능이야.
+
+- **`POST /api/matches/{matchId}/evaluations`**: 경기 종료 후 참가자들이 서로에게 부여한 터치 태그(예: '매너왕', '난사쟁이') ID 배열을 서버로 전송해.
+- **`POST /api/matches/{matchId}/no-shows`**: 주최자가 당일 나타나지 않은 유저를 신고하는 API. 데이터가 쌓이면 해당 유저의 매칭을 제한하는 데 쓰여.
+
+### 🏀 TeamUp: 아마추어 농구 매칭 & 에스크로 결제 플랫폼
+
+**"인원 미달, 홀수 매칭, 구장비 사기 걱정 없이! 조건에 맞는 짝수 인원으로 안전하게 N빵 결제하는 농구 매칭 서비스"**
+
+### 1. 홈 화면 및 타겟팅 (UX & 마케팅)
+
+- **하이퍼 로컬 시작:** 초기에는 광진구 등 특정 지역의 무료 야외 코트를 거점으로 삼아 '콜드 스타트'를 돌파.
+- **직관적인 리스트 뷰:** 앱 진입 시 상단에 날짜(일/월/화)를 두고, 해당 날짜에 열리는 매치들을 시간순으로 리스팅하여 유저들이 가장 익숙하게 경기를 찾을 수 있도록 구성.
+- **구장 DB화:** 주최자가 매치 생성 시 서버에 미리 구축된 구장(Court) 데이터를 검색해 매핑. 고화질 사진과 시설 정보가 자동으로 깔끔하게 노출됨.
+
+### 2. 💳 스마트 N빵 & 에스크로 결제 (비즈니스 코어)
+
+- **최대 금액 선결제:** 주최자가 설정한 '최소 진행 인원(예: 6명)'을 기준으로 1인당 최대 참가비를 산정해 유저가 선결제.
+- **에스크로(Escrow) 보관:** 결제 대금은 주최자에게 바로 가지 않고 플랫폼이 보관. 경기 종료 후 24시간 동안 참가자들의 이의 제기(구장비 부풀리기 사기 등)가 없으면 수수료를 제외하고 주최자에게 정산.
+- **차액 포인트 환불:** 최소 인원보다 더 많은 정원(예: 10명)이 꽉 차서 1인당 부담금이 줄어들면, 그 차액만큼을 앱 내 포인트나 부분 취소로 유저에게 돌려주어 긍정적인 결제 경험 제공.
+
+### 3. 👥 짝수 매칭제 & 스케줄러 (시스템 코어)
+
+- **Waitlist(대기) 상태 머신:** 농구의 질을 떨어뜨리는 '홀수 매칭'을 시스템적으로 차단.
+    - 1~6번째(최소 인원) 결제자는 즉시 `CONFIRMED(참가 확정)`.
+    - 7번째 결제자는 돈은 묶이되 `WAITING_FOR_PAIR(짝수 대기 중)` 상태로 대기.
+    - 8번째 결제자가 들어오는 순간, 트랜잭션이 발생해 7번과 8번 유저를 동시에 `CONFIRMED`로 업데이트.
+- **자동 폭파 및 홀수 환불:** * 경기 시작 N시간 전까지 '최소 인원'이 안 모이면 전체 자동 환불 및 매치 취소.
+    - 매치는 성사되었으나 누군가 '홀수'로 혼자 대기 중이라면, 그 1명에게만 알림을 보내고 100% 자동 환불 처리하여 무조건 짝수 경기를 보장.
+
+### 4. 🤝 상호 평가 및 노쇼 방어 (데이터 축적)
+
+- 경기 종료 후 **'터치 태그 방식'**으로 가볍게 실력과 매너를 상호 평가.
+- 주최자의 '노쇼 리포트'와 태그 데이터를 누적하여, 유저의 초기 자체 평가 실력을 객관적인 지표로 보정하고 불량 유저의 매칭을 제한.

@@ -5,17 +5,13 @@ import { mockMatchTeams, mockJoinTeams, mockMyTeam, mockMyTeamMembers, mockTeamM
 // Mock 데이터 저장소 (메모리 기반)
 const mockData = {
   teams: [...mockMatchTeams, ...mockJoinTeams, mockMyTeam],
+  // 첫 유저: 플레이어 카드 필드는 비워 두어 기본(미설정) 카드 UI를 확인할 수 있게 함
   users: [
     {
       id: 'user1',
-      name: 'Yoo',
-      email: 'Yoo@gmail.com',
+      name: '플레이어',
+      email: 'player@example.com',
       team: mockMyTeam,
-      height: 178,
-      position: 'FORWARD' as const, // Position: 'GUARD' | 'FORWARD' | 'CENTER'
-      subPosition: 'CENTER' as const, // Position: 'GUARD' | 'FORWARD' | 'CENTER'
-      playStyle: 'SHOOTER' as const, // PlayStyle: 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'
-      statusMsg: 'TeamUp is good!',
     },
   ] as User[],
   matchRequests: [] as MatchRequest[],
@@ -503,11 +499,11 @@ export const handlers = [
       id: user.id,
       email: user.email,
       nickname: user.name,
-      mainPosition: user.position || 'GUARD',
-      subPosition: undefined,
-      gender: 'MALE',
+      mainPosition: user.position ?? '',
+      subPosition: user.subPosition,
+      gender: user.gender ?? 'MALE',
       age: 25,
-      address: user.address || '',
+      address: user.address ?? '',
       height: user.height,
       playStyle: user.playStyle,
       statusMsg: user.statusMsg,
@@ -516,8 +512,8 @@ export const handlers = [
     })
   }),
 
-  // 사용자 정보 수정
-  http.put('*/api/users/me', async ({ request }) => {
+  // 사용자 정보 수정 (백엔드 명세: PATCH /api/users/profile)
+  http.patch('*/api/users/profile', async ({ request }) => {
     const body = (await request.json()) as Partial<{
       nickname: string
       gender: string
@@ -548,7 +544,7 @@ export const handlers = [
       id: user.id,
       email: user.email,
       nickname: user.name,
-      mainPosition: user.position || 'GUARD',
+      mainPosition: user.position ?? '',
       subPosition: user.subPosition,
       gender: body.gender || 'MALE',
       age: 25,
