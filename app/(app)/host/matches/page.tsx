@@ -16,6 +16,8 @@ import { toast } from 'sonner'
 import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { MATCH_STATUS_META } from '@/lib/status-meta'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
+import { MatchDateCarousel } from '@/components/features/matches/MatchDateCarousel'
+import { toDateKey } from '@/lib/match-list-date'
 
 export default function HostMatchesPage() {
   const { user } = useUser()
@@ -23,6 +25,7 @@ export default function HostMatchesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadError, setHasLoadError] = useState(false)
   const [mode, setMode] = useState<'ALL' | 'MY' | 'TODAY' | 'WEEK'>('ALL')
+  const [selectedDate, setSelectedDate] = useState<string>('ALL')
 
   const loadMatches = async () => {
     try {
@@ -43,11 +46,16 @@ export default function HostMatchesPage() {
   }, [])
 
   const filteredMatches = useMemo(() => {
-    if (mode === 'ALL' || mode === 'MY') return matches
+    const dateFiltered =
+      selectedDate === 'ALL'
+        ? matches
+        : matches.filter((match) => toDateKey(new Date(match.startAt)) === selectedDate)
+
+    if (mode === 'ALL' || mode === 'MY') return dateFiltered
 
     if (mode === 'TODAY') {
       const now = new Date()
-      return matches.filter((match) => new Date(match.startAt).toDateString() === now.toDateString())
+      return dateFiltered.filter((match) => new Date(match.startAt).toDateString() === now.toDateString())
     }
 
     const now = new Date()
@@ -57,11 +65,11 @@ export default function HostMatchesPage() {
     start.setHours(0, 0, 0, 0)
     const end = new Date(start)
     end.setDate(start.getDate() + 7)
-    return matches.filter((match) => {
+    return dateFiltered.filter((match) => {
       const target = new Date(match.startAt)
       return target >= start && target < end
     })
-  }, [matches, mode])
+  }, [matches, mode, selectedDate])
   const displayName = user?.username || user?.firstName || user?.fullName || '플레이어'
 
   return (
@@ -86,6 +94,9 @@ export default function HostMatchesPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
+        <div className="mb-3">
+          <MatchDateCarousel selectedDate={selectedDate} onSelect={setSelectedDate} />
+        </div>
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Button variant={mode === 'ALL' ? 'default' : 'outline'} size="sm" onClick={() => setMode('ALL')}>
             전체
