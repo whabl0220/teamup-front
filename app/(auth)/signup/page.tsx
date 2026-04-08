@@ -186,7 +186,7 @@ export default function SignupPage() {
       case 'account':
         return '이메일과 비밀번호로 계정을 생성하세요'
       case 'profile':
-        return '플레이어 카드 정보를 입력하세요'
+        return '기본 정보는 필수, 플레이어 카드 항목은 선택 입력이에요'
       case 'verify':
         return '이메일로 받은 인증 코드를 입력하세요'
     }
@@ -350,6 +350,9 @@ export default function SignupPage() {
               </Button>
             </div>
 
+            <p className="mb-4 text-xs text-muted-foreground">
+              이름·성별·활동 지역은 필수예요. 주 포지션·플레이 스타일·한 줄 소개는 나중에 마이페이지에서도 채울 수 있어요.
+            </p>
             <UserInfoForm
               formData={formData}
               onChange={setFormData}

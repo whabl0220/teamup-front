@@ -1,8 +1,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const { userId } = await auth()
+  if (userId) {
+    redirect('/home')
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* 중앙 콘텐츠 */}

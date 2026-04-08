@@ -58,6 +58,25 @@ export const setStoredApplications = (applications: MatchApplication[]) => {
 export const getStoredApplicationsByMatchId = (matchId: string): MatchApplication[] =>
   getStoredApplications().filter((app) => app.matchId === matchId)
 
+/**
+ * 같은 매치·유저에 신청 이력이 여러 건일 때(취소 후 재신청 등), `.find()`로 첫 행만 고르면
+ * 취소분이 먼저 와서 활성 신청을 놓칩니다. 입금 대기·확정 중 최신 건만 반환합니다.
+ */
+export const pickActiveApplicationForUserOnMatch = (
+  applications: MatchApplication[],
+  userId: string
+): MatchApplication | null => {
+  const latest = applications
+    .filter((a) => a.userId === userId)
+    .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())[0]
+
+  if (!latest) return null
+
+  return latest.status === 'PENDING_DEPOSIT' || latest.status === 'CONFIRMED'
+    ? latest
+    : null
+}
+
 export const upsertStoredApplication = (application: MatchApplication) => {
   const applications = getStoredApplications()
   const next = applications.some((app) => app.id === application.id)

@@ -9,6 +9,7 @@ import { getMockMatchById } from '@/lib/mock-matches'
 import type { Match, MatchApplicationStatus } from '@/types/match'
 import { toast } from 'sonner'
 import {
+  pickActiveApplicationForUserOnMatch,
   upsertStoredApplication,
   updateStoredApplicationStatus,
 } from '@/lib/match-local-store'
@@ -30,15 +31,6 @@ type LocalApplicationState = {
   status: MatchApplicationStatus
 }
 
-const getApplyButtonLabel = (matchStatus: Match['status'], isSubmitting: boolean, isMyHostedMatch: boolean) => {
-  if (isSubmitting) return '처리 중...'
-  if (isMyHostedMatch) return '내 주최 경기'
-  if (matchStatus === 'RECRUITING') return '참가 신청'
-  if (matchStatus === 'FULL') return '신청 마감'
-  if (matchStatus === 'CANCELLED') return '취소된 경기'
-  return '종료된 경기'
-}
-
 export default function MatchDetailPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
@@ -54,7 +46,7 @@ export default function MatchDetailPage() {
   const application = useMemo<LocalApplicationState | null>(() => {
     if (!matchId) return null
     const localUserId = getLocalUser().userId
-    const mine = applicationsByMatch.find((app) => app.userId === localUserId)
+    const mine = pickActiveApplicationForUserOnMatch(applicationsByMatch, localUserId)
     return mine ? { applicationId: mine.id, status: mine.status } : null
   }, [applicationsByMatch, matchId])
 
@@ -224,7 +216,6 @@ export default function MatchDetailPage() {
         application={application}
         isSubmitting={isSubmitting}
         isMyHostedMatch={isMyHostedMatch}
-        applyButtonLabel={getApplyButtonLabel(match.status, isSubmitting, isMyHostedMatch)}
         onApply={handleApply}
         onCancel={handleCancel}
       />

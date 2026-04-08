@@ -32,7 +32,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ClerkProvider>
+        <ClerkProvider
+          signInUrl="/login"
+          signUpUrl="/signup"
+          signInFallbackRedirectUrl="/home"
+          signUpFallbackRedirectUrl="/home"
+        >
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             <MSWProvider>
               <ClerkIdentitySync />

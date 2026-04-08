@@ -2,11 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, Save } from 'lucide-react'
 import { userService } from '@/lib/services'
 import { Position, PlayStyle, User } from '@/types'
@@ -17,7 +19,9 @@ import { toast } from 'sonner'
 
 export default function ProfileEditPage() {
   const router = useRouter()
+  const { user: clerkUser } = useUser()
   const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [user, setUser] = useState<User | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -35,6 +39,7 @@ export default function ProfileEditPage() {
     const loadData = async () => {
       try {
         setIsLoading(true)
+        setLoadError(null)
         const userData = await userService.getMe()
         setUser(mapApiUserToUser(userData))
         if (userData) {
@@ -47,19 +52,35 @@ export default function ProfileEditPage() {
           })
         }
       } catch (err) {
-        console.error('사용자 정보 로드 실패:', err)
-        toast.error(
-          toUserErrorMessage(err, {
+        if (clerkUser) {
+          setUser({
+            id: clerkUser.id,
+            name: clerkUser.username || clerkUser.firstName || clerkUser.fullName || '플레이어',
+            email: clerkUser.primaryEmailAddress?.emailAddress || '',
+            gender: '',
+            address: '',
+            height: undefined,
+            position: undefined,
+            subPosition: undefined,
+            playStyle: undefined,
+            statusMsg: '',
+          })
+          setLoadError(null)
+        } else {
+          console.error('사용자 정보 로드 실패:', err)
+          const message = toUserErrorMessage(err, {
             fallback: '사용자 정보를 불러오는데 실패했습니다.',
           })
-        )
+          setLoadError(message)
+          toast.error(message)
+        }
       } finally {
         setIsLoading(false)
       }
     }
 
     loadData()
-  }, [])
+  }, [clerkUser])
 
   // 미리보기용 유저 데이터
   const previewUser = {
@@ -100,8 +121,25 @@ export default function ProfileEditPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-background pb-20">
+        <header className="sticky top-0 z-10 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-6 w-56" />
+          </div>
+        </header>
+
+        <div className="mx-auto max-w-lg space-y-6 p-4">
+          <div className="space-y-3">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-56 w-full rounded-2xl" />
+          </div>
+
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-xl" />
+        </div>
       </div>
     )
   }
@@ -109,7 +147,7 @@ export default function ProfileEditPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">로그인이 필요합니다.</p>
+        <p className="text-muted-foreground">{loadError ?? '로그인이 필요합니다.'}</p>
       </div>
     )
   }

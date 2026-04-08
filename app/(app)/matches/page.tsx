@@ -20,6 +20,8 @@ import { formatCurrencyKRW, formatDateTimeKorean } from '@/lib/formatters'
 import { APPLICATION_STATUS_META, MATCH_STATUS_META } from '@/lib/status-meta'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
 import { useMyStoredApplications } from '@/hooks/useStoredApplications'
+import { MatchDateCarousel } from '@/components/features/matches/MatchDateCarousel'
+import { toDateKey } from '@/lib/match-list-date'
 
 type MatchListMode = 'ALL' | 'MY' | 'TODAY' | 'WEEK'
 type MyStatusFilter = 'ALL' | MatchApplicationStatus
@@ -48,6 +50,7 @@ export default function MatchesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasLoadError, setHasLoadError] = useState(false)
   const [mode, setMode] = useState<MatchListMode>('ALL')
+  const [selectedDate, setSelectedDate] = useState<string>('ALL')
   const [myStatusFilter, setMyStatusFilter] = useState<MyStatusFilter>('ALL')
   const localUserId = useMemo(() => getLocalUser().userId, [])
 
@@ -84,21 +87,26 @@ export default function MatchesPage() {
   }, [storedApplications])
 
   const filteredMatches = useMemo(() => {
-    if (mode === 'ALL') return matches
+    const dateFiltered =
+      selectedDate === 'ALL'
+        ? matches
+        : matches.filter((match) => toDateKey(new Date(match.startAt)) === selectedDate)
+
+    if (mode === 'ALL') return dateFiltered
 
     if (mode === 'TODAY') {
       const now = new Date()
-      return matches.filter((match) => new Date(match.startAt).toDateString() === now.toDateString())
+      return dateFiltered.filter((match) => new Date(match.startAt).toDateString() === now.toDateString())
     }
 
     if (mode === 'WEEK') {
-      return matches.filter((match) => isInThisWeek(new Date(match.startAt)))
+      return dateFiltered.filter((match) => isInThisWeek(new Date(match.startAt)))
     }
 
-    const myMatches = matches.filter((match) => myLatestApplicationByMatch.has(match.id))
+    const myMatches = dateFiltered.filter((match) => myLatestApplicationByMatch.has(match.id))
     if (myStatusFilter === 'ALL') return myMatches
     return myMatches.filter((match) => myLatestApplicationByMatch.get(match.id)?.status === myStatusFilter)
-  }, [matches, mode, myLatestApplicationByMatch, myStatusFilter])
+  }, [matches, mode, myLatestApplicationByMatch, myStatusFilter, selectedDate])
   const displayName = user?.username || user?.firstName || user?.fullName || '플레이어'
 
   return (
@@ -123,6 +131,9 @@ export default function MatchesPage() {
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
+        <div className="mb-3">
+          <MatchDateCarousel selectedDate={selectedDate} onSelect={setSelectedDate} />
+        </div>
         <div className="mb-4 flex gap-2">
           <Button variant={mode === 'ALL' ? 'default' : 'outline'} size="sm" onClick={() => setMode('ALL')}>
             전체

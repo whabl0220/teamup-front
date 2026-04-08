@@ -1,5 +1,22 @@
 import type { CreateMatchRequest, MatchLevel, UpdateMatchRequest } from '@/types/match'
 
+const pad2 = (n: number) => String(n).padStart(2, '0')
+
+/** `<input type="datetime-local" />`용 로컬 문자열 */
+export const toLocalDatetimeValue = (d: Date) =>
+  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+
+/** 경기 생성 폼 기본값: 오늘 정오 12:00 시작, 종료는 시작 + 2시간 */
+export const getDefaultMatchDatetimeRangeLocal = (): { startAt: string; endAt: string } => {
+  const start = new Date()
+  start.setHours(12, 0, 0, 0)
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000)
+  return {
+    startAt: toLocalDatetimeValue(start),
+    endAt: toLocalDatetimeValue(end),
+  }
+}
+
 export type MatchFormValues = {
   title: string
   courtId: string
@@ -24,17 +41,22 @@ export const toIsoFromLocalDatetime = (value: string): string => {
 export const isMatchFormSubmittable = (values: MatchFormValues): boolean => {
   const parsedFee = Number(values.fee)
   const parsedCapacity = Number(values.capacity)
+  const feeOk =
+    values.fee.trim() !== '' &&
+    Number.isFinite(parsedFee) &&
+    parsedFee >= 0 &&
+    Number.isInteger(parsedFee)
+  const depositOk = parsedFee === 0 || Boolean(values.depositAccount.trim())
   return Boolean(
     values.title.trim() &&
       values.courtId &&
       values.startAt &&
-      values.fee.trim() &&
-      Number.isFinite(parsedFee) &&
-      parsedFee > 0 &&
+      feeOk &&
       values.capacity.trim() &&
       Number.isFinite(parsedCapacity) &&
+      Number.isInteger(parsedCapacity) &&
       parsedCapacity > 0 &&
-      values.depositAccount.trim()
+      depositOk
   )
 }
 
@@ -55,15 +77,29 @@ export const validateMatchDateRange = (
 
 type MatchPayload = CreateMatchRequest | UpdateMatchRequest
 
-export const toMatchPayload = (values: MatchFormValues): MatchPayload => ({
-  title: values.title.trim(),
-  courtId: values.courtId,
-  startAt: toIsoFromLocalDatetime(values.startAt),
-  endAt: values.endAt.trim() ? toIsoFromLocalDatetime(values.endAt) : undefined,
-  fee: Math.round(Number(values.fee)),
-  capacity: Math.round(Number(values.capacity)),
-  level: values.level,
-  cancellationPolicy: values.cancellationPolicy.trim() || undefined,
-  notes: values.notes.trim() || undefined,
-  depositAccount: values.depositAccount.trim(),
-})
+export const toMatchPayload = (values: MatchFormValues): MatchPayload => {
+  const fee = Number(values.fee)
+  const capacity = Number(values.capacity)
+
+  if (!Number.isFinite(fee) || !Number.isInteger(fee) || fee < 0) {
+    throw new Error('Invalid fee')
+  }
+  if (!Number.isFinite(capacity) || !Number.isInteger(capacity) || capacity <= 0) {
+    throw new Error('Invalid capacity')
+  }
+
+  const depositAccount = values.depositAccount.trim() || undefined
+  return {
+    title: values.title.trim(),
+    courtId: values.courtId,
+    startAt: toIsoFromLocalDatetime(values.startAt),
+    endAt: values.endAt.trim() ? toIsoFromLocalDatetime(values.endAt) : undefined,
+    fee,
+    capacity,
+    level: values.level,
+    cancellationPolicy: values.cancellationPolicy.trim() || undefined,
+    notes: values.notes.trim() || undefined,
+    // 무료 경기(fee === 0)이거나 빈 값이면 필드 자체를 보내지 않음
+    depositAccount: fee === 0 ? undefined : depositAccount,
+  }
+}

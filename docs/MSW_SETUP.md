@@ -73,6 +73,7 @@ npm run dev
 ### 사용자 관련
 - ✅ `GET /api/users/{userId}/teams` - 사용자의 팀 목록 조회
 - ✅ `GET /api/users/me` - 현재 사용자 정보
+- ✅ `PATCH /api/users/profile` - 프로필 수정
 - ✅ `GET /api/users/{userId}` - 사용자 조회
 
 ### 팀 관련
@@ -85,10 +86,6 @@ npm run dev
 - ✅ `POST /api/games/match` - 게임 생성
 - ✅ `POST /api/games/{gameId}/finish-and-feedback` - 피드백 제출
 - ✅ `POST /api/games/{gameId}/report?teamId={teamId}` - AI 리포트 생성
-
-### 사용자 관련
-- ✅ `GET /api/users/me` - 현재 사용자 정보
-- ✅ `GET /api/users/{userId}` - 사용자 조회
 
 ### 매칭 요청 관련
 - ✅ `GET /api/match-requests/received` - 받은 매칭 요청 목록

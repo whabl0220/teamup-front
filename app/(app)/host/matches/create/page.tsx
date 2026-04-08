@@ -19,18 +19,24 @@ import {
 import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
-import { isMatchFormSubmittable, toMatchPayload, validateMatchDateRange } from '@/lib/match-form'
+import {
+  getDefaultMatchDatetimeRangeLocal,
+  isMatchFormSubmittable,
+  toMatchPayload,
+  validateMatchDateRange,
+} from '@/lib/match-form'
 import { isHostScheduleOverlapError, toUserErrorMessage } from '@/lib/error-utils'
 import type { MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
 
 export default function HostMatchCreatePage() {
   const router = useRouter()
+  const [defaultDateRange] = useState(getDefaultMatchDatetimeRangeLocal)
 
   const [title, setTitle] = useState('')
   const [courtId, setCourtId] = useState('')
-  const [startAt, setStartAt] = useState('')
-  const [endAt, setEndAt] = useState('')
+  const [startAt, setStartAt] = useState(defaultDateRange.startAt)
+  const [endAt, setEndAt] = useState(defaultDateRange.endAt)
   const [fee, setFee] = useState('')
   const [capacity, setCapacity] = useState('')
   const [level, setLevel] = useState<MatchLevel>('ALL')
@@ -181,7 +187,8 @@ export default function HostMatchCreatePage() {
                 <p className="text-sm font-semibold text-foreground">총 참가비</p>
                 <Input
                   type="number"
-                  min={1}
+                  min={0}
+                  step={100}
                   value={fee}
                   onChange={(e) => setFee(e.target.value)}
                   placeholder="예: 8000"
@@ -198,6 +205,9 @@ export default function HostMatchCreatePage() {
                 />
               </div>
             </div>
+            <p className="-mt-1 text-xs text-muted-foreground">
+              0원이면 무료 경기로 등록됩니다. 유료 경기일 때만 입금 계좌를 입력하면 됩니다.
+            </p>
 
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">경기 레벨</p>
@@ -216,9 +226,13 @@ export default function HostMatchCreatePage() {
 
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Wallet className="h-4 w-4" /> 입금 계좌
+                <Wallet className="h-4 w-4" /> 입금 계좌 <span className="font-normal text-muted-foreground">(유료 시)</span>
               </p>
-              <Input value={depositAccount} onChange={(e) => setDepositAccount(e.target.value)} placeholder="예: 토스뱅크 ..." />
+              <Input
+                value={depositAccount}
+                onChange={(e) => setDepositAccount(e.target.value)}
+                placeholder="예: 토스뱅크 ..."
+              />
             </div>
 
             <div className="space-y-1">

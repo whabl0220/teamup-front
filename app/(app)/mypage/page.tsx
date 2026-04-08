@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
+import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { userService } from '@/lib/services'
 import { clearNotifications } from '@/lib/local-notifications'
@@ -148,8 +149,53 @@ export default function MyPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background pb-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="min-h-screen bg-background pb-20">
+        <header className="sticky top-0 z-40 border-b border-border/50 bg-background/95 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-4">
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-10 w-10 rounded-xl" />
+              <Skeleton className="h-6 w-40" />
+            </div>
+            <Skeleton className="h-9 w-9 rounded-full" />
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-lg px-4 py-6 space-y-6">
+          <Card className="teamup-card-soft">
+            <CardContent className="p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-9 w-28 rounded-lg" />
+              </div>
+              <Skeleton className="h-40 w-full rounded-xl" />
+            </CardContent>
+          </Card>
+
+          <Card className="teamup-card-soft">
+            <CardContent className="p-5 space-y-3">
+              <Skeleton className="h-5 w-24" />
+              <div className="grid grid-cols-3 gap-2">
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+                <Skeleton className="h-28 w-full rounded-lg" />
+              </div>
+              <Skeleton className="h-11 w-full rounded-lg" />
+            </CardContent>
+          </Card>
+
+          <Card className="teamup-card-soft">
+            <CardContent className="p-5 space-y-3">
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-11 w-full rounded-lg" />
+              <Separator />
+              <Skeleton className="h-11 w-full rounded-lg" />
+              <Separator />
+              <Skeleton className="h-11 w-full rounded-lg" />
+              <Separator />
+              <Skeleton className="h-20 w-full rounded-lg" />
+            </CardContent>
+          </Card>
+        </main>
       </div>
     )
   }

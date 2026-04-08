@@ -1,4 +1,4 @@
-import { del, get, post, put } from './client'
+import { del, get, patch, post, put } from './client'
 import type {
   CreateMatchRequest,
   Match,
@@ -34,6 +34,6 @@ export const matchApi = {
   refundApplication: (matchId: string, applicationId: string) =>
     put<MatchApplication>(`/api/matches/${matchId}/applications/${applicationId}/refund`),
   updateMatchStatus: (matchId: string, data: UpdateMatchStatusRequest) =>
-    put<Match>(`/api/matches/${matchId}/status`, data),
+    patch<Match>(`/api/matches/${matchId}/status`, data),
   updateMatch: (matchId: string, data: UpdateMatchRequest) => put<Match>(`/api/matches/${matchId}`, data),
 }

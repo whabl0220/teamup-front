@@ -277,6 +277,134 @@
 
 ---
 
+## 19) [Major] 취소·환불 이후 오래된 활성 신청이 다시 유효로 오판
+
+- **증상**
+  - 신청 취소/환불 후 재신청하지 않았는데도 UI가 "입금 대기 중" 등 활성 상태로 표시
+  - `CONFIRMED(오래됨) + REFUNDED(최신)` 이력이 공존하면 활성 신청으로 오판
+- **원인**
+  - `pickActiveApplicationForUserOnMatch()`에서 활성 상태만 먼저 필터링한 뒤 최신순 정렬  
+    → 더 최신인 `CANCELLED`/`REFUNDED`가 있어도 오래된 `CONFIRMED`가 반환될 수 있음
+- **해결**
+  - 같은 매치/유저의 전체 이력을 **최신순 정렬 먼저** 처리 후, 1건(가장 최신)의 상태만 판정  
+    → 최신 건이 활성(`PENDING_DEPOSIT`/`CONFIRMED`)이 아니면 `null` 반환
+  - `lib/match-local-store.ts` 수정
+- **재발 방지**
+  - "상태 판정은 최신 이력 1건 기준" 원칙을 로컬 스토어 유틸에 일관 적용
+
+---
+
+## 20) [Major] 무료 경기(fee=0) 생성 시 빈 `depositAccount`가 API에 전송
+
+- **증상**
+  - 참가비를 0원으로 설정하면 폼 제출은 되지만, 빈 문자열 `""` 그대로 API에 전달되어 요청 실패 가능
+- **원인**
+  - `isMatchFormSubmittable()`은 `fee === 0`일 때 `depositAccount`를 비워도 허용  
+    그러나 `toMatchPayload()`는 무조건 `depositAccount: values.depositAccount.trim()` 전송
+  - `CreateMatchRequest` / `UpdateMatchRequest` 타입이 `depositAccount: string`(필수)로 선언
+- **해결**
+  - `types/match.ts`: `depositAccount`를 `string?`(선택적)으로 변경
+  - `toMatchPayload()`: `fee === 0`이면 `depositAccount: undefined` (필드 미전송)  
+    유료이더라도 빈 값이면 `undefined`로 처리해 `""` 전송 방지
+- **재발 방지**
+  - 조건부 필수 필드는 타입에서도 optional로 선언하고, payload 변환 함수에서 조건 처리
+
+---
+
+## 21) [Major] HTTP 헬퍼에서 falsy body가 전송 누락
+
+- **증상**
+  - `post`/`put`/`patch`/`del`에 `0`, `false`, `""`, `null` 같은 falsy 값을 body로 전달하면 body가 비어 전송됨
+- **원인**
+  - `body: data ? JSON.stringify(data) : undefined` 조건으로 falsy 값을 `undefined`로 처리
+- **해결**
+  - `data !== undefined ? JSON.stringify(data) : undefined` 로 변경  
+    → `undefined`를 명시적으로 생략한 경우에만 body 미전송
+  - `lib/services/client.ts`의 `post` · `put` · `patch` · `del` 모두 일괄 수정
+- **재발 방지**
+  - HTTP body 생략 조건은 `=== undefined`로만 제한. falsy 전체를 생략 조건에 두지 않는다
+
+---
+
+## 22) [Major] 주 포지션 없이 부 포지션만 저장/제출 가능
+
+- **증상**
+  - `mainPosition`은 비어 있는데 `subPosition`만 저장되어, 카드 화면에서 부 포지션이 표시되지 않는 상태 발생
+- **원인**
+  - 폼에서 `subPosition` 선택이 `mainPosition` 존재 여부와 독립적으로 활성화
+  - 제출 전 `mainPosition`/`subPosition` 상관관계 검증 부재
+- **해결**
+  - `components/features/profile/UserInfoForm.tsx`
+  - `mainPosition`이 없으면 `subPosition` 비활성화
+  - `mainPosition`이 비워질 때 `subPosition` 자동 초기화
+  - 제출 직전에 `mainPosition` 없는 `subPosition` 값 방어적으로 제거
+- **재발 방지**
+  - 종속 선택 필드는 UI 비활성화 + 제출 전 도메인 검증을 함께 적용
+
+---
+
+## 23) [Major] 기본정보 수정 폼에서 키(`height`) 입력 필드 누락
+
+- **증상**
+  - 기본정보 수정 페이지에서 키가 로드되지만 입력 UI가 없어 수정/재입력이 불가
+  - 제출 시 `height`가 빈 값으로 유지되어 의도치 않게 미전송될 수 있음
+- **원인**
+  - `UserInfoFormData`에는 `height`가 남아 있으나 `UserInfoForm`의 basic 필드 렌더링에서 누락
+- **해결**
+  - `components/features/profile/UserInfoForm.tsx` basic 섹션에 `height` 입력 복구
+  - 숫자 범위(`150~230`)와 상태 바인딩(`formData.height`) 연결
+- **재발 방지**
+  - 폼 데이터 인터페이스 변경 시 렌더 필드/submit payload 동기화 체크리스트 운영
+
+---
+
+## 24) [Major] 알림 페이지 fake loading이 스크롤 복원을 깨뜨림
+
+- **증상**
+  - 알림 상세 진입 후 복귀 시 저장한 스크롤 위치가 정확히 복원되지 않음
+- **원인**
+  - 동기 데이터(localStorage)임에도 skeleton을 150ms 강제 렌더
+  - 실제 리스트 대신 skeleton 높이 기준으로 `scrollTo`가 먼저 실행되어 y값 clamp 발생
+- **해결**
+  - `app/(app)/notifications/page.tsx`에서 fake loading/skeleton 분기 제거
+  - 동기 로드된 실제 알림 목록을 즉시 렌더하도록 단순화
+- **재발 방지**
+  - 동기 데이터 화면에서는 인위적 로딩 지연을 넣지 않음
+  - 스크롤 복원이 필요하면 실제 콘텐츠 렌더 타이밍 기준으로 수행
+
+---
+
+## 25) [Major] 정원(`capacity`) 소수 입력 시 반올림 저장으로 값 왜곡
+
+- **증상**
+  - 사용자가 소수 정원을 입력하면 제출은 통과하고 payload에서 반올림되어 저장값이 달라짐
+- **원인**
+  - 제출 가능 체크에서 정수 검증 누락
+  - payload 변환에서 `Math.round(Number(values.capacity))` 사용
+- **해결**
+  - `lib/match-form.ts`
+  - `isMatchFormSubmittable()`에 `Number.isInteger(parsedCapacity)` 추가
+  - `toMatchPayload()`에서 반올림 제거, 정수/범위 검증 후 원값 사용
+- **재발 방지**
+  - 수량/정원 필드는 입력 검증과 payload 변환 규칙을 동일하게 정수 기반으로 유지
+
+---
+
+## 26) [Major] 선택형 프로필 필드가 빈 문자열(`''`)로 클리어되지 않음 (MSW)
+
+- **증상**
+  - 부분 업데이트에서 `address`, `mainPosition`, `subPosition`, `playStyle`, `statusMsg`를 비우려 해도 반영되지 않음
+- **원인**
+  - `mocks/handlers.ts`의 PATCH 로직이 `if (body.xxx)` truthy 체크를 사용해 `''`을 무시
+- **해결**
+  - 문자열 필드 갱신 조건을 `!== undefined`로 변경
+  - 선택형 enum 필드는 `''` 수신 시 `undefined`로 정리되도록 처리
+- **재발 방지**
+  - PATCH mock 구현은 “미전송(undefined) vs 빈 값('')”을 명확히 구분
+  - 부분 업데이트 테스트에 “필드 클리어” 케이스를 고정 추가
+
+---
+
 ## 빠른 체크리스트
 
 - 서비스 fallback 함수의 비동기 호출은 `await` 했는가?
@@ -288,4 +416,7 @@
 - 색상 값이 전역 토큰/semantic class로 관리되는가?
 - TS 복합 조건에서 불가능 비교를 만들고 있지 않은가?
 - 객체 스프레드 시 중복 키가 없는가?
+- 상태 판정은 최신 이력 1건 기준으로 하는가?
+- 조건부 필수 필드는 타입에서 optional이고, payload 변환에서 조건 처리하는가?
+- HTTP body 생략 조건이 `=== undefined`로만 되어 있는가?
 

@@ -96,7 +96,7 @@ export async function post<T = unknown>(
 ): Promise<T> {
   return fetchAPI<T>(endpoint, {
     method: 'POST',
-    body: data ? JSON.stringify(data) : undefined,
+    body: data !== undefined ? JSON.stringify(data) : undefined,
   })
 }
 
@@ -107,7 +107,18 @@ export async function put<T = unknown>(
 ): Promise<T> {
   return fetchAPI<T>(endpoint, {
     method: 'PUT',
-    body: data ? JSON.stringify(data) : undefined,
+    body: data !== undefined ? JSON.stringify(data) : undefined,
+  })
+}
+
+// PATCH 요청
+export async function patch<T = unknown>(
+  endpoint: string,
+  data?: unknown
+): Promise<T> {
+  return fetchAPI<T>(endpoint, {
+    method: 'PATCH',
+    body: data !== undefined ? JSON.stringify(data) : undefined,
   })
 }
 
@@ -115,6 +126,6 @@ export async function put<T = unknown>(
 export async function del<T = unknown>(endpoint: string, data?: unknown): Promise<T> {
   return fetchAPI<T>(endpoint, {
     method: 'DELETE',
-    body: data ? JSON.stringify(data) : undefined,
-  });
+    body: data !== undefined ? JSON.stringify(data) : undefined,
+  })
 }

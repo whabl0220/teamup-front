@@ -5,17 +5,13 @@ import { mockMatchTeams, mockJoinTeams, mockMyTeam, mockMyTeamMembers, mockTeamM
 // Mock 데이터 저장소 (메모리 기반)
 const mockData = {
   teams: [...mockMatchTeams, ...mockJoinTeams, mockMyTeam],
+  // 첫 유저: 플레이어 카드 필드는 비워 두어 기본(미설정) 카드 UI를 확인할 수 있게 함
   users: [
     {
       id: 'user1',
-      name: 'Yoo',
-      email: 'Yoo@gmail.com',
+      name: '플레이어',
+      email: 'player@example.com',
       team: mockMyTeam,
-      height: 178,
-      position: 'FORWARD' as const, // Position: 'GUARD' | 'FORWARD' | 'CENTER'
-      subPosition: 'CENTER' as const, // Position: 'GUARD' | 'FORWARD' | 'CENTER'
-      playStyle: 'SHOOTER' as const, // PlayStyle: 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'
-      statusMsg: 'TeamUp is good!',
     },
   ] as User[],
   matchRequests: [] as MatchRequest[],
@@ -503,11 +499,11 @@ export const handlers = [
       id: user.id,
       email: user.email,
       nickname: user.name,
-      mainPosition: user.position || 'GUARD',
-      subPosition: undefined,
-      gender: 'MALE',
+      mainPosition: user.position ?? '',
+      subPosition: user.subPosition,
+      gender: user.gender ?? 'MALE',
       age: 25,
-      address: user.address || '',
+      address: user.address ?? '',
       height: user.height,
       playStyle: user.playStyle,
       statusMsg: user.statusMsg,
@@ -516,8 +512,8 @@ export const handlers = [
     })
   }),
 
-  // 사용자 정보 수정
-  http.put('*/api/users/me', async ({ request }) => {
+  // 사용자 정보 수정 (백엔드 명세: PATCH /api/users/profile)
+  http.patch('*/api/users/profile', async ({ request }) => {
     const body = (await request.json()) as Partial<{
       nickname: string
       gender: string
@@ -535,22 +531,33 @@ export const handlers = [
     }
 
     // 사용자 정보 업데이트
-    if (body.nickname) user.name = body.nickname
-    if (body.gender) user.gender = body.gender
-    if (body.address) user.address = body.address
+    if (body.nickname !== undefined) user.name = body.nickname
+    if (body.gender !== undefined) user.gender = body.gender
+    if (body.address !== undefined) user.address = body.address
     if (body.height !== undefined) user.height = body.height
-    if (body.mainPosition) user.position = body.mainPosition as 'GUARD' | 'FORWARD' | 'CENTER'
-    if (body.subPosition) user.subPosition = body.subPosition as 'GUARD' | 'FORWARD' | 'CENTER'
-    if (body.playStyle) user.playStyle = body.playStyle as 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'
-    if (body.statusMsg) user.statusMsg = body.statusMsg
+    if (body.mainPosition !== undefined) {
+      user.position = (body.mainPosition || undefined) as 'GUARD' | 'FORWARD' | 'CENTER' | undefined
+    }
+    if (body.subPosition !== undefined) {
+      user.subPosition = (body.subPosition || undefined) as 'GUARD' | 'FORWARD' | 'CENTER' | undefined
+    }
+    if (body.playStyle !== undefined) {
+      user.playStyle = (body.playStyle || undefined) as
+        | 'SLASHER'
+        | 'SHOOTER'
+        | 'DEFENDER'
+        | 'PASSER'
+        | undefined
+    }
+    if (body.statusMsg !== undefined) user.statusMsg = body.statusMsg
 
     return HttpResponse.json({
       id: user.id,
       email: user.email,
       nickname: user.name,
-      mainPosition: user.position || 'GUARD',
+      mainPosition: user.position ?? '',
       subPosition: user.subPosition,
-      gender: body.gender || 'MALE',
+      gender: user.gender ?? 'MALE',
       age: 25,
       address: user.address || '',
       height: user.height,
