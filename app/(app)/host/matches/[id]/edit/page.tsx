@@ -20,16 +20,16 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
-import { isMatchFormSubmittable, toMatchPayload, validateMatchDateRange } from '@/lib/match-form'
+import {
+  isMatchFormSubmittable,
+  toLocalDatetimeValue,
+  toMatchPayload,
+  validateMatchDateRange,
+} from '@/lib/match-form'
 import { isHostScheduleOverlapError, toUserErrorMessage } from '@/lib/error-utils'
 import { getLocalUser } from '@/lib/services/match'
 import type { Match, MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
-
-const pad2 = (n: number) => String(n).padStart(2, '0')
-
-const toLocalDatetimeValue = (d: Date) =>
-  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 
 export default function HostMatchEditPage() {
   const params = useParams<{ id: string }>()

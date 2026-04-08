@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { PlusCircle, Wallet, Building2, CalendarDays } from 'lucide-react'
@@ -19,7 +19,12 @@ import {
 import { matchService } from '@/lib/services'
 import { getMatchCourtById, MATCH_COURT_PRESETS } from '@/lib/match-courts'
 import { getMatchLevelLabel } from '@/lib/match-level-meta'
-import { isMatchFormSubmittable, toMatchPayload, validateMatchDateRange } from '@/lib/match-form'
+import {
+  getDefaultMatchDatetimeRangeLocal,
+  isMatchFormSubmittable,
+  toMatchPayload,
+  validateMatchDateRange,
+} from '@/lib/match-form'
 import { isHostScheduleOverlapError, toUserErrorMessage } from '@/lib/error-utils'
 import type { MatchLevel } from '@/types/match'
 import { toast } from 'sonner'
@@ -31,6 +36,12 @@ export default function HostMatchCreatePage() {
   const [courtId, setCourtId] = useState('')
   const [startAt, setStartAt] = useState('')
   const [endAt, setEndAt] = useState('')
+
+  useEffect(() => {
+    const { startAt: nextStart, endAt: nextEnd } = getDefaultMatchDatetimeRangeLocal()
+    setStartAt(nextStart)
+    setEndAt(nextEnd)
+  }, [])
   const [fee, setFee] = useState('')
   const [capacity, setCapacity] = useState('')
   const [level, setLevel] = useState<MatchLevel>('ALL')

@@ -1,5 +1,22 @@
 import type { CreateMatchRequest, MatchLevel, UpdateMatchRequest } from '@/types/match'
 
+const pad2 = (n: number) => String(n).padStart(2, '0')
+
+/** `<input type="datetime-local" />`용 로컬 문자열 */
+export const toLocalDatetimeValue = (d: Date) =>
+  `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+
+/** 경기 생성 폼 기본값: 오늘 정오 12:00 시작, 종료는 시작 + 2시간 */
+export const getDefaultMatchDatetimeRangeLocal = (): { startAt: string; endAt: string } => {
+  const start = new Date()
+  start.setHours(12, 0, 0, 0)
+  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000)
+  return {
+    startAt: toLocalDatetimeValue(start),
+    endAt: toLocalDatetimeValue(end),
+  }
+}
+
 export type MatchFormValues = {
   title: string
   courtId: string
