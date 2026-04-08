@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hostedCount, setHostedCount] = useState(0)
+  const [allMatches, setAllMatches] = useState<Match[]>([])
   const [todayMatchCount, setTodayMatchCount] = useState(0)
   const [pendingDepositCount, setPendingDepositCount] = useState(0)
   const { user } = useUser()
@@ -31,25 +32,17 @@ export default function HomePage() {
     setIsLoading(true)
     try {
       const [hosted, allMatches] = await Promise.all([matchService.listHostedMatches(), matchService.listMatches()])
-      const today = new Date().toDateString()
-
-      const myMatchIdSet = new Set(myApps.map((app) => app.matchId))
-      const myTodayMatches = allMatches.filter(
-        (match: Match) =>
-          myMatchIdSet.has(match.id) && new Date(match.startAt).toDateString() === today
-      )
-
       setHostedCount(hosted.length)
-      setTodayMatchCount(myTodayMatches.length)
-      setPendingDepositCount(myApps.filter((app) => app.status === 'PENDING_DEPOSIT').length)
+      setAllMatches(allMatches)
     } catch {
       setHostedCount(0)
+      setAllMatches([])
       setTodayMatchCount(0)
       setPendingDepositCount(0)
     } finally {
       setIsLoading(false)
     }
-  }, [myApps])
+  }, [])
 
   useEffect(() => {
     void refreshDashboard()
@@ -57,6 +50,16 @@ export default function HomePage() {
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
   }, [refreshDashboard])
+
+  useEffect(() => {
+    const today = new Date().toDateString()
+    const myMatchIdSet = new Set(myApps.map((app) => app.matchId))
+    const myTodayMatches = allMatches.filter(
+      (match: Match) => myMatchIdSet.has(match.id) && new Date(match.startAt).toDateString() === today
+    )
+    setTodayMatchCount(myTodayMatches.length)
+    setPendingDepositCount(myApps.filter((app) => app.status === 'PENDING_DEPOSIT').length)
+  }, [allMatches, myApps])
 
   const primaryAction = useMemo(() => {
     if (pendingDepositCount > 0) {

@@ -46,7 +46,7 @@ export default function MatchDetailPage() {
   const application = useMemo<LocalApplicationState | null>(() => {
     if (!matchId) return null
     const localUserId = getLocalUser().userId
-    const mine = pickActiveApplicationForUserOnMatch(applicationsByMatch, matchId, localUserId)
+    const mine = pickActiveApplicationForUserOnMatch(applicationsByMatch, localUserId)
     return mine ? { applicationId: mine.id, status: mine.status } : null
   }, [applicationsByMatch, matchId])
 

@@ -42,7 +42,6 @@ export default function BasicInfoEditPage() {
         setLoadError(null)
         const userData = await userService.getMe()
         setUser(mapApiUserToUser(userData))
-        setLoadError(null)
         if (userData) {
           setFormData({
             nickname: userData.nickname || '',

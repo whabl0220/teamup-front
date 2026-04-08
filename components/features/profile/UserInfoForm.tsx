@@ -55,9 +55,11 @@ export function UserInfoForm({
   }
 
   const handleSubmit = (e: React.FormEvent) => {
-    // 방어적으로 제출 직전에 mainPosition 없이 선택된 subPosition을 정리한다.
+    // 제출 시점 레이스를 피하기 위해, 잘못된 조합이면 먼저 상태만 정리하고 제출은 중단한다.
     if (!formData.mainPosition && formData.subPosition) {
+      e.preventDefault()
       onChange({ ...formData, subPosition: '' })
+      return
     }
     onSubmit(e)
   }

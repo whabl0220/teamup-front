@@ -42,7 +42,6 @@ export default function ProfileEditPage() {
         setLoadError(null)
         const userData = await userService.getMe()
         setUser(mapApiUserToUser(userData))
-        setLoadError(null)
         if (userData) {
           setFormData({
             height: userData.height || 0,

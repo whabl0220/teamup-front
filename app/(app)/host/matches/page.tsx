@@ -27,6 +27,11 @@ export default function HostMatchesPage() {
   const [mode, setMode] = useState<'ALL' | 'MY' | 'TODAY' | 'WEEK'>('ALL')
   const [selectedDate, setSelectedDate] = useState<string>('ALL')
 
+  const handleModeChange = (nextMode: 'ALL' | 'MY' | 'TODAY' | 'WEEK') => {
+    setMode(nextMode)
+    setSelectedDate('ALL')
+  }
+
   const loadMatches = async () => {
     try {
       setIsLoading(true)
@@ -98,16 +103,32 @@ export default function HostMatchesPage() {
           <MatchDateCarousel selectedDate={selectedDate} onSelect={setSelectedDate} />
         </div>
         <div className="mb-4 flex flex-wrap items-center gap-2">
-          <Button variant={mode === 'ALL' ? 'default' : 'outline'} size="sm" onClick={() => setMode('ALL')}>
+          <Button
+            variant={mode === 'ALL' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleModeChange('ALL')}
+          >
             전체
           </Button>
-          <Button variant={mode === 'MY' ? 'default' : 'outline'} size="sm" onClick={() => setMode('MY')}>
+          <Button
+            variant={mode === 'MY' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleModeChange('MY')}
+          >
             내 주최
           </Button>
-          <Button variant={mode === 'TODAY' ? 'default' : 'outline'} size="sm" onClick={() => setMode('TODAY')}>
+          <Button
+            variant={mode === 'TODAY' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleModeChange('TODAY')}
+          >
             오늘
           </Button>
-          <Button variant={mode === 'WEEK' ? 'default' : 'outline'} size="sm" onClick={() => setMode('WEEK')}>
+          <Button
+            variant={mode === 'WEEK' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleModeChange('WEEK')}
+          >
             이번주
           </Button>
           <Button

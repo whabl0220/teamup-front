@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { PlusCircle, Wallet, Building2, CalendarDays } from 'lucide-react'
@@ -31,17 +31,12 @@ import { toast } from 'sonner'
 
 export default function HostMatchCreatePage() {
   const router = useRouter()
+  const [defaultDateRange] = useState(getDefaultMatchDatetimeRangeLocal)
 
   const [title, setTitle] = useState('')
   const [courtId, setCourtId] = useState('')
-  const [startAt, setStartAt] = useState('')
-  const [endAt, setEndAt] = useState('')
-
-  useEffect(() => {
-    const { startAt: nextStart, endAt: nextEnd } = getDefaultMatchDatetimeRangeLocal()
-    setStartAt(nextStart)
-    setEndAt(nextEnd)
-  }, [])
+  const [startAt, setStartAt] = useState(defaultDateRange.startAt)
+  const [endAt, setEndAt] = useState(defaultDateRange.endAt)
   const [fee, setFee] = useState('')
   const [capacity, setCapacity] = useState('')
   const [level, setLevel] = useState<MatchLevel>('ALL')

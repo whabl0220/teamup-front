@@ -64,11 +64,10 @@ export const getStoredApplicationsByMatchId = (matchId: string): MatchApplicatio
  */
 export const pickActiveApplicationForUserOnMatch = (
   applications: MatchApplication[],
-  matchId: string,
   userId: string
 ): MatchApplication | null => {
   const latest = applications
-    .filter((a) => a.matchId === matchId && a.userId === userId)
+    .filter((a) => a.userId === userId)
     .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())[0]
 
   if (!latest) return null
