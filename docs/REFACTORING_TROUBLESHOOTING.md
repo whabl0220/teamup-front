@@ -326,6 +326,85 @@
 
 ---
 
+## 22) [Major] 주 포지션 없이 부 포지션만 저장/제출 가능
+
+- **증상**
+  - `mainPosition`은 비어 있는데 `subPosition`만 저장되어, 카드 화면에서 부 포지션이 표시되지 않는 상태 발생
+- **원인**
+  - 폼에서 `subPosition` 선택이 `mainPosition` 존재 여부와 독립적으로 활성화
+  - 제출 전 `mainPosition`/`subPosition` 상관관계 검증 부재
+- **해결**
+  - `components/features/profile/UserInfoForm.tsx`
+  - `mainPosition`이 없으면 `subPosition` 비활성화
+  - `mainPosition`이 비워질 때 `subPosition` 자동 초기화
+  - 제출 직전에 `mainPosition` 없는 `subPosition` 값 방어적으로 제거
+- **재발 방지**
+  - 종속 선택 필드는 UI 비활성화 + 제출 전 도메인 검증을 함께 적용
+
+---
+
+## 23) [Major] 기본정보 수정 폼에서 키(`height`) 입력 필드 누락
+
+- **증상**
+  - 기본정보 수정 페이지에서 키가 로드되지만 입력 UI가 없어 수정/재입력이 불가
+  - 제출 시 `height`가 빈 값으로 유지되어 의도치 않게 미전송될 수 있음
+- **원인**
+  - `UserInfoFormData`에는 `height`가 남아 있으나 `UserInfoForm`의 basic 필드 렌더링에서 누락
+- **해결**
+  - `components/features/profile/UserInfoForm.tsx` basic 섹션에 `height` 입력 복구
+  - 숫자 범위(`150~230`)와 상태 바인딩(`formData.height`) 연결
+- **재발 방지**
+  - 폼 데이터 인터페이스 변경 시 렌더 필드/submit payload 동기화 체크리스트 운영
+
+---
+
+## 24) [Major] 알림 페이지 fake loading이 스크롤 복원을 깨뜨림
+
+- **증상**
+  - 알림 상세 진입 후 복귀 시 저장한 스크롤 위치가 정확히 복원되지 않음
+- **원인**
+  - 동기 데이터(localStorage)임에도 skeleton을 150ms 강제 렌더
+  - 실제 리스트 대신 skeleton 높이 기준으로 `scrollTo`가 먼저 실행되어 y값 clamp 발생
+- **해결**
+  - `app/(app)/notifications/page.tsx`에서 fake loading/skeleton 분기 제거
+  - 동기 로드된 실제 알림 목록을 즉시 렌더하도록 단순화
+- **재발 방지**
+  - 동기 데이터 화면에서는 인위적 로딩 지연을 넣지 않음
+  - 스크롤 복원이 필요하면 실제 콘텐츠 렌더 타이밍 기준으로 수행
+
+---
+
+## 25) [Major] 정원(`capacity`) 소수 입력 시 반올림 저장으로 값 왜곡
+
+- **증상**
+  - 사용자가 소수 정원을 입력하면 제출은 통과하고 payload에서 반올림되어 저장값이 달라짐
+- **원인**
+  - 제출 가능 체크에서 정수 검증 누락
+  - payload 변환에서 `Math.round(Number(values.capacity))` 사용
+- **해결**
+  - `lib/match-form.ts`
+  - `isMatchFormSubmittable()`에 `Number.isInteger(parsedCapacity)` 추가
+  - `toMatchPayload()`에서 반올림 제거, 정수/범위 검증 후 원값 사용
+- **재발 방지**
+  - 수량/정원 필드는 입력 검증과 payload 변환 규칙을 동일하게 정수 기반으로 유지
+
+---
+
+## 26) [Major] 선택형 프로필 필드가 빈 문자열(`''`)로 클리어되지 않음 (MSW)
+
+- **증상**
+  - 부분 업데이트에서 `address`, `mainPosition`, `subPosition`, `playStyle`, `statusMsg`를 비우려 해도 반영되지 않음
+- **원인**
+  - `mocks/handlers.ts`의 PATCH 로직이 `if (body.xxx)` truthy 체크를 사용해 `''`을 무시
+- **해결**
+  - 문자열 필드 갱신 조건을 `!== undefined`로 변경
+  - 선택형 enum 필드는 `''` 수신 시 `undefined`로 정리되도록 처리
+- **재발 방지**
+  - PATCH mock 구현은 “미전송(undefined) vs 빈 값('')”을 명확히 구분
+  - 부분 업데이트 테스트에 “필드 클리어” 케이스를 고정 추가
+
+---
+
 ## 빠른 체크리스트
 
 - 서비스 fallback 함수의 비동기 호출은 `await` 했는가?

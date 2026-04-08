@@ -54,6 +54,7 @@ export const isMatchFormSubmittable = (values: MatchFormValues): boolean => {
       feeOk &&
       values.capacity.trim() &&
       Number.isFinite(parsedCapacity) &&
+      Number.isInteger(parsedCapacity) &&
       parsedCapacity > 0 &&
       depositOk
   )
@@ -77,7 +78,16 @@ export const validateMatchDateRange = (
 type MatchPayload = CreateMatchRequest | UpdateMatchRequest
 
 export const toMatchPayload = (values: MatchFormValues): MatchPayload => {
-  const fee = Math.round(Number(values.fee))
+  const fee = Number(values.fee)
+  const capacity = Number(values.capacity)
+
+  if (!Number.isFinite(fee) || !Number.isInteger(fee) || fee < 0) {
+    throw new Error('Invalid fee')
+  }
+  if (!Number.isFinite(capacity) || !Number.isInteger(capacity) || capacity <= 0) {
+    throw new Error('Invalid capacity')
+  }
+
   const depositAccount = values.depositAccount.trim() || undefined
   return {
     title: values.title.trim(),
@@ -85,7 +95,7 @@ export const toMatchPayload = (values: MatchFormValues): MatchPayload => {
     startAt: toIsoFromLocalDatetime(values.startAt),
     endAt: values.endAt.trim() ? toIsoFromLocalDatetime(values.endAt) : undefined,
     fee,
-    capacity: Math.round(Number(values.capacity)),
+    capacity,
     level: values.level,
     cancellationPolicy: values.cancellationPolicy.trim() || undefined,
     notes: values.notes.trim() || undefined,

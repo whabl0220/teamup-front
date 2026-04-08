@@ -35,6 +35,8 @@ export function MatchDateCarousel({
 
   return (
     <div
+      role="radiogroup"
+      aria-label="매치 날짜 선택"
       className={cn(
         'match-date-carousel-scroll -mx-1 flex snap-x snap-mandatory gap-1.5 overflow-x-auto px-1 pb-2',
         className

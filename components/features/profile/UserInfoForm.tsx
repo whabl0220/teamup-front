@@ -43,9 +43,27 @@ export function UserInfoForm({
 
   const showBasicFields = fields === 'all' || fields === 'basic'
   const showCardFields = fields === 'all' || fields === 'card'
+  const isSubPositionDisabled = isLoading || !formData.mainPosition
+
+  const handleMainPositionChange = (value: string) => {
+    // 주 포지션이 비어있으면 부 포지션도 함께 비워서 subPosition 단독 제출을 막는다.
+    onChange({
+      ...formData,
+      mainPosition: value,
+      subPosition: value ? formData.subPosition : ''
+    })
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    // 방어적으로 제출 직전에 mainPosition 없이 선택된 subPosition을 정리한다.
+    if (!formData.mainPosition && formData.subPosition) {
+      onChange({ ...formData, subPosition: '' })
+    }
+    onSubmit(e)
+  }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* 기본 정보 필드 */}
       {showBasicFields && (
         <>
@@ -109,6 +127,22 @@ export function UserInfoForm({
               />
             </div>
           </div>
+
+          {/* 키 */}
+          <div className="space-y-2">
+            <Label htmlFor="height">키 (cm)</Label>
+            <Input
+              id="height"
+              type="number"
+              min="150"
+              max="230"
+              placeholder="예: 180"
+              value={formData.height}
+              onChange={(e) => onChange({ ...formData, height: e.target.value })}
+              disabled={isLoading}
+              className="h-11"
+            />
+          </div>
         </>
       )}
 
@@ -121,7 +155,7 @@ export function UserInfoForm({
               <Label htmlFor="mainPosition">주 포지션</Label>
               <Select
                 value={formData.mainPosition}
-                onValueChange={(value) => onChange({ ...formData, mainPosition: value })}
+                onValueChange={handleMainPositionChange}
                 disabled={isLoading}
               >
                 <SelectTrigger className="h-11">
@@ -140,10 +174,10 @@ export function UserInfoForm({
               <Select
                 value={formData.subPosition}
                 onValueChange={(value) => onChange({ ...formData, subPosition: value })}
-                disabled={isLoading}
+                disabled={isSubPositionDisabled}
               >
                 <SelectTrigger className="h-11">
-                  <SelectValue placeholder="선택사항" />
+                  <SelectValue placeholder={formData.mainPosition ? '선택사항' : '주 포지션 먼저 선택'} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="GUARD">가드</SelectItem>

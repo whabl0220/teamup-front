@@ -531,14 +531,25 @@ export const handlers = [
     }
 
     // 사용자 정보 업데이트
-    if (body.nickname) user.name = body.nickname
-    if (body.gender) user.gender = body.gender
-    if (body.address) user.address = body.address
+    if (body.nickname !== undefined) user.name = body.nickname
+    if (body.gender !== undefined) user.gender = body.gender
+    if (body.address !== undefined) user.address = body.address
     if (body.height !== undefined) user.height = body.height
-    if (body.mainPosition) user.position = body.mainPosition as 'GUARD' | 'FORWARD' | 'CENTER'
-    if (body.subPosition) user.subPosition = body.subPosition as 'GUARD' | 'FORWARD' | 'CENTER'
-    if (body.playStyle) user.playStyle = body.playStyle as 'SLASHER' | 'SHOOTER' | 'DEFENDER' | 'PASSER'
-    if (body.statusMsg) user.statusMsg = body.statusMsg
+    if (body.mainPosition !== undefined) {
+      user.position = (body.mainPosition || undefined) as 'GUARD' | 'FORWARD' | 'CENTER' | undefined
+    }
+    if (body.subPosition !== undefined) {
+      user.subPosition = (body.subPosition || undefined) as 'GUARD' | 'FORWARD' | 'CENTER' | undefined
+    }
+    if (body.playStyle !== undefined) {
+      user.playStyle = (body.playStyle || undefined) as
+        | 'SLASHER'
+        | 'SHOOTER'
+        | 'DEFENDER'
+        | 'PASSER'
+        | undefined
+    }
+    if (body.statusMsg !== undefined) user.statusMsg = body.statusMsg
 
     return HttpResponse.json({
       id: user.id,
@@ -546,7 +557,7 @@ export const handlers = [
       nickname: user.name,
       mainPosition: user.position ?? '',
       subPosition: user.subPosition,
-      gender: body.gender || 'MALE',
+      gender: user.gender ?? 'MALE',
       age: 25,
       address: user.address || '',
       height: user.height,

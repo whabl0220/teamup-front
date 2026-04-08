@@ -87,10 +87,6 @@ npm run dev
 - ✅ `POST /api/games/{gameId}/finish-and-feedback` - 피드백 제출
 - ✅ `POST /api/games/{gameId}/report?teamId={teamId}` - AI 리포트 생성
 
-### 사용자 관련
-- ✅ `GET /api/users/me` - 현재 사용자 정보
-- ✅ `GET /api/users/{userId}` - 사용자 조회
-
 ### 매칭 요청 관련
 - ✅ `GET /api/match-requests/received` - 받은 매칭 요청 목록
 - ✅ `POST /api/match-requests` - 매칭 요청 보내기
