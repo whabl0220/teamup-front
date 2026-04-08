@@ -1,43 +1,40 @@
-# TeamUp - AI 기반 농구 팀 매칭 & 코칭 플랫폼
+# TeamUp - 농구 매치 참가/주최 운영 플랫폼
 
-농구 팀을 만들고, AI 추천으로 다른 팀과 매칭하며, 경기 후 AI 코치의 분석을 받을 수 있는 플랫폼입니다.
+농구 경기를 탐색하고 참가 신청/취소를 관리하며, 주최 경기 생성·신청자 확정·환불 처리까지 한 흐름에서 운영할 수 있는 프론트엔드 앱입니다.
 
 ## 주요 기능
 
-### 🏀 팀 관리
-- 팀 생성 및 관리
-- 팀 DNA 시스템 (BULLS, WARRIORS, SPURS)
-- 팀 레벨 및 경험치 시스템
-- 팀원 관리 및 팀장 위임
+### 🏀 인증/프로필
+- Clerk 기반 로그인/회원가입
+- 기본 정보(닉네임, 성별, 활동 지역, 키) 수정
+- 플레이어 카드 정보(포지션/플레이 스타일/한 줄 소개) 관리
 
-### 🤝 팀 매칭
-- AI 기반 팀 매칭 추천 (90%대 매칭률)
-- 팀 DNA 기반 상성 분석
-- 팀 레벨 고려한 균형잡힌 매칭
-- 실시간 매칭 요청 및 수락
+### 🤝 참가자 매치 흐름
+- 날짜 캐러셀 + 모드(전체/내 경기/오늘/이번주) 필터
+- 매치 상세에서 참가 신청/취소 처리
+- 로컬 스토어 기반 신청 상태 반영(오프라인/네트워크 불안정 보조)
 
-### 🎯 AI 코칭
-- 경기 결과 기록
-- 5개 포지션별 피드백 시스템
-- AI 코치의 맞춤형 분석 리포트
-- 팀 DNA별 차별화된 코칭 스타일
-- 경기 전적 및 통계 관리
+### 🧭 주최자 매치 운영
+- 주최 경기 생성(날짜/정원/참가비/입금 계좌/취소 정책)
+- 내 주최 경기 목록/상세 조회
+- 신청자 확정/취소/환불 플로우 지원
 
-### 🗺️ 지도 기능
-- 주변 농구장 검색
-- 주변 팀 찾기
-- Kakao Map 연동
+### 🔔 알림/대시보드
+- 로컬 알림 저장소 기반 알림 로그/읽음/전체 삭제
+- 홈 대시보드에서 오늘 참가/입금 대기/미확인 알림 요약
+- 주요 액션으로 빠른 이동(참가/주최/프로필)
 
 ## 기술 스택
 
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: Radix UI
-- **State Management**: React Hooks (Zustand 준비 중)
+- **Auth**: Clerk
+- **Styling**: Tailwind CSS v4
+- **UI Components**: Radix UI + shadcn/ui
+- **State Management**: React Hooks + localStorage external store (일부 Zustand)
 - **Date Handling**: date-fns
 - **Toast Notifications**: Sonner
-- **Map**: Kakao Map API
+- **Map**: Kakao Map API (연동 준비)
 - **Backend API**: REST API
 - **API Mocking**: MSW (Mock Service Worker)
 
@@ -135,28 +132,25 @@ types/
 
 ## API 엔드포인트
 
-주요 API 엔드포인트:
+현재 프론트 기준 주요 API 엔드포인트:
 
+- `POST /api/auth/signup` - 회원가입
 - `POST /api/auth/login` - 로그인
-- `POST /api/auth/register` - 회원가입
+- `GET /api/users/me` - 내 정보 조회
+- `PATCH /api/users/profile` - 내 프로필 수정
+- `GET /api/users/{userId}` - 사용자 조회
 - `GET /api/users/{userId}/teams` - 사용자 팀 조회
-- `POST /api/teams` - 팀 생성
-- `GET /api/teams/{teamId}/match-suggestions` - 매칭 추천
-- `POST /api/games/match` - 게임 생성
-- `POST /api/games/{gameId}/finish-and-feedback` - 피드백 제출
-- `GET /api/reports/games/{gameId}` - AI 리포트 조회
-
-## 팀 DNA 시스템
-
-- **BULLS**: 강력한 수비와 투지 중심의 플레이 스타일
-- **WARRIORS**: 빠른 템포와 팀워크 중심의 플레이 스타일
-- **SPURS**: 완벽한 조직력과 정교한 플레이 스타일
+- `GET /api/matches` - 매치 목록 조회
+- `GET /api/matches/{matchId}` - 매치 상세 조회
+- `POST /api/matches` - 주최 경기 생성
+- `POST /api/matches/{matchId}/apply` - 참가 신청
+- `PUT /api/matches/{matchId}/applications/{applicationId}/cancel` - 참가 신청 취소
 
 ## 개발 정보
 
-- **개발 환경**: Node.js 18+
+- **개발 환경**: Node.js 20+
 - **패키지 매니저**: npm
-- **코드 스타일**: ESLint + Prettier
+- **코드 스타일**: ESLint
 - **Git 브랜치**: main
 
 ## 배포
