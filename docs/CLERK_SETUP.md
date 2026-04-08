@@ -136,6 +136,14 @@ Next.js 16에서는 `middleware` 컨벤션이 `proxy`로 전환되는 경고가 
 - 스팸함 확인
 - 코드 만료 시 재시도
 
+### 4) 소셜 로그인 직후 랜딩(`/`)으로만 돌아오는 경우
+
+- Clerk Dashboard **Paths**에서 **Sign-in URL**이 `/login`, **Sign-up URL**이 `/signup`인지 확인합니다.  
+  루트 `/`로 두면 `auth.protect()`가 비로그인 사용자를 보낼 때 **로그인 화면이 아니라 랜딩**으로만 보일 수 있습니다.
+- **After sign-in / After sign-up**은 `/home` 등 앱 진입 경로로 맞춥니다.
+- 프론트 `ClerkProvider`에 `signInUrl` / `signUpUrl` / `afterSignInUrl` / `afterSignUpUrl`을 두어 Dashboard와 일치시키는 것을 권장합니다.
+- 랜딩 페이지는 서버에서 `auth()`로 이미 로그인된 사용자를 `/home`으로 보냅니다(세션은 있는데 URL만 `/`인 경우 보완).
+
 ---
 
 ## 백엔드 연동 전제 참고
