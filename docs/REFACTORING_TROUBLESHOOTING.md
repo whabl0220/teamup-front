@@ -277,6 +277,55 @@
 
 ---
 
+## 19) [Major] 취소·환불 이후 오래된 활성 신청이 다시 유효로 오판
+
+- **증상**
+  - 신청 취소/환불 후 재신청하지 않았는데도 UI가 "입금 대기 중" 등 활성 상태로 표시
+  - `CONFIRMED(오래됨) + REFUNDED(최신)` 이력이 공존하면 활성 신청으로 오판
+- **원인**
+  - `pickActiveApplicationForUserOnMatch()`에서 활성 상태만 먼저 필터링한 뒤 최신순 정렬  
+    → 더 최신인 `CANCELLED`/`REFUNDED`가 있어도 오래된 `CONFIRMED`가 반환될 수 있음
+- **해결**
+  - 같은 매치/유저의 전체 이력을 **최신순 정렬 먼저** 처리 후, 1건(가장 최신)의 상태만 판정  
+    → 최신 건이 활성(`PENDING_DEPOSIT`/`CONFIRMED`)이 아니면 `null` 반환
+  - `lib/match-local-store.ts` 수정
+- **재발 방지**
+  - "상태 판정은 최신 이력 1건 기준" 원칙을 로컬 스토어 유틸에 일관 적용
+
+---
+
+## 20) [Major] 무료 경기(fee=0) 생성 시 빈 `depositAccount`가 API에 전송
+
+- **증상**
+  - 참가비를 0원으로 설정하면 폼 제출은 되지만, 빈 문자열 `""` 그대로 API에 전달되어 요청 실패 가능
+- **원인**
+  - `isMatchFormSubmittable()`은 `fee === 0`일 때 `depositAccount`를 비워도 허용  
+    그러나 `toMatchPayload()`는 무조건 `depositAccount: values.depositAccount.trim()` 전송
+  - `CreateMatchRequest` / `UpdateMatchRequest` 타입이 `depositAccount: string`(필수)로 선언
+- **해결**
+  - `types/match.ts`: `depositAccount`를 `string?`(선택적)으로 변경
+  - `toMatchPayload()`: `fee === 0`이면 `depositAccount: undefined` (필드 미전송)  
+    유료이더라도 빈 값이면 `undefined`로 처리해 `""` 전송 방지
+- **재발 방지**
+  - 조건부 필수 필드는 타입에서도 optional로 선언하고, payload 변환 함수에서 조건 처리
+
+---
+
+## 21) [Major] HTTP 헬퍼에서 falsy body가 전송 누락
+
+- **증상**
+  - `post`/`put`/`patch`/`del`에 `0`, `false`, `""`, `null` 같은 falsy 값을 body로 전달하면 body가 비어 전송됨
+- **원인**
+  - `body: data ? JSON.stringify(data) : undefined` 조건으로 falsy 값을 `undefined`로 처리
+- **해결**
+  - `data !== undefined ? JSON.stringify(data) : undefined` 로 변경  
+    → `undefined`를 명시적으로 생략한 경우에만 body 미전송
+  - `lib/services/client.ts`의 `post` · `put` · `patch` · `del` 모두 일괄 수정
+- **재발 방지**
+  - HTTP body 생략 조건은 `=== undefined`로만 제한. falsy 전체를 생략 조건에 두지 않는다
+
+---
+
 ## 빠른 체크리스트
 
 - 서비스 fallback 함수의 비동기 호출은 `await` 했는가?
@@ -288,4 +337,7 @@
 - 색상 값이 전역 토큰/semantic class로 관리되는가?
 - TS 복합 조건에서 불가능 비교를 만들고 있지 않은가?
 - 객체 스프레드 시 중복 키가 없는가?
+- 상태 판정은 최신 이력 1건 기준으로 하는가?
+- 조건부 필수 필드는 타입에서 optional이고, payload 변환에서 조건 처리하는가?
+- HTTP body 생략 조건이 `=== undefined`로만 되어 있는가?
 

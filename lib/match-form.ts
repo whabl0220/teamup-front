@@ -76,15 +76,20 @@ export const validateMatchDateRange = (
 
 type MatchPayload = CreateMatchRequest | UpdateMatchRequest
 
-export const toMatchPayload = (values: MatchFormValues): MatchPayload => ({
-  title: values.title.trim(),
-  courtId: values.courtId,
-  startAt: toIsoFromLocalDatetime(values.startAt),
-  endAt: values.endAt.trim() ? toIsoFromLocalDatetime(values.endAt) : undefined,
-  fee: Math.round(Number(values.fee)),
-  capacity: Math.round(Number(values.capacity)),
-  level: values.level,
-  cancellationPolicy: values.cancellationPolicy.trim() || undefined,
-  notes: values.notes.trim() || undefined,
-  depositAccount: values.depositAccount.trim(),
-})
+export const toMatchPayload = (values: MatchFormValues): MatchPayload => {
+  const fee = Math.round(Number(values.fee))
+  const depositAccount = values.depositAccount.trim() || undefined
+  return {
+    title: values.title.trim(),
+    courtId: values.courtId,
+    startAt: toIsoFromLocalDatetime(values.startAt),
+    endAt: values.endAt.trim() ? toIsoFromLocalDatetime(values.endAt) : undefined,
+    fee,
+    capacity: Math.round(Number(values.capacity)),
+    level: values.level,
+    cancellationPolicy: values.cancellationPolicy.trim() || undefined,
+    notes: values.notes.trim() || undefined,
+    // 무료 경기(fee === 0)이거나 빈 값이면 필드 자체를 보내지 않음
+    depositAccount: fee === 0 ? undefined : depositAccount,
+  }
+}

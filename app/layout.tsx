@@ -35,8 +35,8 @@ export default function RootLayout({
         <ClerkProvider
           signInUrl="/login"
           signUpUrl="/signup"
-          afterSignInUrl="/home"
-          afterSignUpUrl="/home"
+          signInFallbackRedirectUrl="/home"
+          signUpFallbackRedirectUrl="/home"
         >
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             <MSWProvider>

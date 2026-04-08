@@ -67,15 +67,15 @@ export const pickActiveApplicationForUserOnMatch = (
   matchId: string,
   userId: string
 ): MatchApplication | null => {
-  const mine = applications.filter((a) => a.matchId === matchId && a.userId === userId)
-  const active = mine.filter(
-    (a) => a.status === 'PENDING_DEPOSIT' || a.status === 'CONFIRMED'
-  )
-  if (active.length === 0) return null
-  const latest = [...active].sort(
-    (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()
-  )[0]
-  return latest ?? null
+  const latest = applications
+    .filter((a) => a.matchId === matchId && a.userId === userId)
+    .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())[0]
+
+  if (!latest) return null
+
+  return latest.status === 'PENDING_DEPOSIT' || latest.status === 'CONFIRMED'
+    ? latest
+    : null
 }
 
 export const upsertStoredApplication = (application: MatchApplication) => {

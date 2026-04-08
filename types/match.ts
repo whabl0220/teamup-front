@@ -70,7 +70,8 @@ export interface CreateMatchRequest {
   level: MatchLevel
   cancellationPolicy?: string
   notes?: string
-  depositAccount: string
+  /** fee === 0(무료 경기)일 때는 생략 가능 */
+  depositAccount?: string
 }
 
 export interface UpdateMatchRequest {
@@ -83,7 +84,8 @@ export interface UpdateMatchRequest {
   level: MatchLevel
   cancellationPolicy?: string
   notes?: string
-  depositAccount: string
+  /** fee === 0(무료 경기)일 때는 생략 가능 */
+  depositAccount?: string
 }
 
 export interface UpdateMatchStatusRequest {
