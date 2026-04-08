@@ -249,7 +249,8 @@ export default function HostMatchEditPage() {
                 <p className="text-sm font-semibold text-foreground">총 참가비</p>
                 <Input
                   type="number"
-                  min={1}
+                  min={0}
+                  step={100}
                   value={fee}
                   onChange={(e) => setFee(e.target.value)}
                   placeholder="예: 8000"
@@ -266,6 +267,9 @@ export default function HostMatchEditPage() {
                 />
               </div>
             </div>
+            <p className="-mt-1 text-xs text-muted-foreground">
+              0원이면 무료 경기로 등록됩니다. 유료 경기일 때만 입금 계좌를 입력하면 됩니다.
+            </p>
 
             <div className="space-y-1">
               <p className="text-sm font-semibold text-foreground">경기 레벨</p>
@@ -284,7 +288,8 @@ export default function HostMatchEditPage() {
 
             <div className="space-y-1">
               <p className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Wallet className="h-4 w-4" /> 입금 계좌
+                <Wallet className="h-4 w-4" /> 입금 계좌{' '}
+                <span className="font-normal text-muted-foreground">(유료 시)</span>
               </p>
               <Input
                 value={depositAccount}

@@ -41,17 +41,21 @@ export const toIsoFromLocalDatetime = (value: string): string => {
 export const isMatchFormSubmittable = (values: MatchFormValues): boolean => {
   const parsedFee = Number(values.fee)
   const parsedCapacity = Number(values.capacity)
+  const feeOk =
+    values.fee.trim() !== '' &&
+    Number.isFinite(parsedFee) &&
+    parsedFee >= 0 &&
+    Number.isInteger(parsedFee)
+  const depositOk = parsedFee === 0 || Boolean(values.depositAccount.trim())
   return Boolean(
     values.title.trim() &&
       values.courtId &&
       values.startAt &&
-      values.fee.trim() &&
-      Number.isFinite(parsedFee) &&
-      parsedFee > 0 &&
+      feeOk &&
       values.capacity.trim() &&
       Number.isFinite(parsedCapacity) &&
       parsedCapacity > 0 &&
-      values.depositAccount.trim()
+      depositOk
   )
 }
 
